@@ -1,0 +1,97 @@
+/* Recharts plots, themed by tokens. The SVG is laid out LTR; see ChartFrame. */
+.chart-frame {
+  margin: 0;
+  direction: ltr;
+  font-family: inherit;
+  min-width: 0;
+}
+
+.chart-frame .recharts-text,
+.chart-frame .recharts-legend-item-text {
+  font-family: var(--font-family-base);
+}
+
+.chart-frame :focus {
+  outline: none;
+}
+
+/* Keyboard users still get the one focus ring (Recharts' accessibility layer is focusable). */
+.chart-frame :focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-small);
+}
+
+.chart-frame .recharts-bar-rectangle,
+.chart-frame .recharts-sector,
+.chart-frame .recharts-active-dot {
+  cursor: pointer;
+}
+
+.chart-frame .recharts-bar-rectangle path,
+.chart-frame .recharts-rectangle {
+  transition: opacity var(--duration-base) ease;
+}
+
+/* A legend of clickable series under a chart (RTL, token-colored swatches). */
+.series-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1) var(--space-3);
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+  direction: rtl;
+}
+
+.series-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  border-radius: var(--radius-small);
+  background: none;
+  color: var(--color-muted);
+  font: inherit;
+  font-size: var(--font-size-small);
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) ease,
+    opacity var(--duration-fast) ease;
+}
+
+.series-legend__item:hover {
+  background: var(--color-primary-soft);
+  color: var(--color-ink);
+}
+
+.series-legend__item--dimmed {
+  opacity: 0.4;
+}
+
+.series-legend__swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: var(--radius-pill);
+}
+
+/* Headline figure above a chart («۱٬۲۳۴ تماس در این بازه»). */
+.chart-headline {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.chart-headline__value {
+  font-size: var(--font-size-title);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-headline__label {
+  color: var(--color-muted);
+  font-size: var(--font-size-small);
+}

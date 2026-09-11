@@ -89,11 +89,12 @@ describe('TicketDetailPage', () => {
 
   it('links to the previous ticket and disables «next» at the end of the list', async () => {
     renderPage(ticketRepository());
+    await screen.findByText('تیکت ۹۰۰۱');
 
-    expect(await screen.findByRole('link', { name: 'تیکت قبلی' })).toHaveAttribute(
-      'href',
-      '/tickets/9000',
-    );
+    // The neighbours load after the ticket itself.
+    expect(
+      await screen.findByRole('link', { name: 'تیکت قبلی' }, { timeout: 3000 }),
+    ).toHaveAttribute('href', '/tickets/9000');
     expect(screen.queryByRole('link', { name: 'تیکت بعدی' })).not.toBeInTheDocument();
   });
 

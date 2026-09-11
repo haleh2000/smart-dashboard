@@ -16,7 +16,7 @@ import { SentimentBar } from './SentimentBar';
 import { StackedBars } from './StackedBars';
 import { SubjectLineTable } from './SubjectLineTable';
 import { SubjectTree } from './SubjectTree';
-import { TrendChart } from './TrendChart';
+import { AreaTrendChart } from './charts/AreaTrendChart';
 
 function SubjectDonut() {
   const scope = useDashboardScope();
@@ -102,7 +102,8 @@ function TrendPanel() {
     <Panel title="روند هفتگی کانال‌های ارتباطی (نوع کانال)">
       <ChartState query={query} isEmpty={(data) => data.buckets.length === 0}>
         {(data) => (
-          <TrendChart
+          <AreaTrendChart
+            label="روند هفتگی نوع کانال"
             data={data}
             selected={scope.filters.type}
             onSelect={(v) => toggle('type', v)}
@@ -148,13 +149,18 @@ export function TicketAnalyticsTab() {
           column="type"
         />
       </div>
-      <SubjectTreePanel />
       <TrendPanel />
-      <div className="dashboard__grid">
-        <BreakdownPanel title="توزیع بین شعب" dimension="branch" series={1} />
-        <BreakdownPanel title="رشته بیمه" dimension="insuranceLine" series={4} />
-        <BreakdownPanel title="کانال ورودی" dimension="channel" series={3} />
+      <BreakdownPanel
+        title="توزیع تماس‌ها و تیکت‌ها بین شعب"
+        dimension="branch"
+        series={0}
+        variant="columns"
+      />
+      <div className="dashboard__grid dashboard__grid--wide">
+        <BreakdownPanel title="رشته بیمه" dimension="insuranceLine" series={3} />
+        <BreakdownPanel title="کانال ورودی" dimension="channel" series={2} />
       </div>
+      <SubjectTreePanel />
       <SubjectLinePanel />
     </div>
   );

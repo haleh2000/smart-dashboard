@@ -1,9 +1,12 @@
 import { formatElapsed, formatPercent, formatPersianNumber } from '@/shared/lib/format';
-import { BarList, Panel, StatCard } from '@/shared/ui';
+import { Panel, StatCard } from '@/shared/ui';
 import { scopeForChart } from '../../domain/filters';
 import { useDashboardFilterStore, useDashboardScope } from '../dashboardFilterStore';
 import { useCallHeatmap, useCallStats, useRepeatCalls } from '../hooks/analyticsQueries';
 import { ChartState } from './ChartState';
+import { hourLabel, weekdayLabels } from '../dimensionLabels';
+import { ColumnChart } from './charts/ColumnChart';
+import { VolumeAreaChart } from './charts/VolumeAreaChart';
 import { Heatmap } from './Heatmap';
 import './KpiCards.css';
 
@@ -38,6 +41,67 @@ export function CallStatsCards() {
         </div>
       )}
     </ChartState>
+  );
+}
+
+/** Calls per hour and per weekday: the heatmap's margins, as two readable charts. */
+function PeakPanels() {
+  const scope = useDashboardScope();
+  const toggle = useDashboardFilterStore((state) => state.toggle);
+  const byHour = useCallHeatmap(scopeForChart(scope, 'hour'));
+  const byWeekday = useCallHeatmap(scopeForChart(scope, 'weekday'));
+  const share = (value: number, total: number) => (total ? value / total : 0);
+  return (
+    <div className="dashboard__grid dashboard__grid--wide">
+      <Panel title="حجم تماس بر اساس ساعت">
+        <ChartState query={byHour} isEmpty={(data) => data.max === 0} skeletonRows={5}>
+          {(data) => {
+            const hours = Array.from({ length: 24 }, (_, hour) =>
+              data.counts.reduce((sum, row) => sum + (row[hour] ?? 0), 0),
+            );
+            const total = hours.reduce((sum, n) => sum + n, 0);
+            return (
+              <VolumeAreaChart
+                label="تماس‌ها"
+                items={hours.map((value, hour) => ({
+                  key: String(hour),
+                  label: hourLabel(hour),
+                  value,
+                  share: share(value, total),
+                }))}
+                selectedKey={scope.filters.hour}
+                onSelect={(hour) => toggle('hour', hour)}
+              />
+            );
+          }}
+        </ChartState>
+      </Panel>
+      <Panel title="حجم تماس بر اساس روز هفته">
+        <ChartState query={byWeekday} isEmpty={(data) => data.max === 0} skeletonRows={5}>
+          {(data) => {
+            const days = data.counts.map((row) => row.reduce((sum, n) => sum + n, 0));
+            const total = days.reduce((sum, n) => sum + n, 0);
+            const selectedDay = scope.filters.weekday;
+            return (
+              <ColumnChart
+                label="تماس‌ها"
+                series={4}
+                height={260}
+                items={days.map((value, day) => ({
+                  label: weekdayLabels[day] ?? String(day),
+                  value,
+                  share: share(value, total),
+                }))}
+                selected={
+                  selectedDay === undefined ? undefined : weekdayLabels[Number(selectedDay)]
+                }
+                onSelect={(label) => toggle('weekday', String(weekdayLabels.indexOf(label)))}
+              />
+            );
+          }}
+        </ChartState>
+      </Panel>
+    </div>
   );
 }
 
@@ -97,11 +161,13 @@ function RepeatCallsPanel() {
                   value={stats.avgTimeToResolveSec ? formatElapsed(stats.avgTimeToResolveSec) : '—'}
                 />
               </div>
-              <BarList
-                series={2}
-                rows={stats.distribution.map((d) => ({
+              <ColumnChart
+                label="تعداد مشتریان"
+                series={1}
+                height={240}
+                items={stats.distribution.map((d) => ({
                   label: bucketLabels[d.bucket],
-                  count: d.customers,
+                  value: d.customers,
                   share: customers ? d.customers / customers : 0,
                 }))}
               />
@@ -118,6 +184,7 @@ export function CallsTab() {
   return (
     <div className="dashboard__section">
       <CallStatsCards />
+      <PeakPanels />
       <HeatmapPanel />
       <RepeatCallsPanel />
     </div>
