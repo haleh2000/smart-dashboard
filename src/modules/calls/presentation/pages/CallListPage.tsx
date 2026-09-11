@@ -13,10 +13,12 @@ import {
   SkeletonTable,
   tableExport,
 } from '@/shared/ui';
+import type { CallFilter } from '../../domain/CallRepository';
 import { callPaths } from '../callPaths';
 import { useCallRepository } from '../callServices';
 import { callColumns, callExportColumns } from '../components/callColumns';
 import { CallFilters } from '../components/CallFilters';
+import { CallSummaryStrip } from '../components/CallSummaryStrip';
 import { useCalls } from '../hooks/callQueries';
 import { useCallListParams } from '../hooks/useCallListParams';
 
@@ -25,6 +27,16 @@ export function CallListPage() {
   const repository = useCallRepository();
   const { state, query, update, reset, isFiltered } = useCallListParams();
   const { data, isPending, isError, refetch } = useCalls(query);
+  const filter: CallFilter = {
+    search: query.search,
+    status: query.status,
+    direction: query.direction,
+    agent: query.agent,
+    queue: query.queue,
+    sentiment: query.sentiment,
+    startedIn: query.startedIn,
+    uncategorizedOnly: query.uncategorizedOnly,
+  };
   const [exporting, setExporting] = useState(false);
   const [exportFailed, setExportFailed] = useState(false);
 
@@ -50,6 +62,8 @@ export function CallListPage() {
         title="تماس‌ها"
         subtitle="تماس‌های مرکز تماس (سیتاک) به همراه فایل صوتی، متن مکالمه و تحلیل هوشمند"
       />
+
+      <CallSummaryStrip filter={filter} />
 
       <CallFilters
         key={state.search}

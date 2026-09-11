@@ -24,7 +24,14 @@ export interface Caller {
 }
 
 export interface CallAnalysis {
+  /** Customer side of the conversation. */
   sentiment: Sentiment;
+  /** Operator side: tone, courtesy and empathy of the agent. */
+  agentSentiment: Sentiment;
+  /** 3-level subject the AI detected from the transcript, independent of the agent's choice. */
+  detectedSubject: SubjectPath;
+  /** Confidence of `detectedSubject`, between 0 and 1. */
+  detectionConfidence: number;
   priority: Priority;
   autoLabel: string;
   topic: string;
@@ -77,6 +84,26 @@ export interface IncomingCall {
 }
 
 export const isCategorized = (call: Pick<Call, 'subject'>) => call.subject !== undefined;
+
+export const SUBJECT_AGREEMENTS = ['match', 'partial', 'mismatch', 'pending'] as const;
+/**
+ * Operator vs. AI subject detection: `match` when all three levels agree, `partial` when only
+ * the main subject does, `pending` while the agent has not categorized the call yet.
+ */
+export type SubjectAgreement = (typeof SUBJECT_AGREEMENTS)[number];
+
+export const subjectAgreement = (
+  agent: SubjectPath | undefined,
+  ai: SubjectPath,
+): SubjectAgreement => {
+  if (!agent) return 'pending';
+  if (agent.level1 !== ai.level1) return 'mismatch';
+  return agent.level2 === ai.level2 && agent.level3 === ai.level3 ? 'match' : 'partial';
+};
+
+/** The subject used for reporting: the agent's categorization, else the AI's detection. */
+export const reportedSubject = (call: Pick<Call, 'subject' | 'analysis'>) =>
+  call.subject ?? call.analysis?.detectedSubject;
 
 /** A partially filled path from the 3-level picker is only complete when all levels are set. */
 export const isCompleteSubject = (subject: Partial<SubjectPath>): subject is SubjectPath =>

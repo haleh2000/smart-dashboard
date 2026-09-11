@@ -1,15 +1,24 @@
 import { Link } from 'react-router';
 import { formatDateTime, formatDuration, formatPersianNumber } from '@/shared/lib/format';
 import { SentimentBadge, StatusBadge, TagList, sentimentMeta, type DataColumn } from '@/shared/ui';
-import type { Call } from '../../domain/call';
+import type { SubjectPath } from '@/shared/domain/insights';
+import { subjectAgreement, type Call } from '../../domain/call';
 import type { CallSortField } from '../../domain/CallRepository';
-import { callDirectionLabels, callStatusMeta, UNCATEGORIZED, UNKNOWN_CALLER } from '../callLabels';
+import {
+  agreementMeta,
+  callDirectionLabels,
+  callStatusMeta,
+  UNCATEGORIZED,
+  UNKNOWN_CALLER,
+} from '../callLabels';
 import { callPaths } from '../callPaths';
 import { CallStatusBadge } from './CallBadges';
 import './callColumns.css';
 
 const subjectText = (call: Call) =>
   call.subject ? `${call.subject.level1} › ${call.subject.level3}` : UNCATEGORIZED;
+
+const aiSubjectText = (subject: SubjectPath) => `${subject.level1} › ${subject.level3}`;
 
 /** Call list columns (README → «لیست تماس‌ها: تماس‌گیرنده، زمان، مدت، وضعیت، موضوع» + AI). */
 export const callColumns: DataColumn<Call, CallSortField>[] = [
@@ -90,6 +99,27 @@ export const callColumns: DataColumn<Call, CallSortField>[] = [
     header: 'احساس',
     cell: (c) => c.analysis && <SentimentBadge sentiment={c.analysis.sentiment} />,
     exportValue: (c) => c.analysis && sentimentMeta[c.analysis.sentiment].label,
+  },
+  {
+    header: 'احساس اپراتور',
+    cell: (c) => c.analysis && <SentimentBadge sentiment={c.analysis.agentSentiment} />,
+    exportValue: (c) => c.analysis && sentimentMeta[c.analysis.agentSentiment].label,
+  },
+  {
+    header: 'موضوع AI',
+    cell: (c) => {
+      if (!c.analysis) return <span className="queue-table__muted">—</span>;
+      const agreement = subjectAgreement(c.subject, c.analysis.detectedSubject);
+      return (
+        <span className="call-ai-subject">
+          <span>{aiSubjectText(c.analysis.detectedSubject)}</span>
+          <StatusBadge tone={agreementMeta[agreement].tone}>
+            {agreementMeta[agreement].label}
+          </StatusBadge>
+        </span>
+      );
+    },
+    exportValue: (c) => c.analysis && aiSubjectText(c.analysis.detectedSubject),
   },
   {
     header: 'برچسب‌ها',

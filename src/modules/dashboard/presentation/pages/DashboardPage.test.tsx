@@ -50,7 +50,35 @@ const fakeRepository = (): AnalyticsRepository => ({
     avgCallsPerCustomer: 0,
     avgTimeToResolveSec: 0,
     distribution: [],
+    resolution: [],
+    avgCallsToResolve: 0,
+    byReason: [],
   })),
+  getSentimentOverview: vi.fn(async () => {
+    const zero = { positive: 0, neutral: 0, negative: 0 };
+    return {
+      analyzed: 0,
+      customer: { ...zero, score: 0 },
+      agent: { ...zero, score: 0 },
+      matrix: { positive: zero, neutral: zero, negative: zero },
+      journey: { improved: 0, unchanged: 0, worsened: 0 },
+      trend: [],
+      bySubject: [],
+      byOperator: [],
+    };
+  }),
+  getSubjectDetection: vi.fn(async () => ({
+    analyzed: 0,
+    match: 0,
+    partial: 0,
+    mismatch: 0,
+    pending: 0,
+    avgConfidence: 0,
+    bySubject: [],
+    confusions: [],
+    confidenceBands: [],
+  })),
+  getCallReasons: vi.fn(async () => ({ total: 0, aiOnly: 0, nodes: [] })),
 });
 
 const renderPage = (repository: AnalyticsRepository, path = '/dashboard') =>
@@ -100,6 +128,9 @@ describe('DashboardPage', () => {
     renderPage(fakeRepository(), '/dashboard?tab=calls');
 
     expect(await screen.findByText('تماس‌های ورودی')).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'تماس‌ها' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: 'تماس‌ها و ساعات پیک' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
   });
 });

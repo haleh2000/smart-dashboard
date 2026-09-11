@@ -1,5 +1,6 @@
-import type { Role } from '@/modules/auth';
+import type { Permission, Role } from '@/modules/auth';
 import type { BadgeTone } from '@/shared/ui';
+import type { RoleDefinition, RoleErrorCode } from '../domain/roleDefinition';
 import type { IntegrationId, IntegrationStatus, SettingsField } from '../domain/settings';
 import type { StaffUserErrorCode } from '../domain/staffUser';
 
@@ -30,6 +31,32 @@ export const roleTones: Record<Role, BadgeTone> = {
   supervisor: 'warning',
   admin: 'success',
 };
+
+/** Permission checklist groups in the role form, with a one-line hint per permission. */
+export const permissionGroups: readonly { title: string; permissions: readonly Permission[] }[] = [
+  { title: 'عمومی', permissions: ['dashboard.view', 'tickets.view', 'customers.view'] },
+  { title: 'تماس‌ها', permissions: ['calls.view', 'calls.receive'] },
+  { title: 'مدیریت', permissions: ['admin.manage'] },
+];
+
+export const permissionHints: Record<Permission, string> = {
+  'dashboard.view': 'KPIها، نمودارها، هیت‌مپ و تحلیل احساسات',
+  'tickets.view': 'لیست و جزئیات تیکت‌های CRM، یادداشت‌ها و خروجی Excel',
+  'customers.view': 'اطلاعات هویتی، بیمه‌نامه‌ها، خسارت‌ها و سوابق تعامل',
+  'calls.view': 'لیست تماس‌ها، فایل صوتی، متن مکالمه و تحلیل AI',
+  'calls.receive': 'پنجره تماس ورودی و ثبت موضوع سه‌سطحی',
+  'admin.manage': 'کاربران، نقش‌ها، تنظیمات و Integrationها',
+};
+
+export const roleErrorMessages: Record<RoleErrorCode, string> = {
+  required: 'نام نقش الزامی است.',
+  tooLong: 'نام نقش حداکثر ۴۰ نویسه است.',
+  duplicate: 'نقشی با این نام وجود دارد.',
+  noPermission: 'حداقل یک دسترسی انتخاب کنید.',
+};
+
+export const roleToneOf = (role: Pick<RoleDefinition, 'system' | 'baseRole'>): BadgeTone =>
+  role.system && role.baseRole ? roleTones[role.baseRole] : 'neutral';
 
 export const activeMeta = {
   active: { label: 'فعال', tone: 'success' as BadgeTone },

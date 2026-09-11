@@ -44,6 +44,7 @@ const customer: CustomerProfile = {
 
 const fakeRepository = (profile: CustomerProfile | null = customer): CustomerRepository => ({
   list: vi.fn(),
+  getOverview: vi.fn(),
   getProfile: vi.fn(async () => profile),
   getInteractions: vi.fn(async () => [
     {

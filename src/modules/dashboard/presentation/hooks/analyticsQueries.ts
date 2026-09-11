@@ -17,6 +17,9 @@ export const analyticsKeys = {
   calls: (scope: DashboardScope) => [...analyticsKeys.all, 'calls', scope] as const,
   heatmap: (scope: DashboardScope) => [...analyticsKeys.all, 'heatmap', scope] as const,
   repeatCalls: (scope: DashboardScope) => [...analyticsKeys.all, 'repeatCalls', scope] as const,
+  sentiment: (scope: DashboardScope) => [...analyticsKeys.all, 'sentiment', scope] as const,
+  detection: (scope: DashboardScope) => [...analyticsKeys.all, 'detection', scope] as const,
+  reasons: (scope: DashboardScope) => [...analyticsKeys.all, 'reasons', scope] as const,
 };
 
 const shared = { placeholderData: keepPreviousData } as const;
@@ -107,6 +110,33 @@ export function useRepeatCalls(scope: DashboardScope) {
   return useQuery({
     queryKey: analyticsKeys.repeatCalls(scope),
     queryFn: () => repository.getRepeatCalls(scope),
+    ...shared,
+  });
+}
+
+export function useSentimentOverview(scope: DashboardScope) {
+  const repository = useAnalyticsRepository();
+  return useQuery({
+    queryKey: analyticsKeys.sentiment(scope),
+    queryFn: () => repository.getSentimentOverview(scope),
+    ...shared,
+  });
+}
+
+export function useSubjectDetection(scope: DashboardScope) {
+  const repository = useAnalyticsRepository();
+  return useQuery({
+    queryKey: analyticsKeys.detection(scope),
+    queryFn: () => repository.getSubjectDetection(scope),
+    ...shared,
+  });
+}
+
+export function useCallReasons(scope: DashboardScope) {
+  const repository = useAnalyticsRepository();
+  return useQuery({
+    queryKey: analyticsKeys.reasons(scope),
+    queryFn: () => repository.getCallReasons(scope),
     ...shared,
   });
 }

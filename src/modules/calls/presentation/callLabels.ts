@@ -1,5 +1,20 @@
 import type { BadgeTone } from '@/shared/ui';
-import type { CallDirection, CallStatus } from '../domain/call';
+import type { SentimentShift } from '@/shared/domain/insights';
+import type { CallDirection, CallStatus, SubjectAgreement } from '../domain/call';
+
+/** Operator vs. AI subject detection. */
+export const agreementMeta: Record<SubjectAgreement, Meta> = {
+  match: { label: 'تطابق کامل', tone: 'success' },
+  partial: { label: 'تطابق موضوع اصلی', tone: 'warning' },
+  mismatch: { label: 'عدم تطابق', tone: 'error' },
+  pending: { label: 'در انتظار دسته‌بندی اپراتور', tone: 'info' },
+};
+
+export const shiftMeta: Record<SentimentShift, Meta> = {
+  improved: { label: 'بهبود', tone: 'success' },
+  unchanged: { label: 'بدون تغییر', tone: 'neutral' },
+  worsened: { label: 'بدتر شد', tone: 'error' },
+};
 
 interface Meta {
   label: string;

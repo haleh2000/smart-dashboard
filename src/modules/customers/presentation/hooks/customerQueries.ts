@@ -5,6 +5,7 @@ import { useCustomerRepository } from '../customerServices';
 export const customerKeys = {
   all: ['customers'] as const,
   list: (query: CustomerQuery) => [...customerKeys.all, 'list', query] as const,
+  overview: () => [...customerKeys.all, 'overview'] as const,
   profile: (nationalId: string) => [...customerKeys.all, 'profile', nationalId] as const,
   interactions: (nationalId: string) => [...customerKeys.all, 'interactions', nationalId] as const,
   sentiment: (nationalId: string) => [...customerKeys.all, 'sentiment', nationalId] as const,
@@ -16,6 +17,14 @@ export function useCustomers(query: CustomerQuery) {
     queryKey: customerKeys.list(query),
     queryFn: () => repository.list(query),
     placeholderData: keepPreviousData,
+  });
+}
+
+export function useCustomerOverview() {
+  const repository = useCustomerRepository();
+  return useQuery({
+    queryKey: customerKeys.overview(),
+    queryFn: () => repository.getOverview(),
   });
 }
 

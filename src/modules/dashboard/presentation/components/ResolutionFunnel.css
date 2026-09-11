@@ -1,0 +1,97 @@
+.resolution-funnel {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 640px) {
+  .resolution-funnel {
+    grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+  }
+}
+
+.resolution-funnel__step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: center;
+}
+
+/* A chevron between steps, pointing in the reading direction (right → left). */
+.resolution-funnel__step:not(:last-child)::after {
+  content: '‹';
+  position: absolute;
+  inset-inline-end: calc(var(--space-3) / -2 - 0.35rem);
+  top: 45%;
+  color: var(--color-muted);
+  font-size: var(--font-size-title);
+}
+
+.resolution-funnel__label {
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+  min-height: 2.4em;
+}
+
+.resolution-funnel__track {
+  position: relative;
+  width: 100%;
+  max-width: 5.5rem;
+  height: 9rem;
+  border-radius: var(--radius-medium);
+  background: var(--chart-track);
+  overflow: hidden;
+}
+
+.resolution-funnel__fill {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: var(--fill);
+  min-height: 1.6rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: var(--space-1);
+  border-radius: var(--radius-medium) var(--radius-medium) 0 0;
+  background: linear-gradient(to top, var(--chart-series-1), var(--daydar-teal-light));
+  animation: resolution-funnel-rise var(--duration-slow) var(--ease-out) both;
+}
+
+.resolution-funnel__step--open .resolution-funnel__fill {
+  background: var(--gradient-coral);
+}
+
+.resolution-funnel__fill-value {
+  font-size: var(--font-size-small);
+  font-weight: 700;
+  color: var(--color-on-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.resolution-funnel__value {
+  font-size: var(--font-size-title);
+  font-variant-numeric: tabular-nums;
+}
+
+.resolution-funnel__hint {
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+
+@keyframes resolution-funnel-rise {
+  from {
+    height: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resolution-funnel__fill {
+    animation: none;
+  }
+}

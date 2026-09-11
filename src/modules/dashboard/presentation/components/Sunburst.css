@@ -1,0 +1,101 @@
+.sunburst {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.sunburst__figure {
+  position: relative;
+  width: min(100%, 24rem);
+  aspect-ratio: 1;
+}
+
+.sunburst__svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.sunburst__segment {
+  stroke: var(--color-surface);
+  stroke-width: 0.8;
+  cursor: pointer;
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  transition:
+    opacity var(--duration-base) ease,
+    transform var(--duration-fast) var(--ease-out),
+    filter var(--duration-fast) ease;
+  animation: sunburst-in 0.7s var(--ease-out) both;
+}
+
+.sunburst__segment:hover,
+.sunburst__segment:focus-visible {
+  transform: scale(1.03);
+  filter: brightness(1.06);
+  outline: none;
+}
+
+.sunburst__segment--dimmed {
+  opacity: 0.22;
+}
+
+.sunburst__segment--selected {
+  stroke: var(--color-ink);
+  stroke-width: 1.2;
+}
+
+.sunburst__center {
+  position: absolute;
+  inset: 35%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  text-align: center;
+  pointer-events: none;
+}
+
+.sunburst__center-total {
+  font-size: var(--font-size-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.sunburst__center-label {
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sunburst__center-level,
+.sunburst__center-value {
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.sunburst__hint {
+  margin: 0;
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+  text-align: center;
+  line-height: 1.8;
+}
+
+@keyframes sunburst-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85) rotate(-12deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sunburst__segment {
+    animation: none;
+  }
+}

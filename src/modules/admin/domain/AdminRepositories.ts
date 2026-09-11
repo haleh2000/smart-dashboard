@@ -7,6 +7,7 @@ import type {
   ScenarioInput,
   SystemSettings,
 } from './settings';
+import type { RoleDefinition, RoleInput } from './roleDefinition';
 import type { StaffUser, StaffUserInput } from './staffUser';
 
 export interface UserQuery extends PageRequest {
@@ -25,6 +26,17 @@ export interface UserRepository {
   setActive(id: string, active: boolean): Promise<StaffUser>;
   /** Number of active users per role (roles page). */
   countByRole(): Promise<Record<Role, number>>;
+}
+
+/** Port: role management (نقش‌ها و دسترسی‌ها). */
+export interface RoleRepository {
+  /** Built-in roles first, then custom roles by creation date. */
+  list(): Promise<RoleDefinition[]>;
+  create(input: RoleInput): Promise<RoleDefinition>;
+  /** A system role keeps its name; only its description and permissions change. */
+  update(id: string, input: RoleInput): Promise<RoleDefinition>;
+  /** Rejects with SystemRoleError for built-in roles. */
+  remove(id: string): Promise<void>;
 }
 
 /** Port: system settings, integrations and scenarios. */

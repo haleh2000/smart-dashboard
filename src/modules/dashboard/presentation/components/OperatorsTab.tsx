@@ -6,6 +6,7 @@ import { useOperatorStats } from '../hooks/analyticsQueries';
 import { ChartState } from './ChartState';
 import { GroupedColumnChart } from './charts/GroupedColumnChart';
 import { HorizontalBarChart } from './charts/HorizontalBarChart';
+import { OperatorRadar } from './OperatorRadar';
 import { OperatorTable } from './OperatorTable';
 
 /** README → «عملکرد اپراتورها»: calls and tickets per operator, response and handling time. */
@@ -47,6 +48,9 @@ export function OperatorsTab() {
               />
             </Panel>
             <div className="dashboard__grid dashboard__grid--wide">
+              <Panel title="پروفایل عملکرد اپراتور در برابر میانگین تیم">
+                <OperatorRadar stats={stats} selected={selected} />
+              </Panel>
               <Panel title="نرخ حل در اولین تماس (FCR)">
                 <HorizontalBarChart
                   label="FCR"

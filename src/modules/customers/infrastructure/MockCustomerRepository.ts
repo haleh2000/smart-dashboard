@@ -12,6 +12,7 @@ import type {
   SentimentPoint,
 } from '../domain/customer';
 import type {
+  CustomerOverview,
   CustomerQuery,
   CustomerRepository,
   CustomerSortField,
@@ -117,6 +118,26 @@ export class MockCustomerRepository implements CustomerRepository {
       total: filtered.length,
       page,
       pageSize,
+    };
+  }
+
+  async getOverview(): Promise<CustomerOverview> {
+    await delay(150);
+    const all = this.customers.map((c) => this.summarize(c));
+    const last = (sentiment: CustomerSummary['lastSentiment']) =>
+      all.filter((c) => c.lastSentiment === sentiment).length;
+    return {
+      total: all.length,
+      active: all.filter((c) => c.status === 'active').length,
+      vip: all.filter((c) => c.isVip).length,
+      corporate: all.filter((c) => c.kind === 'corporate').length,
+      withOpenTickets: all.filter((c) => c.openTicketCount > 0).length,
+      atRisk: last('negative'),
+      lastSentiment: {
+        positive: last('positive'),
+        neutral: last('neutral'),
+        negative: last('negative'),
+      },
     };
   }
 

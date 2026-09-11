@@ -1,14 +1,22 @@
+import { useState, type CSSProperties } from 'react';
+import { cn } from '@/shared/lib/cn';
 import { formatElapsed, formatPercent, formatPersianNumber } from '@/shared/lib/format';
-import { Panel, StatCard } from '@/shared/ui';
+import { Panel, SegmentedControl, StatCard } from '@/shared/ui';
 import { scopeForChart } from '../../domain/filters';
+import { heatmapPeaks } from '../../domain/heatmap';
 import { useDashboardFilterStore, useDashboardScope } from '../dashboardFilterStore';
 import { useCallHeatmap, useCallStats, useRepeatCalls } from '../hooks/analyticsQueries';
 import { ChartState } from './ChartState';
 import { hourLabel, weekdayLabels } from '../dimensionLabels';
 import { ColumnChart } from './charts/ColumnChart';
 import { VolumeAreaChart } from './charts/VolumeAreaChart';
+import { ClockHeatmap } from './ClockHeatmap';
 import { Heatmap } from './Heatmap';
+import { ResolutionFunnel } from './ResolutionFunnel';
+import './CallsTab.css';
 import './KpiCards.css';
+
+const decimal = (value: number) => formatPersianNumber(value.toFixed(1)).replace('.', '٫');
 
 /** «تعداد تماس‌های ورودی، جاری و پاسخ‌داده‌شده». */
 export function CallStatsCards() {
@@ -56,14 +64,11 @@ function PeakPanels() {
       <Panel title="حجم تماس بر اساس ساعت">
         <ChartState query={byHour} isEmpty={(data) => data.max === 0} skeletonRows={5}>
           {(data) => {
-            const hours = Array.from({ length: 24 }, (_, hour) =>
-              data.counts.reduce((sum, row) => sum + (row[hour] ?? 0), 0),
-            );
-            const total = hours.reduce((sum, n) => sum + n, 0);
+            const { hourTotals, total } = heatmapPeaks(data);
             return (
               <VolumeAreaChart
                 label="تماس‌ها"
-                items={hours.map((value, hour) => ({
+                items={hourTotals.map((value, hour) => ({
                   key: String(hour),
                   label: hourLabel(hour),
                   value,
@@ -79,15 +84,14 @@ function PeakPanels() {
       <Panel title="حجم تماس بر اساس روز هفته">
         <ChartState query={byWeekday} isEmpty={(data) => data.max === 0} skeletonRows={5}>
           {(data) => {
-            const days = data.counts.map((row) => row.reduce((sum, n) => sum + n, 0));
-            const total = days.reduce((sum, n) => sum + n, 0);
+            const { dayTotals, total } = heatmapPeaks(data);
             const selectedDay = scope.filters.weekday;
             return (
               <ColumnChart
                 label="تماس‌ها"
                 series={4}
                 height={260}
-                items={days.map((value, day) => ({
+                items={dayTotals.map((value, day) => ({
                   label: weekdayLabels[day] ?? String(day),
                   value,
                   share: share(value, total),
@@ -105,72 +109,135 @@ function PeakPanels() {
   );
 }
 
+type HeatmapView = 'clock' | 'grid';
+const viewOptions = [
+  { value: 'clock', label: 'ساعت' },
+  { value: 'grid', label: 'جدول' },
+] as const satisfies readonly { value: HeatmapView; label: string }[];
+
+/** «Heatmap»: when the calls peak, as a 24-hour clock (or the classic grid) plus the peak facts. */
 function HeatmapPanel() {
   const scope = useDashboardScope();
   const togglePair = useDashboardFilterStore((state) => state.togglePair);
+  const toggle = useDashboardFilterStore((state) => state.toggle);
+  const [view, setView] = useState<HeatmapView>('clock');
   const query = useCallHeatmap(scopeForChart(scope, 'weekday', 'hour'));
+  const select = (weekday: string, hour: string) =>
+    togglePair(['weekday', weekday], ['hour', hour]);
+
   return (
-    <Panel title="ساعات پرترافیک — تراکم تماس‌ها بر اساس روز و ساعت">
+    <Panel
+      title="ساعت پیک تماس‌ها — تراکم بر اساس روز و ساعت"
+      actions={
+        <SegmentedControl label="نمایش تراکم" options={viewOptions} value={view} onChange={setView} />
+      }
+    >
       <ChartState query={query} isEmpty={(data) => data.max === 0} skeletonRows={7}>
-        {(data) => (
-          <Heatmap
-            data={data}
-            selectedWeekday={scope.filters.weekday}
-            selectedHour={scope.filters.hour}
-            onSelect={(weekday, hour) => togglePair(['weekday', weekday], ['hour', hour])}
-          />
-        )}
-      </ChartState>
-    </Panel>
-  );
-}
-
-const bucketLabels = {
-  '1': '۱ تماس',
-  '2': '۲ تماس',
-  '3': '۳ تماس',
-  '4+': '۴ تماس و بیشتر',
-} as const;
-
-/** «نرخ تکرار تماس»: calls per customer until the issue is solved, and time to solve. */
-function RepeatCallsPanel() {
-  const scope = useDashboardScope();
-  const query = useRepeatCalls(scope);
-  return (
-    <Panel title="نرخ تکرار تماس">
-      <ChartState query={query}>
-        {(stats) => {
-          const customers = stats.distribution.reduce((sum, d) => sum + d.customers, 0);
+        {(data) => {
+          const peaks = heatmapPeaks(data);
+          const maxSlot = peaks.topSlots[0]?.count ?? 1;
           return (
-            <div className="dashboard__section">
-              <div className="cards">
-                <StatCard
-                  label="نرخ تکرار"
-                  value={formatPercent(stats.repeatRate)}
-                  tone="warning"
-                />
-                <StatCard
-                  label="میانگین تماس هر مشتری"
-                  value={formatPersianNumber(stats.avgCallsPerCustomer.toFixed(1)).replace(
-                    '.',
-                    '٫',
-                  )}
-                />
-                <StatCard
-                  label="میانگین زمان تا حل"
-                  value={stats.avgTimeToResolveSec ? formatElapsed(stats.avgTimeToResolveSec) : '—'}
-                />
+            <div className={cn('peak-layout', view === 'grid' && 'peak-layout--grid')}>
+              <div className="peak-layout__chart">
+                {view === 'clock' ? (
+                  <ClockHeatmap
+                    data={data}
+                    peaks={peaks}
+                    selectedWeekday={scope.filters.weekday}
+                    selectedHour={scope.filters.hour}
+                    onSelect={select}
+                  />
+                ) : (
+                  <Heatmap
+                    data={data}
+                    selectedWeekday={scope.filters.weekday}
+                    selectedHour={scope.filters.hour}
+                    onSelect={select}
+                  />
+                )}
               </div>
-              <ColumnChart
-                label="تعداد مشتریان"
-                series={1}
-                height={240}
-                items={stats.distribution.map((d) => ({
-                  label: bucketLabels[d.bucket],
-                  value: d.customers,
-                  share: customers ? d.customers / customers : 0,
-                }))}
-              />
+              <aside className="peak-facts" aria-label="خلاصه ساعات پیک">
+                <div className="peak-facts__hero">
+                  <span className="peak-facts__eyebrow">پیک هفته</span>
+                  <strong className="peak-facts__headline">
+                    {weekdayLabels[peaks.peak.weekday]} · {hourLabel(peaks.peak.hour)}
+                  </strong>
+                  <span className="peak-facts__sub">
+                    {formatPersianNumber(peaks.peak.count)} تماس ·{' '}
+                    {decimal(peaks.total ? (peaks.peak.count / peaks.total) * 168 : 0)} برابر میانگین
+                    هر ساعت
+                  </span>
+                </div>
+                <div className="peak-facts__grid">
+                  <button
+                    type="button"
+                    className="peak-facts__fact"
+                    onClick={() => toggle('weekday', String(peaks.busiestDay.weekday))}
+                  >
+                    <span className="peak-facts__fact-label">شلوغ‌ترین روز</span>
+                    <span className="peak-facts__fact-value">
+                      {weekdayLabels[peaks.busiestDay.weekday]}
+                    </span>
+                    <span className="peak-facts__fact-meta">
+                      {formatPersianNumber(peaks.busiestDay.count)} تماس
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="peak-facts__fact"
+                    onClick={() => toggle('hour', String(peaks.busiestHour.hour))}
+                  >
+                    <span className="peak-facts__fact-label">شلوغ‌ترین ساعت</span>
+                    <span className="peak-facts__fact-value">
+                      {hourLabel(peaks.busiestHour.hour)}
+                    </span>
+                    <span className="peak-facts__fact-meta">
+                      {formatPersianNumber(peaks.busiestHour.count)} تماس
+                    </span>
+                  </button>
+                  {peaks.quietestHour && (
+                    <button
+                      type="button"
+                      className="peak-facts__fact"
+                      onClick={() => toggle('hour', String(peaks.quietestHour!.hour))}
+                    >
+                      <span className="peak-facts__fact-label">آرام‌ترین ساعت</span>
+                      <span className="peak-facts__fact-value">
+                        {hourLabel(peaks.quietestHour.hour)}
+                      </span>
+                      <span className="peak-facts__fact-meta">
+                        {formatPersianNumber(peaks.quietestHour.count)} تماس
+                      </span>
+                    </button>
+                  )}
+                </div>
+                <h4 className="peak-facts__title">پرترافیک‌ترین بازه‌ها</h4>
+                <ol className="peak-facts__slots">
+                  {peaks.topSlots.map((slot, rank) => (
+                    <li key={`${slot.weekday}-${slot.hour}`}>
+                      <button
+                        type="button"
+                        className={cn(
+                          'peak-facts__slot',
+                          scope.filters.weekday === String(slot.weekday) &&
+                            scope.filters.hour === String(slot.hour) &&
+                            'peak-facts__slot--active',
+                        )}
+                        style={{ '--bar': `${(slot.count / maxSlot) * 100}%` } as CSSProperties}
+                        onClick={() => select(String(slot.weekday), String(slot.hour))}
+                      >
+                        <span className="peak-facts__rank">{formatPersianNumber(rank + 1)}</span>
+                        <span className="peak-facts__slot-name">
+                          {weekdayLabels[slot.weekday]} {hourLabel(slot.hour)}
+                        </span>
+                        <span className="peak-facts__slot-count">
+                          {formatPersianNumber(slot.count)}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+              </aside>
             </div>
           );
         }}
@@ -179,13 +246,99 @@ function RepeatCallsPanel() {
   );
 }
 
-/** README → «تماس‌ها»: incoming / ongoing / answered calls and peak hours. */
+/**
+ * «تحلیل نرخ تکرار تماس»: was the issue solved in the first call, and if not, after how many
+ * calls — plus the subjects that make customers call back.
+ */
+function RepeatCallsPanel() {
+  const scope = useDashboardScope();
+  const toggle = useDashboardFilterStore((state) => state.toggle);
+  const query = useRepeatCalls(scope);
+  return (
+    <Panel title="نرخ تکرار تماس — آیا مشکل در تماس اول حل شد؟">
+      <ChartState query={query}>
+        {(stats) => {
+          const issues = stats.resolution.reduce((sum, s) => sum + s.issues, 0);
+          const first = stats.resolution.find((s) => s.step === '1')?.issues ?? 0;
+          const maxRepeat = Math.max(0.01, ...stats.byReason.map((r) => r.repeatRate));
+          return (
+            <div className="dashboard__section">
+              <div className="cards">
+                <StatCard
+                  label="حل در تماس اول"
+                  value={formatPercent(issues ? first / issues : 0)}
+                  hint={`${formatPersianNumber(first)} از ${formatPersianNumber(issues)} مسئله`}
+                  tone="success"
+                />
+                <StatCard
+                  label="نرخ تکرار تماس"
+                  value={formatPercent(stats.repeatRate)}
+                  hint="مشتریانی که بیش از یک بار تماس گرفتند"
+                  tone="warning"
+                />
+                <StatCard
+                  label="میانگین تماس تا حل"
+                  value={stats.avgCallsToResolve ? decimal(stats.avgCallsToResolve) : '—'}
+                />
+                <StatCard
+                  label="میانگین زمان تا حل"
+                  value={stats.avgTimeToResolveSec ? formatElapsed(stats.avgTimeToResolveSec) : '—'}
+                />
+              </div>
+              <div className="repeat-layout">
+                <section>
+                  <h4 className="repeat-layout__title">مسئله در کدام تماس حل شد؟</h4>
+                  <ResolutionFunnel resolution={stats.resolution} />
+                </section>
+                <section>
+                  <h4 className="repeat-layout__title">موضوعاتی که باعث تماس مجدد می‌شوند</h4>
+                  <ul className="repeat-reasons">
+                    {stats.byReason.map((reason) => (
+                      <li key={reason.subject}>
+                        <button
+                          type="button"
+                          className={cn(
+                            'repeat-reasons__row',
+                            scope.filters.subject1 !== undefined &&
+                              scope.filters.subject1 !== reason.subject &&
+                              'repeat-reasons__row--dimmed',
+                          )}
+                          style={
+                            { '--bar': `${(reason.repeatRate / maxRepeat) * 100}%` } as CSSProperties
+                          }
+                          aria-pressed={scope.filters.subject1 === reason.subject}
+                          onClick={() => toggle('subject1', reason.subject)}
+                        >
+                          <span className="repeat-reasons__name">{reason.subject}</span>
+                          <span className="repeat-reasons__meter" aria-hidden="true" />
+                          <span className="repeat-reasons__rate">
+                            {formatPercent(reason.repeatRate)}
+                          </span>
+                          <span className="repeat-reasons__meta">
+                            {formatPersianNumber(reason.issues)} مسئله · {decimal(reason.avgCalls)}{' '}
+                            تماس
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              </div>
+            </div>
+          );
+        }}
+      </ChartState>
+    </Panel>
+  );
+}
+
+/** README → «تماس‌ها»: incoming / ongoing / answered calls, peak hours and repeat calls. */
 export function CallsTab() {
   return (
     <div className="dashboard__section">
       <CallStatsCards />
-      <PeakPanels />
       <HeatmapPanel />
+      <PeakPanels />
       <RepeatCallsPanel />
     </div>
   );

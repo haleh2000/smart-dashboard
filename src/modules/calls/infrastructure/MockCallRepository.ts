@@ -4,8 +4,14 @@ import { subjectTree } from '@/mocks/reference';
 import type { SubjectNode, SubjectPath } from '@/shared/domain/insights';
 import type { Page } from '@/shared/domain/pagination';
 import { isWithinRange } from '@/shared/domain/period';
-import type { Call } from '../domain/call';
-import type { CallQuery, CallRepository, CallSortField } from '../domain/CallRepository';
+import { subjectAgreement, type Call } from '../domain/call';
+import type {
+  CallFilter,
+  CallQuery,
+  CallRepository,
+  CallSortField,
+  CallSummary,
+} from '../domain/CallRepository';
 import { subscribeToFeed } from './incomingFeed';
 
 const matchesSearch = (call: Call, term: string) =>
@@ -62,30 +68,62 @@ export class MockCallRepository implements CallRepository {
     return [...simulatedCalls, ...this.calls];
   }
 
+  private filter(query: CallFilter) {
+    const term = query.search?.trim();
+    return this.all().filter(
+      (call) =>
+        (!term || matchesSearch(call, term)) &&
+        (!query.status || call.status === query.status) &&
+        (!query.direction || call.direction === query.direction) &&
+        (!query.agent || call.agent === query.agent) &&
+        (!query.queue || call.queue === query.queue) &&
+        (!query.sentiment || call.analysis?.sentiment === query.sentiment) &&
+        isWithinRange(call.startedAt, query.startedIn) &&
+        (!query.uncategorizedOnly || (call.status === 'answered' && !call.subject)),
+    );
+  }
+
   async list(query: CallQuery): Promise<Page<Call>> {
     await delay();
     const { page, pageSize, sort } = query;
-    const term = query.search?.trim();
     const direction = sort.direction === 'asc' ? 1 : -1;
-    const filtered = this.all()
-      .filter(
-        (call) =>
-          (!term || matchesSearch(call, term)) &&
-          (!query.status || call.status === query.status) &&
-          (!query.direction || call.direction === query.direction) &&
-          (!query.agent || call.agent === query.agent) &&
-          (!query.queue || call.queue === query.queue) &&
-          (!query.sentiment || call.analysis?.sentiment === query.sentiment) &&
-          isWithinRange(call.startedAt, query.startedIn) &&
-          (!query.uncategorizedOnly || (call.status === 'answered' && !call.subject)),
-      )
-      .sort((a, b) => compare(a, b, sort.field) * direction);
+    const filtered = this.filter(query).sort((a, b) => compare(a, b, sort.field) * direction);
 
     return {
       items: filtered.slice((page - 1) * pageSize, page * pageSize),
       total: filtered.length,
       page,
       pageSize,
+    };
+  }
+
+  async summarize(query: CallFilter): Promise<CallSummary> {
+    await delay(150);
+    const calls = this.filter(query);
+    const answered = calls.filter((c) => c.status === 'answered');
+    const analyzed = calls.filter((c) => c.analysis);
+    const reviewed = analyzed.filter((c) => c.subject);
+    const average = (values: number[]) =>
+      values.length ? values.reduce((sum, v) => sum + v, 0) / values.length : 0;
+    const ratio = (part: number, whole: number) => (whole ? part / whole : 0);
+    return {
+      total: calls.length,
+      answered: answered.length,
+      missed: calls.filter((c) => c.status === 'missed').length,
+      live: calls.filter((c) => c.status === 'ringing' || c.status === 'ongoing').length,
+      avgWaitSec: average(calls.filter((c) => c.status !== 'ringing').map((c) => c.waitSec)),
+      avgTalkSec: average(answered.map((c) => c.durationSec)),
+      negativeShare: ratio(
+        analyzed.filter((c) => c.analysis?.sentiment === 'negative').length,
+        analyzed.length,
+      ),
+      uncategorized: answered.filter((c) => !c.subject).length,
+      aiAgreement: ratio(
+        reviewed.filter(
+          (c) => subjectAgreement(c.subject, c.analysis!.detectedSubject) === 'match',
+        ).length,
+        reviewed.length,
+      ),
     };
   }
 

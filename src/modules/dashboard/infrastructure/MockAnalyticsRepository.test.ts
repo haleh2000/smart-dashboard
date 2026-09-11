@@ -75,4 +75,45 @@ describe('MockAnalyticsRepository', () => {
     expect(stats.distribution.map((d) => d.bucket)).toEqual(['1', '2', '3', '4+']);
     expect(stats.repeatRate).toBeGreaterThan(0);
   });
+
+  it('follows every issue to the call that solved it', async () => {
+    const stats = await repository.getRepeatCalls(all);
+    const issues = stats.resolution.reduce((sum, s) => sum + s.issues, 0);
+
+    expect(stats.resolution.map((s) => s.step)).toEqual(['1', '2', '3', '4+', 'open']);
+    expect(issues).toBe(stats.byReason.reduce((sum, r) => sum + r.issues, 0));
+    expect(stats.avgCallsToResolve).toBeGreaterThanOrEqual(1);
+  });
+
+  it('scores both sides of every analyzed call', async () => {
+    const overview = await repository.getSentimentOverview(all);
+    const analyzed = mockCalls.filter((c) => c.analysis).length;
+    const cells = Object.values(overview.matrix).flatMap((row) => Object.values(row));
+
+    expect(overview.analyzed).toBe(analyzed);
+    expect(overview.agent.positive + overview.agent.neutral + overview.agent.negative).toBe(
+      analyzed,
+    );
+    expect(cells.reduce((a, b) => a + b, 0)).toBe(analyzed);
+    expect(overview.journey.improved).toBeGreaterThan(0);
+  });
+
+  it('splits AI detection into match / partial / mismatch / pending', async () => {
+    const stats = await repository.getSubjectDetection(all);
+
+    expect(stats.match + stats.partial + stats.mismatch + stats.pending).toBe(stats.analyzed);
+    expect(stats.match).toBeGreaterThan(stats.mismatch);
+    expect(stats.avgConfidence).toBeGreaterThan(0.5);
+  });
+
+  it('builds a three-level reason tree whose children add up to their parent', async () => {
+    const reasons = await repository.getCallReasons(all);
+
+    expect(reasons.nodes.reduce((sum, n) => sum + n.count, 0)).toBe(reasons.total);
+    for (const node of reasons.nodes) {
+      expect(node.children.reduce((sum, n) => sum + n.count, 0)).toBe(node.count);
+      for (const child of node.children)
+        expect(child.children.reduce((sum, n) => sum + n.count, 0)).toBe(child.count);
+    }
+  });
 });

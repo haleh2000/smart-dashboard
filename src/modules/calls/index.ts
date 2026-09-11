@@ -6,8 +6,15 @@ export type {
   Caller,
   CallStatus,
   IncomingCall,
+  SubjectAgreement,
 } from './domain/call';
-export { CALL_DIRECTIONS, CALL_STATUSES } from './domain/call';
+export {
+  CALL_DIRECTIONS,
+  CALL_STATUSES,
+  reportedSubject,
+  SUBJECT_AGREEMENTS,
+  subjectAgreement,
+} from './domain/call';
 export type {
   CallFilter,
   CallFilterOptions,

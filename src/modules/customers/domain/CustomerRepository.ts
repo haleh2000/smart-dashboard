@@ -25,9 +25,24 @@ export interface CustomerQuery extends PageRequest {
   sort: Sort<CustomerSortField>;
 }
 
+/** Headline figures above the customer list (whole customer base). */
+export interface CustomerOverview {
+  total: number;
+  active: number;
+  vip: number;
+  corporate: number;
+  /** Customers with at least one open ticket. */
+  withOpenTickets: number;
+  /** Customers whose latest analyzed conversation was negative: the churn-risk list. */
+  atRisk: number;
+  /** Latest analyzed sentiment per customer. */
+  lastSentiment: { positive: number; neutral: number; negative: number };
+}
+
 /** Port: implemented by an infrastructure adapter and injected in src/app/container.ts. */
 export interface CustomerRepository {
   list(query: CustomerQuery): Promise<Page<CustomerSummary>>;
+  getOverview(): Promise<CustomerOverview>;
   /** Resolves to null when no customer has this national id. */
   getProfile(nationalId: string): Promise<CustomerProfile | null>;
   /** Newest first. */

@@ -58,6 +58,7 @@ const ticketRepository = (): TicketRepository => ({
 
 const customerRepository = (): CustomerRepository => ({
   list: vi.fn(),
+  getOverview: vi.fn(),
   getProfile: vi.fn(async () => null),
   getInteractions: vi.fn(async () => []),
   getSentimentHistory: vi.fn(async () => []),

@@ -14,6 +14,7 @@ import {
 import type { CustomerQuery } from '../../domain/CustomerRepository';
 import { customerColumns } from '../components/customerColumns';
 import { CustomerFilters } from '../components/CustomerFilters';
+import { CustomerOverviewStrip } from '../components/CustomerOverviewStrip';
 import { CustomerTable } from '../components/CustomerTable';
 import { useCustomerRepository } from '../customerServices';
 import { useCustomers } from '../hooks/customerQueries';
@@ -44,6 +45,8 @@ export function CustomerListPage() {
         title="مشتریان"
         subtitle="Customer 360: اطلاعات هویتی، بیمه‌ای و سوابق تعامل هر مشتری"
       />
+
+      <CustomerOverviewStrip />
 
       <CustomerFilters
         key={query.search}

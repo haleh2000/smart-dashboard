@@ -1,0 +1,187 @@
+.clock-heatmap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.clock-heatmap__svg {
+  width: min(100%, 30rem);
+  height: auto;
+  overflow: visible;
+  direction: ltr;
+}
+
+.clock-heatmap__face {
+  fill: var(--color-background);
+  stroke: var(--color-outline-soft);
+  stroke-width: 1;
+}
+
+.clock-heatmap__bezel {
+  opacity: 0.85;
+  transition: opacity var(--duration-base) ease;
+}
+
+.clock-heatmap__bezel:hover {
+  opacity: 1;
+}
+
+.clock-heatmap__bezel--dimmed {
+  opacity: 0.25;
+}
+
+.clock-heatmap__cell {
+  cursor: pointer;
+  stroke: var(--color-surface);
+  stroke-width: 0.6;
+  transform-box: view-box;
+  transform-origin: center;
+  transition:
+    opacity var(--duration-base) ease,
+    stroke var(--duration-fast) ease;
+  animation: clock-heatmap-bloom var(--duration-slow) var(--ease-out) both;
+}
+
+.clock-heatmap__cell:hover,
+.clock-heatmap__cell:focus-visible,
+.clock-heatmap__cell--focus {
+  stroke: var(--color-ink);
+  stroke-width: 1.4;
+  outline: none;
+}
+
+.clock-heatmap__cell--hot {
+  stroke: var(--chart-series-2);
+  stroke-width: 1.6;
+}
+
+.clock-heatmap__cell--dimmed {
+  opacity: 0.22;
+}
+
+@keyframes clock-heatmap-bloom {
+  from {
+    opacity: 0;
+    transform: scale(0.6) rotate(-20deg);
+  }
+}
+
+.clock-heatmap__tick {
+  stroke: var(--color-muted);
+  stroke-width: 1;
+  opacity: 0.6;
+}
+
+.clock-heatmap__numeral {
+  fill: var(--color-muted);
+  font-family: var(--font-family-base);
+  font-size: 11px;
+}
+
+.clock-heatmap__numeral--major {
+  fill: var(--color-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.clock-heatmap__hand {
+  transform-box: view-box;
+  transform-origin: center;
+  pointer-events: none;
+  animation: clock-heatmap-sweep 1.2s var(--ease-spring) both;
+}
+
+.clock-heatmap__hand line {
+  stroke: var(--chart-series-2);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.clock-heatmap__hand circle {
+  fill: var(--chart-series-2);
+  stroke: var(--color-surface);
+  stroke-width: 2;
+}
+
+/* Only `from`: the sweep ends at the element's own rotate(), i.e. the peak hour. */
+@keyframes clock-heatmap-sweep {
+  from {
+    transform: rotate(0deg);
+  }
+}
+
+.clock-heatmap__hub {
+  fill: var(--color-surface);
+  stroke: var(--color-outline);
+  stroke-width: 1;
+  filter: drop-shadow(0 2px 6px rgb(0 0 0 / 12%));
+  pointer-events: none;
+}
+
+.clock-heatmap__readout {
+  pointer-events: none;
+  font-family: var(--font-family-base);
+}
+
+.clock-heatmap__readout-label,
+.clock-heatmap__readout-share {
+  fill: var(--color-muted);
+  font-size: 10px;
+}
+
+.clock-heatmap__readout-value {
+  fill: var(--color-ink);
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.clock-heatmap__readout-sub {
+  fill: var(--color-primary);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.clock-heatmap__rings {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+
+.clock-heatmap__ring-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.clock-heatmap__ring-index {
+  display: inline-grid;
+  place-items: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.clock-heatmap__hint {
+  margin: 0;
+  text-align: center;
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clock-heatmap__cell,
+  .clock-heatmap__hand {
+    animation: none;
+  }
+}

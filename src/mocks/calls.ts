@@ -57,6 +57,26 @@ const makeCall = (index: number, startedAt: Date, status: CallStatus): Call => {
     level3: random.pick(subjectTree[level1]?.[level2] ?? ['ندارد']),
   };
   const sentiment = random.pick(['positive', 'neutral', 'neutral', 'negative'] as const);
+  const agentSentiment = random.pick([
+    ...Array<'positive'>(11).fill('positive'),
+    ...Array<'neutral'>(7).fill('neutral'),
+    'negative',
+    'negative',
+  ] as const);
+  // The AI mostly agrees with the agent; sometimes only on the main subject, rarely not at all.
+  const detection = random.next();
+  const aiLevel1 = detection < 0.9 ? level1 : random.pick(Object.keys(subjectTree));
+  const aiLevel2 =
+    detection < 0.78 ? level2 : random.pick(Object.keys(subjectTree[aiLevel1] ?? {}));
+  const detectedSubject =
+    detection < 0.78
+      ? subject
+      : {
+          level1: aiLevel1,
+          level2: aiLevel2,
+          level3: random.pick(subjectTree[aiLevel1]?.[aiLevel2] ?? ['ندارد']),
+        };
+  const confidenceFloor = detection < 0.78 ? 0.8 : detection < 0.9 ? 0.6 : 0.45;
   const durationSec =
     status === 'answered'
       ? 45 + Math.floor(random.next() * 540)
@@ -85,11 +105,14 @@ const makeCall = (index: number, startedAt: Date, status: CallStatus): Call => {
         : undefined,
     resolvedOnFirstCall: status === 'answered' ? random.next() < 0.68 : undefined,
     voice: status === 'answered' ? { voiceId: `VC-${random.digits(6)}`, durationSec } : undefined,
-    transcript: status === 'answered' ? buildTranscript(subject, sentiment) : [],
+    transcript: status === 'answered' ? buildTranscript(subject, sentiment, agentSentiment) : [],
     analysis:
       status === 'answered' && random.next() < 0.92
         ? {
             sentiment,
+            agentSentiment,
+            detectedSubject,
+            detectionConfidence: Math.min(0.99, confidenceFloor + random.next() * 0.25),
             priority: sentiment === 'negative' ? 'high' : random.pick(['low', 'medium'] as const),
             autoLabel: autoLabelFor(subject),
             topic: level2,

@@ -21,6 +21,7 @@ import { UNCATEGORIZED, UNKNOWN_CALLER } from '../callLabels';
 import { callPaths } from '../callPaths';
 import { CallDirectionBadge, CallStatusBadge } from '../components/CallBadges';
 import { CallCategorization } from '../components/CallCategorization';
+import { SentimentDuelCard, SubjectDetectionCard } from '../components/CallInsights';
 import { useCall } from '../hooks/callQueries';
 import './CallDetailPage.css';
 
@@ -94,6 +95,9 @@ function AnalysisCard({ analysis }: { analysis: Call['analysis'] }) {
         <InfoRow label="احساس مشتری">
           <SentimentBadge sentiment={analysis.sentiment} />
         </InfoRow>
+        <InfoRow label="احساس اپراتور">
+          <SentimentBadge sentiment={analysis.agentSentiment} />
+        </InfoRow>
         <InfoRow label="اولویت">
           <PriorityBadge priority={analysis.priority} />
         </InfoRow>
@@ -161,7 +165,10 @@ export function CallDetailPage() {
         <div className="call-detail__column">
           <CallerCard call={call} />
           <CallInfoCard call={call} />
-          <InfoCard title="مکالمه">
+          {call.analysis && (
+            <SentimentDuelCard analysis={call.analysis} transcript={call.transcript} />
+          )}
+          <InfoCard title="مکالمه (تبدیل گفتار به متن)">
             <div className="call-detail__conversation">
               {call.voice ? (
                 <VoicePlayer recording={call.voice} />
@@ -173,6 +180,7 @@ export function CallDetailPage() {
           </InfoCard>
         </div>
         <div className="call-detail__column">
+          <SubjectDetectionCard call={call} />
           <CategorizationCard call={call} />
           <AnalysisCard analysis={call.analysis} />
         </div>

@@ -4,6 +4,13 @@
   gap: var(--space-1);
 }
 
+.call-ai-subject {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
 .call-caller__mobile {
   font-size: var(--font-size-small);
   color: var(--color-muted);

@@ -1,12 +1,13 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SubjectPath } from '@/shared/domain/insights';
-import type { CallQuery } from '../../domain/CallRepository';
+import type { CallFilter, CallQuery } from '../../domain/CallRepository';
 import { useCallRepository } from '../callServices';
 
 export const callKeys = {
   all: ['calls'] as const,
   lists: () => [...callKeys.all, 'list'] as const,
   list: (query: CallQuery) => [...callKeys.lists(), query] as const,
+  summary: (filter: CallFilter) => [...callKeys.lists(), 'summary', filter] as const,
   detail: (id: string) => [...callKeys.all, 'detail', id] as const,
   filterOptions: () => [...callKeys.all, 'filterOptions'] as const,
   subjectTree: () => [...callKeys.all, 'subjectTree'] as const,
@@ -17,6 +18,15 @@ export function useCalls(query: CallQuery) {
   return useQuery({
     queryKey: callKeys.list(query),
     queryFn: () => repository.list(query),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useCallSummary(filter: CallFilter) {
+  const repository = useCallRepository();
+  return useQuery({
+    queryKey: callKeys.summary(filter),
+    queryFn: () => repository.summarize(filter),
     placeholderData: keepPreviousData,
   });
 }

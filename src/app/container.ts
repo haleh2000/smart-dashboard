@@ -1,6 +1,8 @@
 import {
+  MockRoleRepository,
   MockSettingsRepository,
   MockUserRepository,
+  type RoleRepository,
   type SettingsRepository,
   type UserRepository,
 } from '@/modules/admin';
@@ -19,6 +21,7 @@ export interface Dependencies {
   customerRepository: CustomerRepository;
   userRepository: UserRepository;
   settingsRepository: SettingsRepository;
+  roleRepository: RoleRepository;
 }
 
 /**
@@ -34,4 +37,5 @@ export const createDependencies = (): Dependencies => ({
   customerRepository: new MockCustomerRepository(),
   userRepository: new MockUserRepository(),
   settingsRepository: new MockSettingsRepository(),
+  roleRepository: new MockRoleRepository(),
 });

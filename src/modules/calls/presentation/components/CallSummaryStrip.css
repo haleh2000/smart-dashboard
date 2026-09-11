@@ -1,0 +1,6 @@
+.call-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(9rem, 40%), 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}

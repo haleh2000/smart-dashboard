@@ -7,11 +7,22 @@ export type {
   ScenarioInput,
   SystemSettings,
 } from './domain/settings';
-export type { SettingsRepository, UserQuery, UserRepository } from './domain/AdminRepositories';
+export type { RoleDefinition, RoleInput } from './domain/roleDefinition';
+export type {
+  RoleRepository,
+  SettingsRepository,
+  UserQuery,
+  UserRepository,
+} from './domain/AdminRepositories';
+export { MockRoleRepository } from './infrastructure/MockRoleRepository';
 export { MockSettingsRepository } from './infrastructure/MockSettingsRepository';
 export { MockUserRepository } from './infrastructure/MockUserRepository';
 export { adminPaths } from './presentation/adminPaths';
-export { SettingsRepositoryProvider, UserRepositoryProvider } from './presentation/adminServices';
+export {
+  RoleRepositoryProvider,
+  SettingsRepositoryProvider,
+  UserRepositoryProvider,
+} from './presentation/adminServices';
 export { RolesPage } from './presentation/pages/RolesPage';
 export { SettingsPage } from './presentation/pages/SettingsPage';
 export { UsersPage } from './presentation/pages/UsersPage';

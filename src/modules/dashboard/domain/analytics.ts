@@ -98,11 +98,94 @@ export interface Heatmap {
   max: number;
 }
 
-/** «نرخ تکرار تماس»: calls per customer until the issue is solved. */
+export type ResolutionStep = '1' | '2' | '3' | '4+' | 'open';
+
+/**
+ * «نرخ تکرار تماس»: calls per customer until the issue is solved. An issue is one caller's
+ * calls about one main subject; it is solved by the first call marked as resolved.
+ */
 export interface RepeatCallStats {
   repeatRate: number;
   avgCallsPerCustomer: number;
   /** Mean time from a customer's first call to the resolving call, in seconds. */
   avgTimeToResolveSec: number;
   distribution: { bucket: '1' | '2' | '3' | '4+'; customers: number }[];
+  /** Issues by the call that solved them (`open` = not solved yet), in step order. */
+  resolution: { step: ResolutionStep; issues: number }[];
+  /** Mean calls an issue needed until it was solved (solved issues only). */
+  avgCallsToResolve: number;
+  /** Main subjects that make customers call again, highest repeat rate first. */
+  byReason: { subject: string; issues: number; repeatRate: number; avgCalls: number }[];
+}
+
+/** Positive / neutral / negative counts of one side of the conversations. */
+export interface SentimentSplit {
+  positive: number;
+  neutral: number;
+  negative: number;
+  /** Between -1 (all negative) and 1 (all positive). */
+  score: number;
+}
+
+/** «تحلیل احساسات دو طرف»: customer and operator sentiment of the analyzed calls. */
+export interface SentimentOverview {
+  analyzed: number;
+  customer: SentimentSplit;
+  agent: SentimentSplit;
+  /** matrix[customerSentiment][agentSentiment] = calls. */
+  matrix: Record<'positive' | 'neutral' | 'negative', Record<'positive' | 'neutral' | 'negative', number>>;
+  /** How the customer's mood moved from the start to the end of the call. */
+  journey: { improved: number; unchanged: number; worsened: number };
+  /** Weekly scores of both sides, oldest first. */
+  trend: { start: Date; count: number; customerScore: number; agentScore: number }[];
+  /** Per main subject, most calls first. */
+  bySubject: { subject: string; count: number; customerScore: number; agentScore: number }[];
+  /** Per operator, busiest first. */
+  byOperator: {
+    operator: string;
+    count: number;
+    customerScore: number;
+    agentScore: number;
+    /** Share of the operator's calls where the customer ended happier than they started. */
+    improvedShare: number;
+  }[];
+}
+
+/** «تشخیص موضوع تماس توسط اپراتور و AI». */
+export interface SubjectDetectionStats {
+  /** Answered calls the AI analyzed. */
+  analyzed: number;
+  match: number;
+  partial: number;
+  mismatch: number;
+  /** Detected by AI, not categorized by the operator yet. */
+  pending: number;
+  avgConfidence: number;
+  /** Per main subject (as detected by the AI), most calls first. */
+  bySubject: { subject: string; count: number; agreement: number; avgConfidence: number }[];
+  /** Operator main subject → AI main subject, for the disagreements; most frequent first. */
+  confusions: { agent: string; ai: string; count: number }[];
+  confidenceBands: { band: 'low' | 'medium' | 'high' | 'veryHigh'; count: number }[];
+}
+
+/** One node of the multi-level «تحلیل دلایل اصلی تماس» tree (Subject1 → 2 → 3). */
+export interface ReasonNode {
+  label: string;
+  count: number;
+  /** Share of all calls in scope, between 0 and 1. */
+  share: number;
+  /** Share of analyzed calls under this node with a negative customer, between 0 and 1. */
+  negativeShare: number;
+  /** Share of answered calls under this node solved in that call, between 0 and 1. */
+  fcrRate: number;
+  /** Share of calls under this node from customers who called about it more than once. */
+  repeatShare: number;
+  children: ReasonNode[];
+}
+
+export interface CallReasons {
+  total: number;
+  /** Calls whose subject came from the AI because the operator had not categorized them. */
+  aiOnly: number;
+  nodes: ReasonNode[];
 }

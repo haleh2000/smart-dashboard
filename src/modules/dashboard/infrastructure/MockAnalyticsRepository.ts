@@ -1,17 +1,29 @@
-import type { Call } from '@/modules/calls';
+import { reportedSubject, subjectAgreement, type Call, type CallAnalysis } from '@/modules/calls';
 import type { Ticket } from '@/modules/tickets';
 import { customerOfCall, mockCalls } from '@/mocks/calls';
 import { delay } from '@/mocks/delay';
 import { mockTickets } from '@/mocks/tickets';
+import {
+  SENTIMENTS,
+  sentimentScore,
+  sentimentShift,
+  type Sentiment,
+} from '@/shared/domain/insights';
 import { isWithinRange } from '@/shared/domain/period';
 import type {
   BreakdownItem,
+  CallReasons,
   CallStats,
   CrossBreakdown,
   Heatmap,
   Kpis,
   OperatorStats,
+  ReasonNode,
   RepeatCallStats,
+  ResolutionStep,
+  SentimentOverview,
+  SentimentSplit,
+  SubjectDetectionStats,
   SubjectLineTable,
   SubjectRow,
   Trend,
@@ -35,10 +47,11 @@ const ticketValue: Accessor<Ticket> = {
   hour: (t) => String(t.createdAt.getHours()),
 };
 
+// Calls the operator has not categorized yet are reported under the AI's detected subject.
 const callValue: Accessor<Call> = {
-  subject1: (c) => c.subject?.level1,
-  subject2: (c) => c.subject?.level2,
-  subject3: (c) => c.subject?.level3,
+  subject1: (c) => reportedSubject(c)?.level1,
+  subject2: (c) => reportedSubject(c)?.level2,
+  subject3: (c) => reportedSubject(c)?.level3,
   type: () => 'گفت‌وگو',
   channel: () => 'تلفن',
   insuranceLine: (c) => customerOfCall(c)?.policies[0]?.line,
@@ -68,6 +81,45 @@ const countBy = <T>(items: readonly T[], key: (item: T) => string | undefined) =
 
 const sortedEntries = (counts: Map<string, number>) =>
   [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+
+const groupBy = <T>(items: readonly T[], key: (item: T) => string | undefined) => {
+  const groups = new Map<string, T[]>();
+  for (const item of items) {
+    const value = key(item);
+    if (value === undefined) continue;
+    const group = groups.get(value);
+    if (group) group.push(item);
+    else groups.set(value, [item]);
+  }
+  return groups;
+};
+
+type Analyzed = Call & { analysis: CallAnalysis };
+const isAnalyzed = (call: Call): call is Analyzed => call.analysis !== undefined;
+
+const split = (values: readonly Sentiment[]): SentimentSplit => ({
+  positive: values.filter((s) => s === 'positive').length,
+  neutral: values.filter((s) => s === 'neutral').length,
+  negative: values.filter((s) => s === 'negative').length,
+  score: sentimentScore(values),
+});
+
+/** Weekly buckets ending at the range end (or now), at most 12, oldest first. */
+const weekStarts = (range: DashboardScope['range'], dates: readonly Date[]) => {
+  const end = range?.to.getTime() ?? Math.max(Date.now(), ...dates.map((d) => d.getTime() + 1));
+  const earliest = range?.from.getTime() ?? Math.min(end - WEEK, ...dates.map((d) => d.getTime()));
+  const weeks = Math.min(12, Math.max(1, Math.ceil((end - earliest) / WEEK)));
+  return Array.from({ length: weeks }, (_, i) => end - (weeks - i) * WEEK);
+};
+
+/** One issue = one caller's calls about one main subject, oldest first. */
+const issuesOf = (calls: readonly Call[]) =>
+  [
+    ...groupBy(calls, (c) => `${c.caller.mobile}${SEP}${reportedSubject(c)?.level1 ?? ''}`).values(),
+  ].map((group) => [...group].sort((a, b) => a.startedAt.getTime() - b.startedAt.getTime()));
+
+const LEVELS = ['level1', 'level2', 'level3'] as const;
+const UNKNOWN = 'نامشخص';
 
 /** Aggregates the in-memory dataset the way the backend is expected to. */
 export class MockAnalyticsRepository implements AnalyticsRepository {
@@ -206,15 +258,11 @@ export class MockAnalyticsRepository implements AnalyticsRepository {
     await delay(200);
     const tickets = this.filterTickets(scope);
     const series = sortedEntries(countBy(tickets, ticketValue[dimension])).map(([v]) => v);
-    const end =
-      scope.range?.to.getTime() ??
-      Math.max(Date.now(), ...tickets.map((t) => t.createdAt.getTime() + 1));
-    const earliest =
-      scope.range?.from.getTime() ??
-      Math.min(end - WEEK, ...tickets.map((t) => t.createdAt.getTime()));
-    const weeks = Math.min(12, Math.max(1, Math.ceil((end - earliest) / WEEK)));
-    const buckets = Array.from({ length: weeks }, (_, i) => {
-      const start = end - (weeks - i) * WEEK;
+    const starts = weekStarts(
+      scope.range,
+      tickets.map((t) => t.createdAt),
+    );
+    const buckets = starts.map((start) => {
       const inBucket = tickets.filter((t) => {
         const time = t.createdAt.getTime();
         return time >= start && time < start + WEEK;
@@ -308,14 +356,40 @@ export class MockAnalyticsRepository implements AnalyticsRepository {
       [...group].sort((a, b) => a.startedAt.getTime() - b.startedAt.getTime()),
     );
     const buckets = { '1': 0, '2': 0, '3': 0, '4+': 0 };
-    const timesToResolve: number[] = [];
     for (const group of groups) {
       const n = group.length;
       buckets[n >= 4 ? '4+' : (String(n) as '1' | '2' | '3')] += 1;
-      const resolving = group.find((c) => c.resolvedOnFirstCall);
-      if (resolving && group[0])
-        timesToResolve.push(seconds(group[0].startedAt, resolving.startedAt));
     }
+
+    const issues = issuesOf(calls);
+    const steps: Record<ResolutionStep, number> = { '1': 0, '2': 0, '3': 0, '4+': 0, open: 0 };
+    const timesToResolve: number[] = [];
+    const callsToResolve: number[] = [];
+    for (const issue of issues) {
+      const index = issue.findIndex((c) => c.resolvedOnFirstCall);
+      const resolving = issue[index];
+      if (!resolving || !issue[0]) {
+        steps.open += 1;
+        continue;
+      }
+      steps[index >= 3 ? '4+' : (String(index + 1) as '1' | '2' | '3')] += 1;
+      callsToResolve.push(index + 1);
+      timesToResolve.push(seconds(issue[0].startedAt, resolving.startedAt));
+    }
+
+    // Missed calls carry no subject: their issues are grouped as «نامشخص».
+    const byReason = [...groupBy(issues, (issue) => reportedSubject(issue[0]!)?.level1 ?? UNKNOWN)]
+      .map(([subject, group]) => ({
+        subject,
+        issues: group.length,
+        repeatRate: ratio(group.filter((issue) => issue.length > 1).length, group.length),
+        avgCalls: ratio(
+          group.reduce((sum, issue) => sum + issue.length, 0),
+          group.length,
+        ),
+      }))
+      .sort((a, b) => b.repeatRate - a.repeatRate || b.issues - a.issues);
+
     return {
       repeatRate: ratio(groups.filter((g) => g.length > 1).length, groups.length),
       avgCallsPerCustomer: ratio(calls.length, groups.length),
@@ -324,6 +398,162 @@ export class MockAnalyticsRepository implements AnalyticsRepository {
         bucket,
         customers: buckets[bucket],
       })),
+      resolution: (['1', '2', '3', '4+', 'open'] as const).map((step) => ({
+        step,
+        issues: steps[step],
+      })),
+      avgCallsToResolve: average(callsToResolve),
+      byReason,
+    };
+  }
+
+  async getSentimentOverview(scope: DashboardScope): Promise<SentimentOverview> {
+    await delay(200);
+    const calls = this.filterCalls(scope).filter(isAnalyzed);
+    const customerOf = (c: Analyzed) => c.analysis.sentiment;
+    const agentOf = (c: Analyzed) => c.analysis.agentSentiment;
+    const scores = (group: readonly Analyzed[]) => ({
+      count: group.length,
+      customerScore: sentimentScore(group.map(customerOf)),
+      agentScore: sentimentScore(group.map(agentOf)),
+    });
+
+    const matrix = Object.fromEntries(
+      SENTIMENTS.map((customer) => [
+        customer,
+        Object.fromEntries(
+          SENTIMENTS.map((agent) => [
+            agent,
+            calls.filter((c) => customerOf(c) === customer && agentOf(c) === agent).length,
+          ]),
+        ),
+      ]),
+    ) as SentimentOverview['matrix'];
+
+    const shifts = calls.map((c) => sentimentShift(c.transcript, 'customer'));
+    const trend = weekStarts(
+      scope.range,
+      calls.map((c) => c.startedAt),
+    ).map((start) => ({
+      start: new Date(start),
+      ...scores(
+        calls.filter((c) => {
+          const time = c.startedAt.getTime();
+          return time >= start && time < start + WEEK;
+        }),
+      ),
+    }));
+
+    return {
+      analyzed: calls.length,
+      customer: split(calls.map(customerOf)),
+      agent: split(calls.map(agentOf)),
+      matrix,
+      journey: {
+        improved: shifts.filter((s) => s === 'improved').length,
+        unchanged: shifts.filter((s) => s === 'unchanged').length,
+        worsened: shifts.filter((s) => s === 'worsened').length,
+      },
+      trend,
+      bySubject: [...groupBy(calls, (c) => reportedSubject(c)?.level1)]
+        .map(([subject, group]) => ({ subject, ...scores(group) }))
+        .sort((a, b) => b.count - a.count),
+      byOperator: [...groupBy(calls, (c) => c.agent)]
+        .map(([operator, group]) => ({
+          operator,
+          ...scores(group),
+          improvedShare: ratio(
+            group.filter((c) => sentimentShift(c.transcript, 'customer') === 'improved').length,
+            group.length,
+          ),
+        }))
+        .sort((a, b) => b.count - a.count),
+    };
+  }
+
+  async getSubjectDetection(scope: DashboardScope): Promise<SubjectDetectionStats> {
+    await delay(200);
+    const calls = this.filterCalls(scope).filter(isAnalyzed);
+    const agreementOf = (c: Analyzed) => subjectAgreement(c.subject, c.analysis.detectedSubject);
+    const count = (agreement: string) => calls.filter((c) => agreementOf(c) === agreement).length;
+    const confidence = (c: Analyzed) => c.analysis.detectionConfidence;
+    const band = (c: Analyzed) => {
+      const value = confidence(c);
+      return value < 0.6 ? 'low' : value < 0.75 ? 'medium' : value < 0.9 ? 'high' : 'veryHigh';
+    };
+    const disagreements = calls.filter((c) => agreementOf(c) === 'mismatch');
+
+    return {
+      analyzed: calls.length,
+      match: count('match'),
+      partial: count('partial'),
+      mismatch: count('mismatch'),
+      pending: count('pending'),
+      avgConfidence: average(calls.map(confidence)),
+      bySubject: [...groupBy(calls, (c) => c.analysis.detectedSubject.level1)]
+        .map(([subject, group]) => {
+          const reviewed = group.filter((c) => agreementOf(c) !== 'pending');
+          return {
+            subject,
+            count: group.length,
+            agreement: ratio(
+              reviewed.filter((c) => agreementOf(c) === 'match').length,
+              reviewed.length,
+            ),
+            avgConfidence: average(group.map(confidence)),
+          };
+        })
+        .sort((a, b) => b.count - a.count),
+      confusions: sortedEntries(
+        countBy(
+          disagreements,
+          (c) => `${c.subject?.level1 ?? ''}${SEP}${c.analysis.detectedSubject.level1}`,
+        ),
+      )
+        .slice(0, 6)
+        .map(([key, n]) => {
+          const [agent = '', ai = ''] = key.split(SEP);
+          return { agent, ai, count: n };
+        }),
+      confidenceBands: (['low', 'medium', 'high', 'veryHigh'] as const).map((b) => ({
+        band: b,
+        count: calls.filter((c) => band(c) === b).length,
+      })),
+    };
+  }
+
+  async getCallReasons(scope: DashboardScope): Promise<CallReasons> {
+    await delay(200);
+    const calls = this.filterCalls(scope).filter((c) => reportedSubject(c) !== undefined);
+    const repeatIssues = new Set(issuesOf(calls).flatMap((issue) => (issue.length > 1 ? issue : [])));
+
+    const nodesAt = (group: readonly Call[], depth: number): ReasonNode[] => {
+      const level = LEVELS[depth];
+      if (!level) return [];
+      return [...groupBy(group, (c) => reportedSubject(c)?.[level])]
+        .map(([label, members]) => {
+          const analyzed = members.filter(isAnalyzed);
+          const answered = members.filter((c) => c.status === 'answered');
+          return {
+            label,
+            count: members.length,
+            share: ratio(members.length, calls.length),
+            negativeShare: ratio(
+              analyzed.filter((c) => c.analysis.sentiment === 'negative').length,
+              analyzed.length,
+            ),
+            fcrRate: ratio(answered.filter((c) => c.resolvedOnFirstCall).length, answered.length),
+            repeatShare: ratio(members.filter((c) => repeatIssues.has(c)).length, members.length),
+            children: nodesAt(members, depth + 1),
+          };
+        })
+        .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+    };
+
+    return {
+      total: calls.length,
+      aiOnly: calls.filter((c) => !c.subject).length,
+      nodes: nodesAt(calls, 0),
     };
   }
 }
