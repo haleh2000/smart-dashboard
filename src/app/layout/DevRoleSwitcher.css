@@ -21,3 +21,20 @@
     display: none;
   }
 }
+
+.dev-role__call {
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dev-role__call:hover {
+  background: var(--color-warning-soft);
+}
+
+@media (max-width: 640px) {
+  .dev-role__call {
+    display: none;
+  }
+}

@@ -1,52 +1,77 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { Button, PageHeader } from '@/shared/ui';
-import { subjectDrillLevel } from '../../domain/filters';
-import { BreakdownPanel } from '../components/BreakdownPanel';
+import { useSearchParams } from 'react-router';
+import { PERIODS } from '@/shared/domain/period';
+import {
+  Button,
+  PageHeader,
+  periodLabels,
+  SegmentedControl,
+  Tabs,
+  type TabItem,
+} from '@/shared/ui';
+import { CallsTab } from '../components/CallsTab';
 import { FilterChips } from '../components/FilterChips';
 import { KpiCards } from '../components/KpiCards';
+import { OperatorsTab } from '../components/OperatorsTab';
+import { TicketAnalyticsTab } from '../components/TicketAnalyticsTab';
 import { useDashboardFilterStore } from '../dashboardFilterStore';
-import { dimensionLabels } from '../dimensionLabels';
 import { analyticsKeys } from '../hooks/analyticsQueries';
 import './DashboardPage.css';
 
+const TABS = [
+  { id: 'tickets', label: 'تحلیل تیکت‌ها' },
+  { id: 'operators', label: 'عملکرد اپراتورها' },
+  { id: 'calls', label: 'تماس‌ها' },
+] as const satisfies readonly TabItem<string>[];
+type TabId = (typeof TABS)[number]['id'];
+
+const periodOptions = PERIODS.map((value) => ({ value, label: periodLabels[value] }));
+
+/**
+ * Main dashboard (README → «داشبورد اصلی»). Analytics and reports live here — there is no
+ * separate reports page. Filters and the time range are shared across the three tabs.
+ */
 export function DashboardPage() {
   const queryClient = useQueryClient();
-  const filters = useDashboardFilterStore((state) => state.filters);
-  const subjectDimension = subjectDrillLevel(filters);
-  const subjectPath = [filters.subject1, filters.subject2].filter(Boolean).join(' › ');
+  const [params, setParams] = useSearchParams();
+  const period = useDashboardFilterStore((state) => state.period);
+  const setPeriod = useDashboardFilterStore((state) => state.setPeriod);
+  const tab: TabId = TABS.find((t) => t.id === params.get('tab'))?.id ?? 'tickets';
+
+  const changeTab = (id: TabId) =>
+    setParams(id === 'tickets' ? {} : { tab: id }, { replace: true });
 
   return (
     <section className="dashboard">
       <PageHeader
         title="داشبورد"
-        subtitle="عملکرد پشتیبانی بر اساس جدول تیکت‌ها؛ هر نمودار کل صفحه را فیلتر می‌کند."
+        subtitle="عملکرد پشتیبانی بر اساس تیکت‌ها و تماس‌ها؛ هر نمودار کل صفحه را فیلتر می‌کند."
         actions={
-          <Button
-            variant="ghost"
-            onClick={() => queryClient.invalidateQueries({ queryKey: analyticsKeys.all })}
-          >
-            به‌روزرسانی
-          </Button>
+          <>
+            <SegmentedControl
+              label="فیلتر زمانی"
+              options={periodOptions}
+              value={period}
+              onChange={setPeriod}
+            />
+            <Button
+              variant="ghost"
+              onClick={() => queryClient.invalidateQueries({ queryKey: analyticsKeys.all })}
+            >
+              به‌روزرسانی
+            </Button>
+          </>
         }
       />
 
       <FilterChips />
       <KpiCards />
 
-      <div className="dashboard__grid dashboard__grid--wide">
-        <BreakdownPanel
-          title={`پراکندگی ${dimensionLabels[subjectDimension]}${subjectPath ? ` — ${subjectPath}` : ''}`}
-          dimension={subjectDimension}
-          series={1}
-        />
-        <BreakdownPanel title="توزیع بین شعب" dimension="branch" series={5} />
-      </div>
-
-      <div className="dashboard__grid">
-        <BreakdownPanel title="نوع کانال" dimension="type" series={2} />
-        <BreakdownPanel title="کانال ورودی" dimension="channel" series={3} />
-        <BreakdownPanel title="رشته بیمه" dimension="insuranceLine" series={4} />
-      </div>
+      <Tabs tabs={TABS} active={tab} onChange={changeTab} label="بخش‌های داشبورد">
+        {tab === 'tickets' && <TicketAnalyticsTab />}
+        {tab === 'operators' && <OperatorsTab />}
+        {tab === 'calls' && <CallsTab />}
+      </Tabs>
     </section>
   );
 }

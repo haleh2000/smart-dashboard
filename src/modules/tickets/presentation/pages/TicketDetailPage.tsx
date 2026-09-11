@@ -1,68 +1,120 @@
-import type { ReactNode } from 'react';
-import { Link, useParams } from 'react-router';
-import { cn } from '@/shared/lib/cn';
+import { useState } from 'react';
+import { Link, useLocation, useParams } from 'react-router';
+import { CustomerInsuranceCard, customerPaths } from '@/modules/customers';
 import { formatDateTime, formatPersianNumber } from '@/shared/lib/format';
-import { EmptyState, ErrorState, PageHeader, SkeletonTable, StatusBadge } from '@/shared/ui';
-import type { Ticket } from '../../domain/ticket';
-import { PriorityBadge, SentimentBadge, TicketStatusBadge } from '../components/TicketBadges';
-import { useTicket } from '../hooks/ticketQueries';
+import {
+  ActionMenu,
+  EmptyState,
+  ErrorState,
+  InfoCard,
+  InfoGrid,
+  InfoRow,
+  PageHeader,
+  PriorityBadge,
+  SentimentBadge,
+  SkeletonTable,
+  StatusBadge,
+  TagList,
+  Tabs,
+  Transcript,
+  VoicePlayer,
+} from '@/shared/ui';
+import { isOverdue, type Ticket } from '../../domain/ticket';
+import { TicketStatusBadge } from '../components/TicketBadges';
+import { TicketDocuments } from '../components/TicketDocuments';
+import { TicketNotes } from '../components/TicketNotes';
+import { TicketTimeline, TicketUpdates } from '../components/TicketHistory';
+import { parseTicketListParams, toTicketFilter } from '../hooks/ticketListParams';
+import { useAdjacentTickets, useTicket } from '../hooks/ticketQueries';
 import { ticketPaths } from '../ticketPaths';
 import './TicketDetailPage.css';
 
-function Row({
-  label,
-  wide = false,
-  children,
-}: {
-  label: string;
-  wide?: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <div className={cn('summary__row', wide && 'summary__row--wide')}>
-      <dt>{label}</dt>
-      <dd>{children || <span className="summary__muted">—</span>}</dd>
-    </div>
-  );
-}
-
-function Group({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="summary__group">
-      <h3 className="summary__title">{title}</h3>
-      <dl className="summary__grid">{children}</dl>
-    </section>
-  );
-}
+const genderLabels = { male: 'مرد', female: 'زن' } as const;
 
 /** «فیلدهای کلیدی», mirroring the CRM detail page (CRM is the source of truth). */
-function CrmFields({ ticket }: { ticket: Ticket }) {
+function KeyFields({ ticket }: { ticket: Ticket }) {
   return (
-    <>
-      <Group title="اطلاعات مشتری">
-        <Row label="نام مشتری">{ticket.customer.fullName}</Row>
-        <Row label="کدملی">{formatPersianNumber(ticket.customer.nationalId)}</Row>
-        <Row label="موبایل">{formatPersianNumber(ticket.customer.mobile)}</Row>
-        <Row label="مشتری سازمانی">{ticket.customer.corporateName}</Row>
-      </Group>
-      <Group title="فیلدهای کلیدی">
-        <Row label="زمان ایجاد">{formatDateTime(ticket.createdAt)}</Row>
-        <Row label="کانال">{ticket.channel}</Row>
-        <Row label="رشته بیمه">{ticket.insuranceLine}</Row>
-        <Row label="نام شعبه">{ticket.branch}</Row>
-        <Row label="نوع اصلی شکایت">{ticket.subject.level1}</Row>
-        <Row label="نوع شکایت">{ticket.subject.level2}</Row>
-        <Row label="علت شکایت">{ticket.subject.level3}</Row>
-        <Row label="مالک شکایت">{ticket.complaintOwner}</Row>
-        <Row label="مالک پیگیری">{ticket.followUpOwner}</Row>
-        <Row label="متن شکایت" wide>
+    <InfoCard title="فیلدهای کلیدی">
+      <InfoGrid>
+        <InfoRow label="کدملی">{formatPersianNumber(ticket.customer.nationalId)}</InfoRow>
+        <InfoRow label="نام مشتری">
+          <Link to={customerPaths.profile(ticket.customer.nationalId)}>
+            {ticket.customer.fullName}
+          </Link>
+        </InfoRow>
+        <InfoRow label="مشتری سازمانی">{ticket.customer.corporateName ? 'بله' : 'خیر'}</InfoRow>
+        <InfoRow label="نام مشتری سازمانی">{ticket.customer.corporateName}</InfoRow>
+        <InfoRow label="جنسیت">
+          {ticket.customer.gender && genderLabels[ticket.customer.gender]}
+        </InfoRow>
+        <InfoRow label="نوع بیمه‌نامه">{ticket.insuranceLine}</InfoRow>
+        <InfoRow label="موبایل">{formatPersianNumber(ticket.customer.mobile)}</InfoRow>
+        <InfoRow label="نام شعبه">{ticket.branch}</InfoRow>
+        <InfoRow label="کانال ورودی">{ticket.channel}</InfoRow>
+        <InfoRow label="وضعیت">
+          <TicketStatusBadge status={ticket.status} />
+        </InfoRow>
+        <InfoRow label="نوع اصلی شکایت">{ticket.subject.level1}</InfoRow>
+        <InfoRow label="نوع شکایت">{ticket.subject.level2}</InfoRow>
+        <InfoRow label="علت شکایت">{ticket.subject.level3}</InfoRow>
+        <InfoRow label="شماره پرونده">
+          {ticket.fileNumber && <bdi>{formatPersianNumber(ticket.fileNumber)}</bdi>}
+        </InfoRow>
+        <InfoRow label="مالک شکایت">{ticket.complaintOwner}</InfoRow>
+        <InfoRow label="مالک پیگیری شکایت">{ticket.followUpOwner}</InfoRow>
+        <InfoRow label="متن شکایت" wide>
           {ticket.complaintText}
-        </Row>
-        <Row label="پاسخ نهایی" wide>
+        </InfoRow>
+        <InfoRow label="پاسخ نهایی" wide>
           {ticket.finalResponse}
-        </Row>
-      </Group>
-    </>
+        </InfoRow>
+        <InfoRow label="ریشه‌یابی" wide>
+          {ticket.rootCause}
+        </InfoRow>
+        <InfoRow label="توضیحات" wide>
+          {ticket.description}
+        </InfoRow>
+        <InfoRow label="درخواست مالک پیگیری تیکت" wide>
+          {ticket.followUpRequest}
+        </InfoRow>
+        <InfoRow label="نظر امور مشتریان در خصوص SLA" wide>
+          {ticket.slaOpinion}
+        </InfoRow>
+      </InfoGrid>
+    </InfoCard>
+  );
+}
+
+/** «مشخصات و زمانبندی تیکت». */
+function Timing({ ticket }: { ticket: Ticket }) {
+  const overdue = isOverdue(ticket);
+  return (
+    <InfoCard title="مشخصات و زمانبندی">
+      <InfoGrid>
+        <InfoRow label="زمان ایجاد">{formatDateTime(ticket.createdAt)}</InfoRow>
+        <InfoRow label="اولین پاسخ">
+          {ticket.firstResponseAt && formatDateTime(ticket.firstResponseAt)}
+        </InfoRow>
+        <InfoRow label="زمان بسته شدن">
+          {ticket.closedAt && formatDateTime(ticket.closedAt)}
+        </InfoRow>
+        <InfoRow label="SLA باقی‌مانده (روز کاری)">
+          {ticket.status === 'closed' ? (
+            '—'
+          ) : (
+            <StatusBadge
+              tone={overdue ? 'error' : ticket.slaRemainingDays <= 1 ? 'warning' : 'success'}
+            >
+              {overdue
+                ? `${formatPersianNumber(-ticket.slaRemainingDays)} روز تاخیر`
+                : `${formatPersianNumber(ticket.slaRemainingDays)} روز`}
+            </StatusBadge>
+          )}
+        </InfoRow>
+        <InfoRow label="تعداد ارجاع">{formatPersianNumber(ticket.referralCount)}</InfoRow>
+        <InfoRow label="آخرین مالک">{ticket.followUpOwner}</InfoRow>
+      </InfoGrid>
+    </InfoCard>
   );
 }
 
@@ -72,39 +124,79 @@ function Enrichment({ enrichment }: { enrichment: Ticket['enrichment'] }) {
 
   return (
     <>
-      <Group title="تحلیل هوشمند">
-        <Row label="احساس مشتری">
-          <SentimentBadge sentiment={enrichment.sentiment} />
-        </Row>
-        <Row label="اولویت">
-          <PriorityBadge priority={enrichment.priority} />
-        </Row>
-        <Row label="برچسب‌های AI" wide>
-          <span className="summary__tags">
-            {enrichment.aiTags.map((tag) => (
-              <StatusBadge key={tag} tone="info">
-                {tag}
-              </StatusBadge>
-            ))}
-          </span>
-        </Row>
-      </Group>
-      <section className="summary__group">
-        <h3 className="summary__title">مکالمه</h3>
-        <dl className="summary__grid">
-          <Row label="Voice ID">
-            <bdi>{enrichment.voiceId && formatPersianNumber(enrichment.voiceId)}</bdi>
-          </Row>
-        </dl>
-        <p className="transcript">{enrichment.transcript ?? 'متن مکالمه موجود نیست.'}</p>
-      </section>
+      <InfoCard title="تحلیل هوشمند (AI)">
+        <InfoGrid>
+          <InfoRow label="احساس مشتری">
+            <SentimentBadge sentiment={enrichment.sentiment} />
+          </InfoRow>
+          <InfoRow label="اولویت">
+            <PriorityBadge priority={enrichment.priority} />
+          </InfoRow>
+          <InfoRow label="Auto Label" wide>
+            {enrichment.autoLabel}
+          </InfoRow>
+          <InfoRow label="موضوع تشخیصی">{enrichment.topic}</InfoRow>
+          <InfoRow label="برچسب‌های AI" wide>
+            <TagList tags={enrichment.aiTags} />
+          </InfoRow>
+        </InfoGrid>
+        {enrichment.suggestedScenario && (
+          <p className="ticket-scenario">
+            <span className="ticket-scenario__label">سناریوی پیشنهادی</span>
+            {enrichment.suggestedScenario}
+          </p>
+        )}
+      </InfoCard>
+      <InfoCard title="مکالمه">
+        <div className="ticket-conversation">
+          {enrichment.voice ? (
+            <VoicePlayer recording={enrichment.voice} />
+          ) : (
+            <p className="info-card__muted">فایل صوتی برای این تیکت ثبت نشده است.</p>
+          )}
+          <Transcript lines={enrichment.transcript} />
+        </div>
+      </InfoCard>
     </>
+  );
+}
+
+type TabId = 'summary' | 'timeline' | 'updates' | 'notes';
+
+function PrevNext({ ticketId, listSearch }: { ticketId: string; listSearch: string }) {
+  const listState = parseTicketListParams(new URLSearchParams(listSearch));
+  const { data } = useAdjacentTickets(ticketId, toTicketFilter(listState), listState.sort);
+  const link = (id: string | null | undefined, label: string, glyph: string) =>
+    id ? (
+      <Link
+        className="btn btn--ghost ticket-nav__btn"
+        to={ticketPaths.detail(id)}
+        state={{ listSearch }}
+        aria-label={label}
+        title={label}
+      >
+        {glyph}
+      </Link>
+    ) : (
+      <span className="btn btn--ghost ticket-nav__btn" aria-disabled="true" title={label}>
+        {glyph}
+      </span>
+    );
+  return (
+    <span className="ticket-nav">
+      {link(data?.previousId, 'تیکت قبلی', '›')}
+      {link(data?.nextId, 'تیکت بعدی', '‹')}
+    </span>
   );
 }
 
 export function TicketDetailPage() {
   const { ticketId = '' } = useParams();
+  const location = useLocation();
+  const listSearch = (location.state as { listSearch?: string } | null)?.listSearch ?? '';
+  const [tab, setTab] = useState<TabId>('summary');
   const { data: ticket, isPending, isError, refetch } = useTicket(ticketId);
+  const backTo = `${ticketPaths.list}${listSearch}`;
 
   if (isPending) return <SkeletonTable rows={6} />;
   if (isError)
@@ -112,36 +204,82 @@ export function TicketDetailPage() {
   if (!ticket)
     return (
       <EmptyState mascot message="تیکتی با این شماره پیدا نشد.">
-        <Link className="btn btn--ghost" to={ticketPaths.list}>
+        <Link className="btn btn--ghost" to={backTo}>
           بازگشت به تیکت‌ها
         </Link>
       </EmptyState>
     );
 
   return (
-    <section>
+    <section key={ticket.id}>
       <PageHeader
-        title={<span className="summary__tracking">تیکت {formatPersianNumber(ticket.id)}</span>}
+        title={<span className="ticket-heading">تیکت {formatPersianNumber(ticket.id)}</span>}
         subtitle={
           <span className="ticket-heading-meta">
             <StatusBadge tone="info">{ticket.type}</StatusBadge>
             <TicketStatusBadge status={ticket.status} />
+            {ticket.enrichment && <PriorityBadge priority={ticket.enrichment.priority} />}
           </span>
         }
         actions={
-          <Link className="btn btn--ghost" to={ticketPaths.list}>
-            بازگشت به تیکت‌ها
-          </Link>
+          <>
+            <PrevNext ticketId={ticket.id} listSearch={listSearch} />
+            <Link
+              className="btn btn--primary"
+              to={ticketPaths.ofCustomer(ticket.customer.nationalId)}
+            >
+              تیکت‌های دیگر این مشتری
+            </Link>
+            <Link className="btn btn--ghost" to={backTo}>
+              بازگشت
+            </Link>
+            <ActionMenu
+              label="بیشتر"
+              items={[
+                {
+                  label: 'پروفایل مشتری (Customer 360)',
+                  to: customerPaths.profile(ticket.customer.nationalId),
+                },
+                { label: 'افزودن یادداشت', onSelect: () => setTab('notes') },
+                {
+                  label: 'کپی شماره تیکت',
+                  onSelect: () => void navigator.clipboard?.writeText(ticket.id),
+                },
+              ]}
+            />
+          </>
         }
       />
-      <div className="ticket-detail">
-        <div className="summary">
-          <CrmFields ticket={ticket} />
-        </div>
-        <div className="summary summary--side">
-          <Enrichment enrichment={ticket.enrichment} />
-        </div>
-      </div>
+
+      <Tabs
+        label="بخش‌های تیکت"
+        active={tab}
+        onChange={setTab}
+        tabs={[
+          { id: 'summary', label: 'خلاصه' },
+          { id: 'timeline', label: 'جریان‌ها' },
+          { id: 'updates', label: 'آپدیت‌ها' },
+          { id: 'notes', label: 'یادداشت‌ها' },
+        ]}
+      >
+        {tab === 'summary' && (
+          <div className="ticket-detail">
+            <div className="ticket-detail__column">
+              <KeyFields ticket={ticket} />
+              <TicketDocuments ticketId={ticket.id} />
+            </div>
+            <div className="ticket-detail__column">
+              <Enrichment enrichment={ticket.enrichment} />
+              <Timing ticket={ticket} />
+              <CustomerInsuranceCard nationalId={ticket.customer.nationalId} />
+              <TicketNotes ticketId={ticket.id} compact onShowAll={() => setTab('notes')} />
+            </div>
+          </div>
+        )}
+        {tab === 'timeline' && <TicketTimeline ticketId={ticket.id} />}
+        {tab === 'updates' && <TicketUpdates ticketId={ticket.id} />}
+        {tab === 'notes' && <TicketNotes ticketId={ticket.id} />}
+      </Tabs>
     </section>
   );
 }

@@ -196,3 +196,16 @@
 .btn--danger-outline:hover:not(:disabled) {
   background: var(--color-error-soft);
 }
+
+/* Compact control for panel headers and dense toolbars. */
+.btn--small {
+  min-height: auto;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--font-size-small);
+}
+
+.form-textarea {
+  min-height: 6rem;
+  resize: vertical;
+  line-height: 1.8;
+}

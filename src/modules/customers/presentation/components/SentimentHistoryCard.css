@@ -1,0 +1,66 @@
+.sentiment-history__counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.sentiment-history__count {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.sentiment-history__strip {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: var(--space-1);
+  height: var(--space-6);
+  align-items: flex-end;
+}
+
+.sentiment-history__mark {
+  flex: 1;
+  min-width: var(--space-1);
+  max-width: var(--space-4);
+  border-radius: var(--radius-pill);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.sentiment-history__mark:hover {
+  transform: scaleY(1.15);
+}
+
+/* Height encodes the sentiment too, so the strip reads without color. */
+.sentiment-history__mark--positive {
+  height: 100%;
+  background: var(--chart-series-1);
+}
+
+.sentiment-history__mark--neutral {
+  height: 60%;
+  background: var(--chart-series-5);
+}
+
+.sentiment-history__mark--negative {
+  height: 30%;
+  background: var(--chart-series-2);
+}
+
+.sentiment-history__axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-2);
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+
+.sentiment-history__empty {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--font-size-small);
+}

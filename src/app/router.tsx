@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { createBrowserRouter } from 'react-router';
+import { createBrowserRouter, Navigate } from 'react-router';
+import { adminPaths, RolesPage, SettingsPage, UsersPage } from '@/modules/admin';
 import {
   authPaths,
   LoginPage,
@@ -7,10 +8,11 @@ import {
   SessionGate,
   type Permission,
 } from '@/modules/auth';
+import { CallDetailPage, CallListPage } from '@/modules/calls';
+import { CustomerListPage, CustomerProfilePage } from '@/modules/customers';
 import { DashboardPage } from '@/modules/dashboard';
 import { TicketDetailPage, TicketListPage } from '@/modules/tickets';
 import { AppShell } from './layout/AppShell';
-import { ComingSoonPage } from './pages/ComingSoonPage';
 import { HomeRedirect } from './pages/HomeRedirect';
 import { RouteErrorPage } from './pages/RouteErrorPage';
 
@@ -32,20 +34,17 @@ export const router = createBrowserRouter([
       { path: 'dashboard', element: guarded('dashboard.view', <DashboardPage />) },
       { path: 'tickets', element: guarded('tickets.view', <TicketListPage />) },
       { path: 'tickets/:ticketId', element: guarded('tickets.view', <TicketDetailPage />) },
-      { path: 'calls', element: guarded('calls.view', <ComingSoonPage title="تماس‌ها" />) },
-      { path: 'customers', element: guarded('customers.view', <ComingSoonPage title="مشتریان" />) },
+      { path: 'calls', element: guarded('calls.view', <CallListPage />) },
+      { path: 'calls/:callId', element: guarded('calls.view', <CallDetailPage />) },
+      { path: 'customers', element: guarded('customers.view', <CustomerListPage />) },
       {
-        path: 'admin/users',
-        element: guarded('admin.manage', <ComingSoonPage title="مدیریت کاربران" />),
+        path: 'customers/:nationalId',
+        element: guarded('customers.view', <CustomerProfilePage />),
       },
-      {
-        path: 'admin/roles',
-        element: guarded('admin.manage', <ComingSoonPage title="دسترسی‌ها" />),
-      },
-      {
-        path: 'admin/settings',
-        element: guarded('admin.manage', <ComingSoonPage title="تنظیمات" />),
-      },
+      { path: 'admin', element: <Navigate to={adminPaths.users} replace /> },
+      { path: 'admin/users', element: guarded('admin.manage', <UsersPage />) },
+      { path: 'admin/roles', element: guarded('admin.manage', <RolesPage />) },
+      { path: 'admin/settings', element: guarded('admin.manage', <SettingsPage />) },
       { path: '*', element: <RouteErrorPage /> },
     ],
   },

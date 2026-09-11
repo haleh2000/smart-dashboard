@@ -1,0 +1,13 @@
+.call-categorization__error,
+.call-categorization__saved {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-small);
+}
+
+.call-categorization__error {
+  color: var(--color-error);
+}
+
+.call-categorization__saved {
+  color: var(--color-success);
+}

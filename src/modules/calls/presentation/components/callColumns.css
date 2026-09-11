@@ -1,0 +1,10 @@
+.call-caller {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.call-caller__mobile {
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}

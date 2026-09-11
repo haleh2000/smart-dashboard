@@ -1,0 +1,9 @@
+.subject-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.subject-picker .form-select:disabled {
+  opacity: 0.55;
+}

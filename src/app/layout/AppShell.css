@@ -347,6 +347,16 @@
     height: 1.35rem;
   }
 
+  /* Section heading inside the menu (e.g. «مدیریت»). */
+  .side-nav__group {
+    margin-top: var(--space-3);
+    padding: var(--space-2) var(--space-4) var(--space-1);
+    border-top: 1px solid var(--sidebar-divider);
+    font-size: var(--font-size-small);
+    font-weight: 700;
+    opacity: 0.75;
+  }
+
   /* Active entry: the Daydar white pill. */
   .side-nav__item--active {
     background: var(--sidebar-item-active-bg);

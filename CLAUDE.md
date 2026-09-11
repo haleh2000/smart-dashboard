@@ -31,13 +31,14 @@ TypeScript is pinned to `~6.0`: `typescript-eslint` doesn't support TS 7 yet.
 ```
 src/
   app/        composition root: DI container, providers, router, Daydar shell (layout/), navigation
-  modules/    one folder per feature (auth, tickets, dashboard, …)
+  modules/    one folder per feature: auth, dashboard, tickets, calls, customers, admin
     <name>/
       domain/          entities, business rules, repository ports (interfaces). Plain TS only.
       infrastructure/  adapters that implement the ports (Mock* today, Http* once api.yml exists)
       presentation/    React: pages, components, query hooks, labels, paths, stores
       index.ts         the module's public API
-  shared/     feature-agnostic kernel: ui/, theme/, http/, di/, domain/ (pagination), lib/, config/
+  shared/     feature-agnostic kernel: ui/, theme/, http/, di/, lib/, config/,
+              domain/ (pagination, period presets, AI vocabulary: Sentiment/Priority/SubjectPath/Transcript, mobile)
   styles/     global design-system CSS: tokens, base, forms, view-transitions
   mocks/      fake backend dataset used by Mock* adapters (to be deleted once the API exists)
   test/       test setup + renderWithProviders
@@ -72,19 +73,23 @@ There is no separate use-case/application layer on purpose (YAGNI). Presentation
 ## Domain rules from the spec
 
 - **SMART never creates tickets.** They come from CRM. `images/create-ticket.png` is only a data-model reference.
-- **CRM is the source of truth.** SMART data (sentiment, priority, AI tags, voiceId, transcript) sits in `Ticket.enrichment`, attached to the same `TicketID`, and must never overwrite CRM fields. Table columns are CRM columns (in CRM order) plus enrichment columns. They're defined as a config array in `TicketTable.tsx`, so add a column there.
+- **CRM is the source of truth.** SMART data (sentiment, priority, AI tags, voiceId, transcript) sits in `Ticket.enrichment`, attached to the same `TicketID`, and must never overwrite CRM fields. Table columns are CRM columns (in CRM order) plus enrichment columns. They're defined as a config array in `ticketColumns.tsx` (with `exportValue` for the Excel export), so add a column there.
 - **Ticket status badges** use cleaned-up labels with the CRM color mapping (`statusMeta`).
 - **RBAC:** the `rolePermissions` matrix in `modules/auth/domain/permission.ts` is the only place access rules live. Agents don't see the dashboard; `admin.manage` is Admin only.
 - **Dashboard cross-filtering** (Power BI parity): clicking any chart segment filters every chart and KPI, clicking it again removes the filter, and active filters show as chips. The Subject1→2→3 panel drills down, and changing a parent level clears deeper levels. Each chart queries with every filter except its own dimension, so it keeps showing all its segments and highlights the selected one.
 - **Auth:** `/login` is a two-step form (mobile → password) outside `SessionGate`; the gate sends anonymous visitors there and back. Until the real API exists, `MockAuthRepository` accepts any valid mobile (`09xxxxxxxxx`, Persian digits allowed) with any non-empty password.
-- **Aggregation belongs to the backend.** `AnalyticsRepository` returns breakdowns and KPIs; the mock computes them in memory.
+- **Aggregation belongs to the backend.** `AnalyticsRepository` returns breakdowns, cross-breakdowns, subject tables, trends, operator/call stats, the heatmap and repeat-call figures; the mock computes them in memory over tickets **and** calls. `CustomerRepository` returns the Customer 360 (profile + policies + claims, interactions, sentiment history) already joined.
+- **Dashboard** has a shared time filter (`Period` preset → `periodRange` → `DashboardScope.range`) and three tabs (ticket analytics / operators / calls) that share one cross-filter store. Every dimension (subject levels, type, channel, line, branch, sentiment, operator, weekday, hour) applies to tickets and calls alike.
+- **Calls:** the incoming-call popup (`IncomingCallPopup`, mounted in `AppShell`) listens to `CallRepository.subscribeIncoming` (WebSocket/SSE on the real API) and offers the 3-level categorization. It shows for roles with `calls.receive`. In dev, «تماس آزمایشی» in the header rings a fake call.
+- **Excel export** is a UTF-8 CSV with BOM (`shared/lib/csv`), built from the same column config as the table (`DataColumn.exportValue` + `tableExport`) and fetched for the whole filtered list, not just the visible page. Swap in a server export when the API offers one.
+- **Roles page is read-only**: it renders the `rolePermissions` matrix; editing arrives with the API.
 
 ## When `api.yml` arrives (repo root)
 
 1. Generate or write DTO types from it. `openapi-typescript` is a good fit once it supports TS 6; otherwise use `npx openapi-typescript@latest` or write the types by hand.
 2. For each port, add `modules/<name>/infrastructure/Http<Name>Repository.ts` using `createHttpClient({ baseUrl: env.apiBaseUrl, getToken })` from `@/shared/http`, plus a mapper from DTO to domain entity (e.g. ISO string → `Date`). Keep DTOs inside infrastructure.
 3. Swap the adapters in `src/app/container.ts`. Presentation and domain code should not change. If they have to, the port was wrong, so fix the port.
-4. Check the domain field names in `modules/tickets/domain/ticket.ts` and the status list against the API. Then delete `src/mocks/`, the `Mock*` adapters, `devSession.ts` and `DevRoleSwitcher`.
+4. Check the domain field names in `modules/*/domain/*.ts` and the status lists against the API. Then delete `src/mocks/`, the `Mock*` adapters, `devSession.ts`, `DevRoleSwitcher`, `devCallSimulator.ts` / `incomingFeed.ts` (calls) and `DevCallButton`.
 
 Config: `VITE_API_BASE_URL` (see `.env.example`). Read env vars only through `src/shared/config/env.ts`.
 
@@ -106,7 +111,7 @@ The look is copied from the sibling Day Insurance project (`~/GolandProjects/qei
 
 - No TypeScript `enum`s (`erasableSyntaxOnly`). Use `as const` arrays plus a derived union (`TICKET_STATUSES` / `TicketStatus`).
 - `noUncheckedIndexedAccess` is on, so handle `undefined` from index access.
-- Reuse the shared UI primitives in `@/shared/ui` (`Button`, `StatusBadge`, `PageHeader`, `Panel`, `StatCard`, `BarList`, `Pagination`, `SkeletonTable`, `ErrorState`, `EmptyState`, `ThemeToggle`, `NavIcon`). Promote a component into `shared/ui` only when a second module needs it.
+- Reuse the shared UI primitives in `@/shared/ui` (`Button`, `StatusBadge`, `PageHeader`, `Panel`, `StatCard`, `BarList`, `DataTable` + `tableExport`, `FilterBar`/`FilterField`/`FilterSelect`, `Tabs`, `SegmentedControl`, `Dialog`, `ActionMenu`, `InfoCard`/`InfoGrid`/`InfoRow`, `SentimentBadge`/`PriorityBadge`/`TagList`, `VoicePlayer`/`Transcript`, `Pagination`, `SkeletonTable`, `ErrorState`, `EmptyState`, `ThemeToggle`, `NavIcon`). Promote a component into `shared/ui` only when a second module needs it.
 - `StatusBadge` tones are `info | warning | error | success | neutral`, mapped from domain values in each module's labels file (e.g. `statusMeta`).
-- Navigation is flat (`src/app/navigation.ts`). Add an icon to `NavIcon` when adding a section.
-- Sidebar sections that aren't built yet (Calls, Customers, Management) render `ComingSoonPage`. Build each one as a new module following the tickets module's structure.
+- Navigation is flat (`src/app/navigation.ts`); items with the same `group` (e.g. «مدیریت») get one heading in the rail and collapse to one entry in the mobile bottom bar. Add an icon to `NavIcon` when adding a section.
+- List pages keep filters, sort, page and period in the URL (`use*ListParams`). The ticket list passes its query string to the detail page (router state `listSearch`) so prev/next follow the same list.

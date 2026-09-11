@@ -1,14 +1,30 @@
 .panel {
+  min-width: 0;
   background: var(--color-surface);
   border: 1px solid var(--color-outline);
   border-radius: var(--radius-large);
   padding: var(--space-4);
 }
 
+.panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
 .panel__title {
-  margin: 0 0 var(--space-4);
+  margin: 0;
   font-size: var(--font-size-body);
   color: var(--color-primary);
+}
+
+.panel__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .panel__empty {

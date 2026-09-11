@@ -1,5 +1,5 @@
 import type { BadgeTone } from '@/shared/ui';
-import type { Priority, Sentiment, TicketStatus } from '../domain/ticket';
+import type { NoteError, TicketEventKind, TicketStatus } from '../domain/ticket';
 
 interface Meta {
   label: string;
@@ -16,14 +16,17 @@ export const statusMeta: Record<TicketStatus, Meta & { live: boolean }> = {
   closed: { label: 'بسته‌شده', tone: 'neutral', live: false },
 };
 
-export const sentimentMeta: Record<Sentiment, Meta> = {
-  positive: { label: 'مثبت', tone: 'success' },
-  neutral: { label: 'خنثی', tone: 'neutral' },
-  negative: { label: 'منفی', tone: 'error' },
+export const eventMeta: Record<TicketEventKind, Meta> = {
+  created: { label: 'ایجاد', tone: 'info' },
+  assigned: { label: 'تخصیص', tone: 'info' },
+  referred: { label: 'ارجاع', tone: 'warning' },
+  call: { label: 'تماس', tone: 'info' },
+  statusChanged: { label: 'تغییر وضعیت', tone: 'neutral' },
+  responded: { label: 'پاسخ', tone: 'success' },
+  closed: { label: 'بسته شد', tone: 'neutral' },
 };
 
-export const priorityMeta: Record<Priority, Meta> = {
-  low: { label: 'کم', tone: 'neutral' },
-  medium: { label: 'متوسط', tone: 'warning' },
-  high: { label: 'زیاد', tone: 'error' },
+export const noteErrorMessages: Record<NoteError, string> = {
+  empty: 'متن یادداشت را وارد کنید.',
+  tooLong: 'یادداشت بیش از حد طولانی است.',
 };

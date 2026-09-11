@@ -1,0 +1,73 @@
+.roles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.roles > .page-header {
+  margin-bottom: 0;
+}
+
+.roles__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--space-4);
+}
+
+.roles__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.roles__card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.roles__count {
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+
+.roles__description {
+  margin: 0;
+  line-height: 1.9;
+  font-size: var(--font-size-small);
+}
+
+.roles__permission {
+  font-weight: 500;
+  white-space: normal;
+}
+
+.roles__cell {
+  text-align: center;
+  color: var(--color-muted);
+}
+
+.queue-table th.roles__cell {
+  text-align: center;
+}
+
+.roles__cell--on {
+  color: var(--color-success);
+  font-weight: 700;
+}
+
+.roles__note {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-medium);
+  background: var(--color-primary-soft);
+  color: var(--color-muted);
+  font-size: var(--font-size-small);
+  line-height: 1.9;
+}

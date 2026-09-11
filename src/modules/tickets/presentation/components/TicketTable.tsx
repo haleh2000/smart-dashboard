@@ -1,141 +1,117 @@
-import type { ReactNode } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
+import { customerPaths } from '@/modules/customers';
 import type { Sort } from '@/shared/domain/pagination';
-import { formatDateTime, formatPersianNumber } from '@/shared/lib/format';
-import { StatusBadge } from '@/shared/ui';
+import { ActionMenu, DataTable } from '@/shared/ui';
 import type { Ticket } from '../../domain/ticket';
 import type { TicketSortField } from '../../domain/TicketRepository';
+import { useToggleStar } from '../hooks/ticketQueries';
 import { ticketPaths } from '../ticketPaths';
-import { PriorityBadge, SentimentBadge, TicketStatusBadge } from './TicketBadges';
-import './TicketTable.css';
+import { ticketColumns, type TicketColumn } from './ticketColumns';
 
-interface Column {
-  header: string;
-  cell: (ticket: Ticket) => ReactNode;
-  sortField?: TicketSortField;
+function StarButton({ ticket }: { ticket: Ticket }) {
+  const toggleStar = useToggleStar();
+  const label = ticket.starred ? 'حذف ستاره' : 'ستاره‌دار کردن';
+  return (
+    <button
+      type="button"
+      className={`icon-button${ticket.starred ? ' icon-button--on' : ''}`}
+      aria-label={label}
+      aria-pressed={ticket.starred}
+      title={label}
+      onClick={() => toggleStar.mutate({ id: ticket.id, starred: !ticket.starred })}
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z"
+          fill={ticket.starred ? 'currentColor' : 'none'}
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </button>
+  );
 }
 
-/** CRM columns (same order as the current CRM, right → left) followed by SMART enrichment columns. */
-const columns: Column[] = [
-  {
-    header: 'شماره تیکت',
-    sortField: 'id',
-    cell: (t) => (
+function RowActions({ ticket, listSearch }: { ticket: Ticket; listSearch: string }) {
+  return (
+    <span className="queue-table__actions">
+      <StarButton ticket={ticket} />
       <Link
-        to={ticketPaths.detail(t.id)}
-        className="queue-table__tracking"
-        onClick={(e) => e.stopPropagation()}
+        className="icon-button"
+        to={ticketPaths.detail(ticket.id)}
+        state={{ listSearch }}
+        aria-label="مشاهده"
+        title="مشاهده"
       >
-        {formatPersianNumber(t.id)}
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"
+            stroke="currentColor"
+            strokeWidth="1.6"
+          />
+          <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6" />
+        </svg>
       </Link>
-    ),
-  },
-  { header: 'زمان ایجاد', sortField: 'createdAt', cell: (t) => formatDateTime(t.createdAt) },
-  { header: 'نوع تیکت', cell: (t) => t.type },
-  { header: 'وضعیت', sortField: 'status', cell: (t) => <TicketStatusBadge status={t.status} /> },
-  { header: 'موبایل', cell: (t) => formatPersianNumber(t.customer.mobile) },
-  { header: 'کدملی', cell: (t) => formatPersianNumber(t.customer.nationalId) },
-  { header: 'نوع اصلی شکایت', cell: (t) => t.subject.level1 },
-  { header: 'نوع شکایت', cell: (t) => t.subject.level2 },
-  { header: 'مالک پیگیری', cell: (t) => t.followUpOwner },
-  { header: 'علت شکایت', cell: (t) => t.subject.level3 },
-  { header: 'نام شعبه', cell: (t) => t.branch },
-  { header: 'مالک شکایت', cell: (t) => t.complaintOwner },
-  {
-    header: 'احساس',
-    cell: (t) => t.enrichment && <SentimentBadge sentiment={t.enrichment.sentiment} />,
-  },
-  {
-    header: 'اولویت',
-    cell: (t) => t.enrichment && <PriorityBadge priority={t.enrichment.priority} />,
-  },
-  {
-    header: 'برچسب‌های AI',
-    cell: (t) => (
-      <span className="queue-table__tags">
-        {t.enrichment?.aiTags.map((tag) => (
-          <StatusBadge key={tag} tone="info">
-            {tag}
-          </StatusBadge>
-        ))}
-      </span>
-    ),
-  },
-];
+      <ActionMenu
+        label="بیشتر"
+        items={[
+          {
+            label: 'کپی شماره تیکت',
+            onSelect: () => void navigator.clipboard?.writeText(ticket.id),
+          },
+          {
+            label: 'پروفایل مشتری (Customer 360)',
+            to: customerPaths.profile(ticket.customer.nationalId),
+          },
+          {
+            label: 'تیکت‌های دیگر این مشتری',
+            to: ticketPaths.ofCustomer(ticket.customer.nationalId),
+          },
+        ]}
+      />
+    </span>
+  );
+}
 
 interface TicketTableProps {
   tickets: Ticket[];
   sort: Sort<TicketSortField>;
   onSortChange: (sort: Sort<TicketSortField>) => void;
+  selected: ReadonlySet<string>;
+  onSelectionChange: (selected: Set<string>) => void;
 }
 
-export function TicketTable({ tickets, sort, onSortChange }: TicketTableProps) {
+export function TicketTable({
+  tickets,
+  sort,
+  onSortChange,
+  selected,
+  onSelectionChange,
+}: TicketTableProps) {
   const navigate = useNavigate();
-  const open = (id: string) => navigate(ticketPaths.detail(id));
+  const { search } = useLocation();
 
-  const toggleSort = (field: TicketSortField) =>
-    onSortChange({
-      field,
-      direction: sort.field === field && sort.direction === 'desc' ? 'asc' : 'desc',
-    });
+  const columns: TicketColumn[] = [
+    ...ticketColumns(search),
+    {
+      header: 'عملیات',
+      interactive: true,
+      cell: (ticket) => <RowActions ticket={ticket} listSearch={search} />,
+    },
+  ];
 
   return (
-    <div className="queue-table-wrap">
-      <table className="queue-table">
-        <thead>
-          <tr>
-            {columns.map((column) => (
-              <th
-                key={column.header}
-                scope="col"
-                aria-sort={
-                  column.sortField === sort.field
-                    ? sort.direction === 'asc'
-                      ? 'ascending'
-                      : 'descending'
-                    : undefined
-                }
-              >
-                {column.sortField ? (
-                  <button
-                    type="button"
-                    className="queue-table__sort"
-                    onClick={() => toggleSort(column.sortField!)}
-                  >
-                    {column.header}
-                    <span className="queue-table__sort-mark" aria-hidden="true">
-                      {column.sortField === sort.field
-                        ? sort.direction === 'asc'
-                          ? '▲'
-                          : '▼'
-                        : '↕'}
-                    </span>
-                  </button>
-                ) : (
-                  column.header
-                )}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {tickets.map((ticket) => (
-            <tr
-              key={ticket.id}
-              className="queue-table__row"
-              tabIndex={0}
-              onClick={() => open(ticket.id)}
-              onKeyDown={(event) => event.key === 'Enter' && open(ticket.id)}
-            >
-              {columns.map((column) => (
-                <td key={column.header} data-label={column.header}>
-                  {column.cell(ticket)}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      rows={tickets}
+      columns={columns}
+      rowKey={(ticket) => ticket.id}
+      sort={sort}
+      onSortChange={onSortChange}
+      selection={{ selected, onChange: onSelectionChange }}
+      onRowClick={(ticket) =>
+        navigate(ticketPaths.detail(ticket.id), { state: { listSearch: search } })
+      }
+    />
   );
 }

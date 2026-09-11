@@ -1,6 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
+import { SettingsRepositoryProvider, UserRepositoryProvider } from '@/modules/admin';
 import { AuthRepositoryProvider } from '@/modules/auth';
+import { CallRepositoryProvider } from '@/modules/calls';
+import { CustomerRepositoryProvider } from '@/modules/customers';
 import { AnalyticsRepositoryProvider } from '@/modules/dashboard';
 import { TicketRepositoryProvider } from '@/modules/tickets';
 import type { Dependencies } from './container';
@@ -21,7 +24,15 @@ export function AppProviders({
       <AuthRepositoryProvider value={dependencies.authRepository}>
         <TicketRepositoryProvider value={dependencies.ticketRepository}>
           <AnalyticsRepositoryProvider value={dependencies.analyticsRepository}>
-            {children}
+            <CallRepositoryProvider value={dependencies.callRepository}>
+              <CustomerRepositoryProvider value={dependencies.customerRepository}>
+                <UserRepositoryProvider value={dependencies.userRepository}>
+                  <SettingsRepositoryProvider value={dependencies.settingsRepository}>
+                    {children}
+                  </SettingsRepositoryProvider>
+                </UserRepositoryProvider>
+              </CustomerRepositoryProvider>
+            </CallRepositoryProvider>
           </AnalyticsRepositoryProvider>
         </TicketRepositoryProvider>
       </AuthRepositoryProvider>

@@ -1,4 +1,12 @@
+import {
+  MockSettingsRepository,
+  MockUserRepository,
+  type SettingsRepository,
+  type UserRepository,
+} from '@/modules/admin';
 import { MockAuthRepository, type AuthRepository } from '@/modules/auth';
+import { MockCallRepository, type CallRepository } from '@/modules/calls';
+import { MockCustomerRepository, type CustomerRepository } from '@/modules/customers';
 import { MockAnalyticsRepository, type AnalyticsRepository } from '@/modules/dashboard';
 import { MockTicketRepository, type TicketRepository } from '@/modules/tickets';
 
@@ -7,6 +15,10 @@ export interface Dependencies {
   authRepository: AuthRepository;
   ticketRepository: TicketRepository;
   analyticsRepository: AnalyticsRepository;
+  callRepository: CallRepository;
+  customerRepository: CustomerRepository;
+  userRepository: UserRepository;
+  settingsRepository: SettingsRepository;
 }
 
 /**
@@ -18,4 +30,8 @@ export const createDependencies = (): Dependencies => ({
   authRepository: new MockAuthRepository(),
   ticketRepository: new MockTicketRepository(),
   analyticsRepository: new MockAnalyticsRepository(),
+  callRepository: new MockCallRepository(),
+  customerRepository: new MockCustomerRepository(),
+  userRepository: new MockUserRepository(),
+  settingsRepository: new MockSettingsRepository(),
 });

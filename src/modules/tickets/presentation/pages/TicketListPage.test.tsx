@@ -19,10 +19,13 @@ const ticket: Ticket = {
   complaintOwner: 'اپراتور',
   followUpOwner: 'اپراتور',
   complaintText: '',
+  slaRemainingDays: 3,
+  referralCount: 0,
+  starred: false,
   enrichment: null,
 };
 
-const fakeRepository = (): TicketRepository => ({
+const fakeTicketRepository = (): TicketRepository => ({
   list: vi.fn(async (query) => ({
     items: [ticket],
     total: 1,
@@ -30,6 +33,19 @@ const fakeRepository = (): TicketRepository => ({
     pageSize: query.pageSize,
   })),
   getById: vi.fn(async () => ticket),
+  getFilterOptions: vi.fn(async () => ({
+    types: ['شکایت'],
+    subjects: ['پس از صدور'],
+    branches: ['تهران'],
+    operators: ['اپراتور'],
+  })),
+  getAdjacent: vi.fn(async () => ({ previousId: null, nextId: null })),
+  getTimeline: vi.fn(async () => []),
+  getUpdates: vi.fn(async () => []),
+  getNotes: vi.fn(async () => []),
+  addNote: vi.fn(async (_id, text) => ({ id: 'n', at: new Date(), author: 'من', text })),
+  getDocuments: vi.fn(async () => []),
+  setStarred: vi.fn(async () => undefined),
 });
 
 const renderPage = (repository: TicketRepository) =>
@@ -46,14 +62,14 @@ const renderPage = (repository: TicketRepository) =>
 
 describe('TicketListPage', () => {
   it('renders tickets from the injected repository with a status badge', async () => {
-    renderPage(fakeRepository());
+    renderPage(fakeTicketRepository());
 
     expect(await screen.findByRole('link', { name: '۹۰۰۱' })).toBeInTheDocument();
     expect(within(screen.getByRole('table')).getByText('در انتظار')).toBeInTheDocument();
   });
 
   it('passes the status filter to the repository and keeps it in the URL', async () => {
-    const repository = fakeRepository();
+    const repository = fakeTicketRepository();
     const { router } = renderPage(repository);
     await screen.findByRole('link', { name: '۹۰۰۱' });
 
@@ -65,8 +81,43 @@ describe('TicketListPage', () => {
     expect(router.state.location.search).toBe('?status=closed');
   });
 
+  it('filters by priority and operator', async () => {
+    const repository = fakeTicketRepository();
+    const { router } = renderPage(repository);
+    await screen.findByRole('link', { name: '۹۰۰۱' });
+
+    await userEvent.selectOptions(screen.getByLabelText('اولویت'), 'high');
+    await userEvent.selectOptions(await screen.findByLabelText('اپراتور'), 'اپراتور');
+
+    expect(repository.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({ priority: 'high', operator: 'اپراتور' }),
+    );
+    expect(router.state.location.search).toContain('priority=high');
+  });
+
+  it('sorts by a CRM column from its header', async () => {
+    const repository = fakeTicketRepository();
+    renderPage(repository);
+    await screen.findByRole('link', { name: '۹۰۰۱' });
+
+    await userEvent.click(screen.getByRole('button', { name: /نام شعبه/ }));
+
+    expect(repository.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({ sort: { field: 'branch', direction: 'desc' } }),
+    );
+  });
+
+  it('stars a ticket from the row actions', async () => {
+    const repository = fakeTicketRepository();
+    renderPage(repository);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'ستاره‌دار کردن' }));
+
+    expect(repository.setStarred).toHaveBeenCalledWith('9001', true);
+  });
+
   it('opens the detail page when a row is clicked', async () => {
-    const { router } = renderPage(fakeRepository());
+    const { router } = renderPage(fakeTicketRepository());
 
     await userEvent.click(await screen.findByText('تهران'));
 

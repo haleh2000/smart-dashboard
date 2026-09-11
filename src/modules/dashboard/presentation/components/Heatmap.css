@@ -1,0 +1,66 @@
+.heatmap-wrap {
+  overflow-x: auto;
+}
+
+.heatmap {
+  display: grid;
+  grid-template-columns: 4.5rem repeat(24, minmax(1.1rem, 1fr));
+  gap: calc(var(--space-1) / 2);
+  min-width: 34rem;
+}
+
+/* Rows are grid-transparent so their cells line up with the hour header. */
+.heatmap__row {
+  display: contents;
+}
+
+.heatmap__hour {
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.heatmap__day {
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+  align-self: center;
+  white-space: nowrap;
+}
+
+.heatmap__cell {
+  aspect-ratio: 1;
+  min-height: 1.1rem;
+  padding: 0;
+  border: none;
+  border-radius: calc(var(--radius-small) / 2);
+  cursor: pointer;
+  transition:
+    opacity var(--duration-base) ease,
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.heatmap__cell:hover,
+.heatmap__cell:focus-visible {
+  transform: scale(1.2);
+}
+
+.heatmap__cell--dimmed {
+  opacity: 0.3;
+}
+
+.heatmap__scale {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+
+.heatmap__scale-bar {
+  width: 8rem;
+  height: 0.5rem;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(to left, var(--chart-track), var(--chart-series-1));
+}

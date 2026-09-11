@@ -1,0 +1,30 @@
+.sentiment-bar__track {
+  height: 2rem;
+  border-radius: var(--radius-medium);
+}
+
+.sentiment-bar__figures {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
+}
+
+.sentiment-bar__figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.sentiment-bar__figure dt {
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+
+.sentiment-bar__figure dd {
+  margin: 0;
+  font-weight: 700;
+  font-size: var(--font-size-title);
+  font-variant-numeric: tabular-nums;
+}

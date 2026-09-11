@@ -1,0 +1,57 @@
+.insurance-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.insurance-card__heading {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.insurance-card__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.insurance-card__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) 0;
+  border-bottom: 1px dashed var(--color-outline-soft);
+}
+
+.insurance-card__item:last-child {
+  border-bottom: none;
+}
+
+.insurance-card__primary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-weight: 500;
+}
+
+.insurance-card__secondary {
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+
+.insurance-card__link {
+  font-size: var(--font-size-small);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.insurance-card__empty {
+  margin: 0;
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}

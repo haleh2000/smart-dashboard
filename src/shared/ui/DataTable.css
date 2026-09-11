@@ -43,6 +43,44 @@
   background: var(--color-primary-soft);
 }
 
+.queue-table__row--selected {
+  background: var(--color-primary-container);
+}
+
+.queue-table__caption {
+  caption-side: top;
+  text-align: start;
+  padding-bottom: var(--space-2);
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+
+.queue-table__select {
+  width: 1%;
+}
+
+.queue-table__select input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+/* A compact inline cluster of icon buttons (star, view, more). */
+.queue-table__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.queue-table__muted {
+  color: var(--color-muted);
+}
+
+.queue-table__link {
+  font-weight: 500;
+}
+
 .queue-table__sort {
   display: inline-flex;
   align-items: center;

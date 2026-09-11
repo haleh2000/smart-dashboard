@@ -1,4 +1,34 @@
-import { formatDateTime, formatPercent, formatPersianNumber, toLatinDigits } from './format';
+import {
+  formatAmount,
+  formatDate,
+  formatDateTime,
+  formatDuration,
+  formatElapsed,
+  formatPercent,
+  formatPersianNumber,
+  toLatinDigits,
+} from './format';
+
+describe('durations and amounts', () => {
+  it('formats call durations as clock time', () => {
+    expect(formatDuration(205)).toBe('۰۳:۲۵');
+    expect(formatDuration(3805)).toBe('۱:۰۳:۲۵');
+  });
+
+  it('picks a readable unit for elapsed time', () => {
+    expect(formatElapsed(40)).toBe('۴۰ ثانیه');
+    expect(formatElapsed(720)).toBe('۱۲ دقیقه');
+    expect(formatElapsed(3 * 3600 + 1800)).toBe('۳٫۵ ساعت');
+  });
+
+  it('groups large amounts with the Persian separator', () => {
+    expect(formatAmount(12_500_000)).toBe('۱۲٬۵۰۰٬۰۰۰');
+  });
+
+  it('formats a Jalali date without time', () => {
+    expect(formatDate(new Date(2026, 8, 1, 9, 5))).toBe('۱۴۰۵/۰۶/۱۰');
+  });
+});
 
 describe('format', () => {
   it('localizes every digit without grouping', () => {

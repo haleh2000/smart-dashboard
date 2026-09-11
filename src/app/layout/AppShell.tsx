@@ -1,10 +1,13 @@
+import { Fragment } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router';
 import { authPaths, roleLabels, useCan, useCurrentUser, useSignOut } from '@/modules/auth';
+import { IncomingCallPopup } from '@/modules/calls';
 import { env } from '@/shared/config/env';
 import { cn } from '@/shared/lib/cn';
 import { formatPersianNumber } from '@/shared/lib/format';
 import { NavIcon, ThemeToggle } from '@/shared/ui';
-import { activeNavPath, navigation } from '../navigation';
+import { activeNavPath, bottomNavItems, navigation } from '../navigation';
+import { DevCallButton } from './DevCallButton';
 import { DevRoleSwitcher } from './DevRoleSwitcher';
 import './AppShell.css';
 
@@ -36,18 +39,25 @@ export function AppShell() {
         </div>
 
         <nav className="side-nav__menu">
-          {items.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={cn('side-nav__item', item.path === activePath && 'side-nav__item--active')}
-              aria-current={item.path === activePath ? 'page' : undefined}
-            >
-              <span className="side-nav__item-icon">
-                <NavIcon name={item.icon} />
-              </span>
-              <span className="side-nav__item-label">{item.label}</span>
-            </Link>
+          {items.map((item, index) => (
+            <Fragment key={item.path}>
+              {item.group && item.group !== items[index - 1]?.group && (
+                <span className="side-nav__group">{item.group}</span>
+              )}
+              <Link
+                to={item.path}
+                className={cn(
+                  'side-nav__item',
+                  item.path === activePath && 'side-nav__item--active',
+                )}
+                aria-current={item.path === activePath ? 'page' : undefined}
+              >
+                <span className="side-nav__item-icon">
+                  <NavIcon name={item.icon} />
+                </span>
+                <span className="side-nav__item-label">{item.label}</span>
+              </Link>
+            </Fragment>
           ))}
         </nav>
 
@@ -75,6 +85,7 @@ export function AppShell() {
           </Link>
 
           <div className="app-header__actions">
+            {env.isDev && <DevCallButton />}
             {env.isDev && <DevRoleSwitcher />}
             <ThemeToggle />
             <button
@@ -104,13 +115,13 @@ export function AppShell() {
       </div>
 
       <nav className="bottom-nav" aria-label="منوی اصلی">
-        {items.map((item) => (
+        {bottomNavItems(items).map((item) => (
           <Link
             key={item.path}
             to={item.path}
             className={cn(
               'bottom-nav__item',
-              item.path === activePath && 'bottom-nav__item--active',
+              activePath && item.paths.includes(activePath) && 'bottom-nav__item--active',
             )}
           >
             <span className="bottom-nav__icon">
@@ -120,6 +131,8 @@ export function AppShell() {
           </Link>
         ))}
       </nav>
+
+      <IncomingCallPopup />
     </div>
   );
 }

@@ -1,0 +1,40 @@
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.admin-form__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-4);
+}
+
+.admin-form__error {
+  font-size: var(--font-size-small);
+  color: var(--color-error);
+}
+
+.admin-form__banner {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-medium);
+  background: var(--color-error-soft);
+  color: var(--color-error);
+  font-size: var(--font-size-small);
+}
+
+.admin-form__success {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-medium);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  font-size: var(--font-size-small);
+}
+
+.admin-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
