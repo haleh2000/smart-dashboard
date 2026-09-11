@@ -1,0 +1,198 @@
+/*
+ * Shared, token-driven form primitives reused across the request wizard and
+ * any future form screen. No component redefines an input or button from
+ * scratch; layout-specific rules stay in each component's scoped block.
+ * Every value references a design token — no inline hex, ever.
+ */
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.form-field__label {
+  font-size: var(--font-size-small);
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+.form-field__label--required::after {
+  content: ' *';
+  color: var(--color-error);
+}
+
+.form-field__hint {
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+  line-height: 1.7;
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  min-height: var(--control-height);
+  padding: var(--control-padding-block) var(--control-padding-inline);
+  font-family: inherit;
+  font-size: var(--font-size-body);
+  line-height: 1.4;
+  color: var(--color-ink);
+  background: var(--color-background);
+  border: 1.5px solid var(--color-outline);
+  border-radius: var(--radius-control);
+  transition:
+    border-color var(--duration-fast) ease,
+    box-shadow var(--duration-fast) ease,
+    background-color var(--duration-fast) ease;
+}
+
+.form-input:hover:not(:disabled),
+.form-select:hover:not(:disabled) {
+  border-color: var(--daydar-teal-light);
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+  box-shadow: var(--focus-ring);
+}
+
+.form-input::placeholder {
+  color: var(--color-muted);
+  opacity: 0.7;
+}
+
+.form-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-body);
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.form-checkbox input {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--color-primary);
+}
+
+/* Buttons */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+  padding: var(--control-padding-block) var(--control-padding-inline);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-control);
+  font-family: inherit;
+  font-size: var(--font-size-body);
+  line-height: 1.4;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) ease,
+    border-color var(--duration-fast) ease,
+    color var(--duration-fast) ease,
+    box-shadow var(--duration-fast) ease,
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px) scale(0.985);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.btn--primary {
+  background: var(--gradient-brand);
+  color: var(--color-on-primary);
+  box-shadow: var(--shadow-brand);
+}
+
+.btn--primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: var(--shadow-raised);
+}
+
+.btn--accent {
+  background: var(--gradient-coral);
+  color: var(--color-on-accent);
+  box-shadow: var(--shadow-accent);
+}
+
+.btn--accent:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+
+.btn--ghost {
+  background: var(--color-surface);
+  border-color: var(--color-outline);
+  color: var(--color-ink);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+/* Inline text actions are not full-size controls — they opt out of the
+   shared control height on purpose. */
+.btn--danger {
+  background: none;
+  border-color: transparent;
+  color: var(--color-error);
+  min-height: auto;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--font-size-small);
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: var(--color-error-soft);
+}
+
+/* Surface card wrapping a wizard section. */
+.wizard-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-5);
+}
+
+/* A block that dims and disables until the contract inquiry succeeds.
+   Resets fieldset chrome but keeps the wizard-card padding it pairs with. */
+.gated {
+  border: none;
+  padding: var(--space-5);
+  margin: 0;
+  min-inline-size: auto;
+}
+
+.gated[disabled] {
+  opacity: 0.5;
+}
+
+/* Full-size destructive control: same height and framing as .btn--ghost, so a
+   reject button can sit in a decision row next to approve/correct without
+   reading as a smaller inline action. */
+.btn--danger-outline {
+  background: var(--color-surface);
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.btn--danger-outline:hover:not(:disabled) {
+  background: var(--color-error-soft);
+}

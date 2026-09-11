@@ -1,0 +1,329 @@
+/*
+ * Daydar / Day Insurance design tokens — the SINGLE source of truth for
+ * color, radius, spacing, elevation, motion and typography. No component may
+ * carry an inline hex literal; everything references these variables.
+ *
+ * Identity: Day Insurance teal (فیروزه‌ای) on airy white, warm coral accent
+ * (the mascot «دی‌دی» crimson). Light + dark themes share the same token
+ * names, so components never branch on theme. Dark mode follows the system
+ * preference and can be forced via the `data-theme` attribute.
+ *
+ * Confirm final hex values against the official Day brand guide before
+ * release — adjust here, nowhere else.
+ */
+:root {
+  /* Brand — Day Insurance teal scale */
+  --daydar-teal: #039ba7;
+  --daydar-teal-dark: #027782;
+  --daydar-teal-deep: #01585f;
+  --daydar-teal-light: #2bbfca;
+  --daydar-teal-container: #e0f5f7;
+  --daydar-coral: #e4573d;
+  --daydar-coral-dark: #c8422b;
+  --daydar-coral-container: #fdeae5;
+
+  /* Signature brand gradients (headers, hero surfaces, primary CTAs) */
+  --gradient-brand: linear-gradient(135deg, #039ba7 0%, #027782 100%);
+  --gradient-brand-vivid: linear-gradient(135deg, #2bbfca 0%, #027782 100%);
+  --gradient-coral: linear-gradient(135deg, #e4573d 0%, #c8422b 100%);
+  --gradient-hero: linear-gradient(130deg, #027782 0%, #01585f 55%, #01464c 100%);
+
+  /* Verdict surfaces — the public tracking page answers «تایید شد یا نه؟»
+     with a full colored hero, so each outcome owns a gradient and the glow
+     under it. Deliberately shared with the semantic colors below: same
+     meaning, stronger voice. */
+  --gradient-approved: linear-gradient(135deg, #1aa66a 0%, #10714a 100%);
+  --gradient-rejected: linear-gradient(135deg, #d64545 0%, #9c2f2f 100%);
+  --gradient-action-required: linear-gradient(135deg, #e0a21a 0%, #a9720a 100%);
+  --glow-approved: 0 18px 44px -18px rgb(26 166 106 / 65%);
+  --glow-rejected: 0 18px 44px -18px rgb(214 69 69 / 60%);
+  --glow-action-required: 0 18px 44px -18px rgb(224 162 26 / 60%);
+
+  /* Ambient page auras (fixed, very low opacity washes behind everything) */
+  --aura-teal: rgb(3 155 167 / 10%);
+  --aura-coral: rgb(228 87 61 / 7%);
+
+  /* Neutrals */
+  --color-ink: #1e2726;
+  --color-muted: #5c6b6a;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-background: #f4f8f8;
+  --color-outline: #e0e8e7;
+  --color-outline-soft: #eef4f3;
+
+  /* Glass surfaces (sticky header, bottom nav, overlays) */
+  --surface-glass: rgb(255 255 255 / 80%);
+  --surface-glass-border: rgb(30 39 38 / 8%);
+  --blur-glass: saturate(1.6) blur(14px);
+
+  /* Semantic */
+  --color-success: #1aa66a;
+  --color-warning: #e0a21a;
+  --color-error: #d64545;
+  --color-info: #2e7cd6;
+  --color-success-soft: #e0f4ea;
+  --color-warning-soft: #fbf1dc;
+  --color-error-soft: #fae3e3;
+  --color-info-soft: #e3eefb;
+
+  /* Chart series — the ONLY palette any data visualisation draws from, so a
+     bar and the legend beside it can never disagree. Series 1..3 are the three
+     approval flows in their canonical order (پزشکی / دارو / بیماران خاص). */
+  --chart-series-1: #039ba7;
+  --chart-series-2: #e4573d;
+  --chart-series-3: #7b61c9;
+  --chart-series-4: #e0a21a;
+  --chart-series-5: #2e7cd6;
+  --chart-grid: #e0e8e7;
+  --chart-track: #eef4f3;
+
+  /* Roles */
+  /* «دی‌دی» — the Daydar mascot palette, sampled from the official character
+     renders so the WebGL mascot matches the 2D artwork. Theme-independent. */
+  --didi-body: #d61f4a;
+  --didi-panel: #fbf3f2;
+  --didi-feature: #17a9be;
+  --didi-shadow: #1b0a10;
+
+  --color-primary: var(--daydar-teal);
+  --color-primary-hover: var(--daydar-teal-dark);
+  --color-primary-container: var(--daydar-teal-container);
+  --color-primary-soft: rgb(3 155 167 / 10%);
+  --color-accent: var(--daydar-coral);
+  --color-accent-hover: var(--daydar-coral-dark);
+  --color-accent-soft: rgb(228 87 61 / 10%);
+  --color-on-primary: #ffffff;
+  --color-on-accent: #ffffff;
+
+  /* Modal/scrim overlay behind dialogs */
+  --color-overlay: rgb(12 32 31 / 45%);
+
+  /* Focus ring — one visible ring everywhere, keyboard-friendly */
+  --focus-ring: 0 0 0 3px rgb(3 155 167 / 28%);
+  --focus-ring-accent: 0 0 0 3px rgb(228 87 61 / 25%);
+
+  /* Status badge containers (soft backgrounds behind status text) */
+  --status-pending-bg: var(--daydar-teal-container);
+  --status-pending-fg: var(--daydar-teal-dark);
+  --status-correction-bg: #fbf1dc;
+  --status-correction-fg: #8a6410;
+  --status-rejected-bg: #fae3e3;
+  --status-rejected-fg: #a83232;
+  --status-issued-bg: #e0f4ea;
+  --status-issued-fg: #157a4f;
+
+  /* Shape */
+  --radius-small: 8px;
+  --radius-medium: 12px;
+  --radius-large: 16px;
+  --radius-xl: 22px;
+  --radius-pill: 999px;
+
+  /* Interactive controls (buttons, tabs, segmented switches) are gently
+     curved — never pill-shaped. --radius-pill stays for badges, chips,
+     status dots and progress bars, where a full round is the point. */
+  --radius-control: 10px;
+
+  /* Shared control metrics so a button and the input beside it line up.
+     --control-height is the floor every full-size control snaps to, which is
+     what actually guarantees equal heights in a filter bar or search row. */
+  --control-height: 46px;
+  --control-padding-block: 10px;
+  --control-padding-inline: 16px;
+
+  /* Elevation — layered, soft, teal-tinted */
+  --shadow-card: 0 1px 2px rgb(30 39 38 / 5%), 0 4px 14px -6px rgb(30 39 38 / 8%);
+  --shadow-raised: 0 2px 6px rgb(2 119 130 / 8%), 0 14px 34px -12px rgb(2 119 130 / 26%);
+  --shadow-float: 0 4px 10px rgb(30 39 38 / 6%), 0 22px 48px -16px rgb(2 119 130 / 30%);
+  --shadow-modal: 0 8px 20px rgb(12 32 31 / 10%), 0 32px 80px -20px rgb(12 32 31 / 35%);
+  --shadow-nav: 0 -2px 16px -4px rgb(30 39 38 / 12%);
+  --shadow-brand: 0 8px 22px -10px rgb(2 119 130 / 55%);
+  --shadow-accent: 0 8px 22px -10px rgb(200 66 43 / 55%);
+
+  /* Motion — shared easings & durations for a consistent feel */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --duration-fast: 0.15s;
+  --duration-base: 0.25s;
+  --duration-slow: 0.45s;
+
+  /* Layout */
+  --header-height: 64px;
+
+  /* Daydar shell — desktop teal field, right rail, floating light panel */
+  --sidebar-width: 264px;
+  --shell-gap: 14px;
+  --shell-bg: linear-gradient(180deg, #039ba7 0%, #027782 100%);
+  --sidebar-fg: #ffffff;
+  --sidebar-divider: rgb(255 255 255 / 22%);
+  --sidebar-item-hover: rgb(255 255 255 / 14%);
+  --sidebar-item-active-bg: #ffffff;
+  --sidebar-item-active-fg: var(--daydar-teal-dark);
+  --sidebar-avatar-disc: rgb(255 255 255 / 16%);
+  --sidebar-avatar-ring: conic-gradient(
+    from 210deg,
+    #2bbfca 0deg,
+    #ffffff 130deg,
+    rgb(255 255 255 / 35%) 220deg,
+    #2bbfca 360deg
+  );
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* Typography */
+  --font-family-base: 'Vazirmatn', system-ui, sans-serif;
+  --font-size-body: 0.95rem;
+  --font-size-small: 0.8rem;
+  --font-size-title: 1.25rem;
+  --font-size-display: 1.6rem;
+
+  /* Native form-control theming hint (checkbox, scrollbars, date pickers). */
+  color-scheme: light;
+}
+
+/* Dark theme values, shared by two selectors below:
+   1. system preference when the user has NOT forced light,
+   2. an explicit data-theme="dark" from the toggle. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-ink: #e8f0ef;
+    --color-muted: #9db3b1;
+    --color-surface: #16211f;
+    --color-surface-raised: #1d2b29;
+    --color-background: #0e1615;
+    --color-outline: #2a3a38;
+    --color-outline-soft: #223230;
+    --color-primary: #35b6b1;
+    --color-primary-container: #123f3d;
+    --color-primary-soft: rgb(79 197 192 / 14%);
+    --color-accent-soft: rgb(228 87 61 / 16%);
+    --daydar-teal-container: #123f3d;
+    --daydar-coral-container: #43201a;
+    --gradient-brand: linear-gradient(135deg, #027782 0%, #01585f 100%);
+    --gradient-brand-vivid: linear-gradient(135deg, #039ba7 0%, #01585f 100%);
+    --gradient-hero: linear-gradient(130deg, #0f4b49 0%, #0a3a38 55%, #082e2c 100%);
+    --aura-teal: rgb(3 155 167 / 9%);
+    --aura-coral: rgb(228 87 61 / 6%);
+    --shell-bg: linear-gradient(180deg, #0f4b49 0%, #082e2c 100%);
+    --sidebar-divider: rgb(255 255 255 / 14%);
+    --sidebar-item-hover: rgb(255 255 255 / 10%);
+    --sidebar-item-active-bg: #16211f;
+    --sidebar-item-active-fg: #6fd4dd;
+    --sidebar-avatar-disc: rgb(255 255 255 / 10%);
+    --sidebar-avatar-ring: conic-gradient(
+      from 210deg,
+      #039ba7 0deg,
+      #6fd4dd 130deg,
+      rgb(255 255 255 / 25%) 220deg,
+      #039ba7 360deg
+    );
+    --surface-glass: rgb(18 27 26 / 78%);
+    --surface-glass-border: rgb(232 240 239 / 8%);
+    --color-success-soft: #12382a;
+    --color-warning-soft: #3c2f10;
+    --color-error-soft: #401c1c;
+    --color-info-soft: #142a42;
+    --chart-series-1: #35b6b1;
+    --chart-series-2: #f07a63;
+    --chart-series-3: #a58ce8;
+    --chart-series-4: #e8c46a;
+    --chart-series-5: #6ea8e8;
+    --chart-grid: #2a3a38;
+    --chart-track: #223230;
+    --status-pending-bg: #123f3d;
+    --status-pending-fg: #6fd4dd;
+    --status-correction-bg: #3c2f10;
+    --status-correction-fg: #e8c46a;
+    --status-rejected-bg: #401c1c;
+    --status-rejected-fg: #ef9a9a;
+    --status-issued-bg: #12382a;
+    --status-issued-fg: #7ed3ab;
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 30%), 0 4px 14px -6px rgb(0 0 0 / 40%);
+    --shadow-raised: 0 2px 6px rgb(0 0 0 / 35%), 0 14px 34px -12px rgb(0 0 0 / 55%);
+    --shadow-float: 0 4px 10px rgb(0 0 0 / 35%), 0 22px 48px -16px rgb(0 0 0 / 60%);
+    --shadow-modal: 0 8px 20px rgb(0 0 0 / 40%), 0 32px 80px -20px rgb(0 0 0 / 70%);
+    --shadow-nav: 0 -2px 16px -4px rgb(0 0 0 / 55%);
+    --shadow-brand: 0 8px 22px -10px rgb(0 0 0 / 65%);
+    --shadow-accent: 0 8px 22px -10px rgb(0 0 0 / 65%);
+    --color-overlay: rgb(0 0 0 / 62%);
+    --focus-ring: 0 0 0 3px rgb(79 197 192 / 32%);
+    --focus-ring-accent: 0 0 0 3px rgb(228 87 61 / 30%);
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --color-ink: #e8f0ef;
+  --color-muted: #9db3b1;
+  --color-surface: #16211f;
+  --color-surface-raised: #1d2b29;
+  --color-background: #0e1615;
+  --color-outline: #2a3a38;
+  --color-outline-soft: #223230;
+  --color-primary: #35b6b1;
+  --color-primary-container: #123f3d;
+  --color-primary-soft: rgb(79 197 192 / 14%);
+  --color-accent-soft: rgb(228 87 61 / 16%);
+  --daydar-teal-container: #123f3d;
+  --daydar-coral-container: #43201a;
+  --gradient-brand: linear-gradient(135deg, #027782 0%, #01585f 100%);
+  --gradient-brand-vivid: linear-gradient(135deg, #039ba7 0%, #01585f 100%);
+  --gradient-hero: linear-gradient(130deg, #0f4b49 0%, #0a3a38 55%, #082e2c 100%);
+  --aura-teal: rgb(3 155 167 / 9%);
+  --aura-coral: rgb(228 87 61 / 6%);
+  --shell-bg: linear-gradient(180deg, #0f4b49 0%, #082e2c 100%);
+  --sidebar-divider: rgb(255 255 255 / 14%);
+  --sidebar-item-hover: rgb(255 255 255 / 10%);
+  --sidebar-item-active-bg: #16211f;
+  --sidebar-item-active-fg: #6fd4dd;
+  --sidebar-avatar-disc: rgb(255 255 255 / 10%);
+  --sidebar-avatar-ring: conic-gradient(
+    from 210deg,
+    #039ba7 0deg,
+    #6fd4dd 130deg,
+    rgb(255 255 255 / 25%) 220deg,
+    #039ba7 360deg
+  );
+  --surface-glass: rgb(18 27 26 / 78%);
+  --surface-glass-border: rgb(232 240 239 / 8%);
+  --color-success-soft: #12382a;
+  --color-warning-soft: #3c2f10;
+  --color-error-soft: #401c1c;
+  --color-info-soft: #142a42;
+  --chart-series-1: #35b6b1;
+  --chart-series-2: #f07a63;
+  --chart-series-3: #a58ce8;
+  --chart-series-4: #e8c46a;
+  --chart-series-5: #6ea8e8;
+  --chart-grid: #2a3a38;
+  --chart-track: #223230;
+  --status-pending-bg: #123f3d;
+  --status-pending-fg: #6fd4dd;
+  --status-correction-bg: #3c2f10;
+  --status-correction-fg: #e8c46a;
+  --status-rejected-bg: #401c1c;
+  --status-rejected-fg: #ef9a9a;
+  --status-issued-bg: #12382a;
+  --status-issued-fg: #7ed3ab;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 30%), 0 4px 14px -6px rgb(0 0 0 / 40%);
+  --shadow-raised: 0 2px 6px rgb(0 0 0 / 35%), 0 14px 34px -12px rgb(0 0 0 / 55%);
+  --shadow-float: 0 4px 10px rgb(0 0 0 / 35%), 0 22px 48px -16px rgb(0 0 0 / 60%);
+  --shadow-modal: 0 8px 20px rgb(0 0 0 / 40%), 0 32px 80px -20px rgb(0 0 0 / 70%);
+  --shadow-nav: 0 -2px 16px -4px rgb(0 0 0 / 55%);
+  --shadow-brand: 0 8px 22px -10px rgb(0 0 0 / 65%);
+  --shadow-accent: 0 8px 22px -10px rgb(0 0 0 / 65%);
+  --color-overlay: rgb(0 0 0 / 62%);
+  --focus-ring: 0 0 0 3px rgb(79 197 192 / 32%);
+  --focus-ring-accent: 0 0 0 3px rgb(228 87 61 / 30%);
+
+  color-scheme: dark;
+}

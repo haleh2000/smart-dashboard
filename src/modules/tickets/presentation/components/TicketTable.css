@@ -1,0 +1,125 @@
+/* Desk queue table, ported from the Day desk register. Collapses to cards ≤720px. */
+.queue-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-xl);
+}
+
+.queue-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  white-space: nowrap;
+}
+
+.queue-table th,
+.queue-table td {
+  text-align: right;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-outline-soft);
+}
+
+.queue-table th {
+  background: var(--color-primary-container);
+  color: var(--status-pending-fg);
+  font-size: var(--font-size-small);
+  font-weight: 700;
+}
+
+.queue-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.queue-table__row {
+  cursor: pointer;
+  transition: background var(--duration-fast) ease;
+}
+
+.queue-table__row:hover,
+.queue-table__row:focus-visible {
+  background: var(--color-primary-soft);
+}
+
+.queue-table__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.queue-table__sort-mark {
+  font-size: 0.7em;
+  opacity: 0.7;
+}
+
+.queue-table__tracking {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-ink);
+}
+
+.queue-table__tracking:hover {
+  color: var(--color-primary);
+}
+
+.queue-table__tags {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+@media (max-width: 720px) {
+  .queue-table,
+  .queue-table thead,
+  .queue-table tbody,
+  .queue-table tr,
+  .queue-table td {
+    display: block;
+  }
+
+  .queue-table thead {
+    display: none;
+  }
+
+  .queue-table {
+    border: none;
+    background: none;
+    box-shadow: none;
+    white-space: normal;
+  }
+
+  .queue-table tr {
+    margin-bottom: var(--space-3);
+    background: var(--color-surface);
+    border: 1px solid var(--color-outline);
+    border-radius: var(--radius-large);
+    box-shadow: var(--shadow-card);
+    padding: var(--space-2) var(--space-4);
+  }
+
+  .queue-table td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--color-outline-soft);
+  }
+
+  .queue-table td:last-child {
+    border-bottom: none;
+  }
+
+  .queue-table td::before {
+    content: attr(data-label);
+    color: var(--color-muted);
+    font-size: var(--font-size-small);
+  }
+}

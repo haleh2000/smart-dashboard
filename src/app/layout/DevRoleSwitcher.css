@@ -1,0 +1,23 @@
+.dev-role {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border: 1.5px dashed var(--color-warning);
+  border-radius: var(--radius-control);
+  color: var(--status-correction-fg);
+  font-size: var(--font-size-small);
+}
+
+.dev-role__select {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+@media (max-width: 640px) {
+  .dev-role__label {
+    display: none;
+  }
+}

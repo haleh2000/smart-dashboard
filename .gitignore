@@ -1,0 +1,116 @@
+# ───────────────────────── Dependencies ─────────────────────────
+node_modules/
+.pnpm-store/
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+.pnp.*
+
+# ───────────────────────── Build output ─────────────────────────
+dist/
+dist-ssr/
+build/
+out/
+*.tsbuildinfo
+.vite/
+.cache/
+.turbo/
+
+# ───────────────────────── Tests & coverage ─────────────────────────
+coverage/
+*.lcov
+.nyc_output/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+__snapshots__/*.snap.new
+
+# ───────────────────────── Logs ─────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ───────────────────────── Environment & secrets ─────────────────────────
+# Only the template is shared; real values stay on each machine.
+.env
+.env.*
+!.env.example
+*.local
+*.pem
+*.key
+*.p12
+*.crt
+secrets/
+
+# ───────────────────────── Lint / format caches ─────────────────────────
+.eslintcache
+.stylelintcache
+.prettiercache
+
+# ───────────────────────── AI assistants ─────────────────────────
+# CLAUDE.md is team documentation and IS committed. Personal/local Claude files are not.
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/worktrees/
+.claude/todos/
+.claude/*.log
+.playwright-mcp/
+# Other assistants' local state
+.cursor/
+.aider*
+.codex/
+.gemini/
+.continue/
+.windsurf/
+
+# ───────────────────────── Editors & IDEs ─────────────────────────
+# JetBrains (PhpStorm, WebStorm, …)
+.idea/
+*.iml
+*.ipr
+*.iws
+# VS Code — keep only the shared recommended-extensions list
+.vscode/*
+!.vscode/extensions.json
+*.code-workspace
+.history/
+# Others
+.fleet/
+.zed/
+.nova/
+.project
+.settings/
+.classpath
+*.sublime-project
+*.sublime-workspace
+# Vim / Emacs
+*.swp
+*.swo
+*~
+\#*\#
+.\#*
+*.orig
+*.rej
+
+# ───────────────────────── OS files ─────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ───────────────────────── Misc ─────────────────────────
+*.tmp
+*.temp
+.tmp/
+*.bak

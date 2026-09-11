@@ -1,0 +1,190 @@
+/*
+ * Base styles: Persian typography (bundled Vazirmatn — no font CDN),
+ * RTL-first document defaults, the ambient brand backdrop, shared motion
+ * keyframes and designed loading states (skeletons).
+ */
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/Vazirmatn-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/Vazirmatn-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/Vazirmatn-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  direction: rtl;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-body);
+  color: var(--color-ink);
+  background: var(--color-background);
+  text-align: right;
+  -webkit-font-smoothing: antialiased;
+  transition:
+    background-color var(--duration-base) ease,
+    color var(--duration-base) ease;
+}
+
+/* Ambient brand auras — two fixed, very soft washes (teal top / coral
+   bottom) so no screen is ever a flat dead field. Painted on body::before
+   to stay behind every stacking context. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(52rem 34rem at 88% -8%, var(--aura-teal), transparent 62%),
+    radial-gradient(44rem 30rem at -12% 108%, var(--aura-coral), transparent 60%);
+}
+
+h1,
+h2,
+h3 {
+  color: var(--color-ink);
+  font-weight: 700;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+/* One visible, consistent keyboard focus ring everywhere. */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-small);
+}
+
+::selection {
+  background: var(--color-primary-container);
+  color: var(--color-ink);
+}
+
+/* Surfaces and controls ease between light and dark rather than snapping. */
+.wizard-card,
+.form-input,
+.form-select,
+.status-badge {
+  transition:
+    background-color var(--duration-base) ease,
+    border-color var(--duration-base) ease,
+    color var(--duration-base) ease;
+}
+
+/* Brand-tinted scrollbar so chrome matches the identity in both themes. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-outline) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--color-outline);
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--color-background);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/* ───────────────────────── Shared motion ─────────────────────────
+   Keyframes used across components; respect reduced motion below. */
+
+/* The mascot's gentle hover — used by every floating «دی‌دی». */
+@keyframes didi-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+
+  50% {
+    transform: translateY(-22%) rotate(3deg);
+  }
+}
+
+/* Content entering from below (page sections, cards, list items). */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Small elements popping in (badges, chips, success mark). */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Shared skeleton shimmer for loading states — a designed state, never a
+   dead white screen. */
+.skeleton {
+  background: linear-gradient(
+    -90deg,
+    var(--color-outline) 0%,
+    var(--color-primary-container) 50%,
+    var(--color-outline) 100%
+  );
+  background-size: 400% 400%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+  border-radius: var(--radius-small);
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 0% 0%;
+  }
+
+  100% {
+    background-position: -135% 0%;
+  }
+}

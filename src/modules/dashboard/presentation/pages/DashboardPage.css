@@ -1,0 +1,28 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* The page header already carries its own bottom margin; the flex gap replaces it here. */
+.dashboard > .page-header {
+  margin-bottom: 0;
+}
+
+.dashboard__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-4);
+  /* Panels size to their own content: a short ranking is not stretched to its neighbour. */
+  align-items: start;
+}
+
+.dashboard__grid--wide {
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+}
+
+@media (max-width: 520px) {
+  .dashboard__grid--wide {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

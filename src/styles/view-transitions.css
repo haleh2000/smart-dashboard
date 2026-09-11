@@ -1,0 +1,41 @@
+/*
+ * Diagonal polygon theme transition — stage setup.
+ *
+ * useColorTheme wraps the palette swap in document.startViewTransition() and
+ * then animates `clip-path` on ::view-transition-new(root) with the Web
+ * Animations API, so the wipe geometry lives in TypeScript, not here. All this
+ * file does is prepare the stage: kill the browser's default cross-fade, keep
+ * the two snapshots un-blended, and stack the incoming one on top so the 45°
+ * edge stays hard.
+ */
+
+/* The wipe briefly exposes whatever sits behind the snapshots — paint <html>
+   with the token background (not just <body>) so it is never a white flash. */
+html {
+  background-color: var(--color-background);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 2;
+}
+
+/* Belt and braces: useColorTheme already skips the sweep entirely when
+   reduced motion is requested, but a transition started before the setting
+   changed must not keep running. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(root),
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.01ms !important;
+  }
+}

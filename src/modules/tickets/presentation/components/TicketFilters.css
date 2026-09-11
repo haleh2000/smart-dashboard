@@ -1,0 +1,49 @@
+.filter-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.filter-bar__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.filter-bar__field--wide {
+  flex-basis: 22rem;
+}
+
+.filter-bar__label {
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+/* Input + button share --control-height, so they line up for free. */
+.filter-bar__search {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.filter-bar__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-inline-start: auto;
+}
+
+.filter-bar__count {
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+  white-space: nowrap;
+}

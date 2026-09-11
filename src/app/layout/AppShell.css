@@ -1,0 +1,398 @@
+/*
+ * Daydar shell, ported from the Day Remote Treatment Services layout: mobile-first
+ * document flow with a glass header and bottom bar; at ≥1025px the teal field, the
+ * right navigation rail and the floating light panel switch on.
+ */
+/* ────────────────────────── Shell (mobile-first) ──────────────────────────
+   Below the rail breakpoint the shell is a plain document-flow page: sticky
+   glass header, natural scroll, fixed bottom nav. The teal field + floating
+   panel treatment switches on at ≥1025px. */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.side-nav {
+  display: none;
+}
+
+.app-frame {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─────────────────────────── Top bar ───────────────────────────
+   Glass surface: the full-color brand lockup needs a light field, and the
+   translucent blur keeps content readable as it scrolls underneath. */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  min-height: var(--header-height);
+  background: var(--surface-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  backdrop-filter: var(--blur-glass);
+  border-bottom: 1px solid var(--surface-glass-border);
+  color: var(--color-ink);
+  padding: var(--space-2) var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+  color: inherit;
+}
+
+.app-brand__lockup {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: flex-end;
+  gap: var(--space-2);
+
+  /* Physical order, not logical: the bitmaps don't flip in RTL, so the
+     lockup lays out LTR and «دی‌دی» stays on the logo's left. */
+  direction: ltr;
+}
+
+.app-brand__didi {
+  display: block;
+  height: 22px;
+  width: auto;
+  filter: drop-shadow(0 3px 3px rgb(12 32 31 / 25%));
+  animation: didi-float 3.2s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+
+.app-brand__logo {
+  display: block;
+  height: 30px;
+  width: auto;
+}
+
+.app-brand__divider {
+  width: 1px;
+  height: 30px;
+  background: var(--color-outline);
+  flex-shrink: 0;
+}
+
+.app-brand__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.app-brand__title {
+  font-size: var(--font-size-body);
+  font-weight: 700;
+  color: var(--color-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-brand__subtitle {
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+
+.app-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-start: auto;
+}
+
+/* «بازگشت به دی‌دار» — the standing hand-back action to the super-app. */
+.daydar-return {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control);
+  background: var(--gradient-brand);
+  color: var(--color-on-primary);
+  font-size: var(--font-size-small);
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: var(--shadow-brand);
+  transition:
+    filter var(--duration-fast) ease,
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.daydar-return:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.daydar-return svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.app-header__logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--color-outline);
+  background: none;
+  color: var(--color-muted);
+  padding: var(--space-2);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) ease,
+    border-color var(--duration-fast) ease,
+    color var(--duration-fast) ease;
+}
+
+.app-header__logout:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.app-header__logout svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  margin-inline: auto;
+  padding: var(--space-4);
+  padding-bottom: calc(76px + env(safe-area-inset-bottom) + var(--space-4));
+  animation: fade-up var(--duration-slow) var(--ease-out) both;
+}
+
+/* ─────────────────────── Mobile / tablet bottom bar ─────────────────────── */
+.bottom-nav {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  justify-content: space-around;
+  align-items: stretch;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom));
+  background: var(--surface-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  backdrop-filter: var(--blur-glass);
+  border-top: 1px solid var(--surface-glass-border);
+  box-shadow: var(--shadow-nav);
+}
+
+.bottom-nav__item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-1);
+  border-radius: var(--radius-medium);
+  color: var(--color-muted);
+  font-size: 0.68rem;
+  transition:
+    color var(--duration-fast) ease,
+    background var(--duration-fast) ease;
+}
+
+.bottom-nav__icon {
+  display: inline-flex;
+  transition:
+    background var(--duration-fast) ease,
+    padding var(--duration-fast) var(--ease-out);
+}
+
+.bottom-nav__label {
+  line-height: 1;
+}
+
+.bottom-nav__item--active {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.bottom-nav__item--active .bottom-nav__icon {
+  background: var(--color-primary-container);
+  border-radius: var(--radius-pill);
+  padding: var(--space-1) var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .app-brand__text,
+  .app-brand__divider {
+    display: none;
+  }
+
+  .app-brand__logo {
+    height: 26px;
+  }
+
+  .daydar-return {
+    padding: var(--space-1) var(--space-2);
+  }
+}
+
+/* ─────────────── Desktop: teal field + rail + floating panel ─────────────── */
+@media (min-width: 1025px) {
+  .app-shell {
+    flex-direction: row;
+    height: 100vh;
+    overflow: hidden;
+    gap: var(--shell-gap);
+    padding: var(--shell-gap);
+    background: var(--shell-bg);
+  }
+
+  .bottom-nav {
+    display: none;
+  }
+
+  /* The rail is the FIRST flex child, so in RTL it lands on the right —
+     exactly where Daydar keeps it. */
+  .side-nav {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    width: var(--sidebar-width);
+    padding: var(--space-5) var(--space-3) var(--space-4);
+    gap: var(--space-4);
+    color: var(--sidebar-fg);
+    /* The rail itself never scrolls: the profile card is pinned to its top and
+       «دی‌دی» to its bottom, and only the menu between them moves. A rail that
+       scrolls as a whole takes the mascot off-screen the moment an account has
+       more than a screenful of pages. */
+    overflow: hidden;
+  }
+
+  .side-nav__profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Pinned like the mascot: only the menu between them gives up height. */
+    flex-shrink: 0;
+    gap: var(--space-1);
+    text-align: center;
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--sidebar-divider);
+  }
+
+  .side-nav__name {
+    font-weight: 700;
+    font-size: var(--font-size-body);
+  }
+
+  .side-nav__meta,
+  .side-nav__role {
+    font-size: var(--font-size-small);
+    opacity: 0.85;
+  }
+
+  .side-nav__menu {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    /* Takes whatever height the profile and the mascot leave, and scrolls inside
+       it. `min-height: 0` is what actually allows a flex item to shrink below
+       its content — without it the menu pushes the mascot out of the rail. */
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--sidebar-divider) transparent;
+  }
+
+  .side-nav__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-large);
+    color: var(--sidebar-fg);
+    font-size: var(--font-size-body);
+    transition:
+      background var(--duration-fast) ease,
+      color var(--duration-fast) ease,
+      box-shadow var(--duration-fast) ease;
+  }
+
+  .side-nav__item:hover {
+    background: var(--sidebar-item-hover);
+  }
+
+  .side-nav__item-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  .side-nav__item-icon svg {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  /* Active entry: the Daydar white pill. */
+  .side-nav__item--active {
+    background: var(--sidebar-item-active-bg);
+    color: var(--sidebar-item-active-fg);
+    font-weight: 700;
+    box-shadow: var(--shadow-card);
+  }
+
+  /* «دی‌دی» is pinned to the foot of the rail: the menu above it scrolls, the
+     mascot never does, so it is on screen however long the navigation is. */
+  .side-nav__mascot {
+    flex-shrink: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-top: var(--space-2);
+  }
+
+  .side-nav__didi {
+    height: 96px;
+    width: auto;
+    filter: drop-shadow(0 12px 14px rgb(1 70 76 / 45%));
+    animation: didi-float 3.4s ease-in-out infinite;
+    transform-origin: 50% 100%;
+  }
+
+  /* The floating light panel: owns the header and an inner scroll area, so
+     the teal field and the rail never move. */
+  .app-frame {
+    background: var(--color-background);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-modal);
+    overflow: hidden;
+  }
+
+  .app-header {
+    position: static;
+    padding-inline: var(--space-5);
+  }
+
+  .app-brand__logo {
+    height: 36px;
+  }
+
+  .app-main {
+    overflow-y: auto;
+    padding: var(--space-5);
+  }
+}

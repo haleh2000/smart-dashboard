@@ -1,0 +1,157 @@
+.login {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: var(--color-background);
+  overflow: hidden;
+}
+
+/* Two soft brand blobs behind the card — teal leads (trust), coral answers (the mascot). */
+.login::before,
+.login::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(48px);
+}
+
+.login::before {
+  top: -28%;
+  inset-inline-end: -16%;
+  width: 58vw;
+  height: 58vw;
+  max-width: 620px;
+  max-height: 620px;
+  background: var(--gradient-brand-vivid);
+  opacity: 0.16;
+}
+
+.login::after {
+  bottom: -30%;
+  inset-inline-start: -18%;
+  width: 48vw;
+  height: 48vw;
+  max-width: 500px;
+  max-height: 500px;
+  background: var(--gradient-coral);
+  opacity: 0.1;
+}
+
+.login__theme {
+  position: absolute;
+  top: var(--space-4);
+  inset-inline-start: var(--space-4);
+  z-index: 1;
+}
+
+.login__card {
+  position: relative;
+  z-index: 1;
+  width: min(420px, 100%);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-outline-soft);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-float);
+  padding: var(--space-6) var(--space-5);
+  animation: fade-up var(--duration-slow) var(--ease-out) both;
+}
+
+.login__brand {
+  text-align: center;
+  margin-bottom: var(--space-5);
+}
+
+.login__lockup {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+
+  /* LTR layout so «دی‌دی» sits on the logo's physical left in RTL too. */
+  direction: ltr;
+}
+
+.login__didi {
+  display: block;
+  height: 28px;
+  width: auto;
+  filter: drop-shadow(0 4px 4px rgb(12 32 31 / 22%));
+  animation: didi-float 3.2s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+
+.login__logo {
+  display: block;
+  height: 44px;
+  width: auto;
+  max-width: 100%;
+}
+
+.login__title {
+  margin: 0;
+  font-size: var(--font-size-title);
+  color: var(--color-ink);
+}
+
+.login__subtitle {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+
+.login__phase {
+  animation: fade-up var(--duration-base) var(--ease-out) both;
+}
+
+.login__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.login__lead {
+  margin: 0;
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+  line-height: 1.8;
+}
+
+.login__mobile {
+  color: var(--color-ink);
+  font-weight: 500;
+}
+
+.login__secondary {
+  padding: var(--space-2);
+  border: none;
+  background: none;
+  color: var(--color-muted);
+  font-family: inherit;
+  font-size: var(--font-size-small);
+  cursor: pointer;
+  transition: color var(--duration-fast) ease;
+}
+
+.login__secondary:hover:not(:disabled) {
+  color: var(--color-primary);
+}
+
+.login__error {
+  display: block;
+  margin: var(--space-4) 0 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-outline);
+  border-inline-start: 4px solid var(--color-error);
+  border-radius: var(--radius-medium);
+  background: var(--color-error-soft);
+  color: var(--color-ink);
+  font-size: var(--font-size-small);
+  line-height: 1.8;
+  animation: pop-in var(--duration-base) var(--ease-out) both;
+}

@@ -1,0 +1,13 @@
+.mascot-loader {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mascot-loader__didi {
+  height: 72px;
+  width: auto;
+  animation: didi-float 3.2s ease-in-out infinite;
+  filter: drop-shadow(0 10px 10px rgb(12 32 31 / 18%));
+}
