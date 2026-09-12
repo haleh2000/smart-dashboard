@@ -10,6 +10,7 @@ import { CallRepositoryProvider } from '@/modules/calls';
 import { CustomerRepositoryProvider } from '@/modules/customers';
 import { AnalyticsRepositoryProvider } from '@/modules/dashboard';
 import { TicketRepositoryProvider } from '@/modules/tickets';
+import { AgentWorkspaceRepositoryProvider } from '@/modules/agent-workspace';
 import type { Dependencies } from './container';
 
 const queryClient = new QueryClient({
@@ -33,7 +34,9 @@ export function AppProviders({
                 <UserRepositoryProvider value={dependencies.userRepository}>
                   <SettingsRepositoryProvider value={dependencies.settingsRepository}>
                     <RoleRepositoryProvider value={dependencies.roleRepository}>
-                      {children}
+                      <AgentWorkspaceRepositoryProvider value={dependencies.agentWorkspaceRepository}>
+                        {children}
+                      </AgentWorkspaceRepositoryProvider>
                     </RoleRepositoryProvider>
                   </SettingsRepositoryProvider>
                 </UserRepositoryProvider>

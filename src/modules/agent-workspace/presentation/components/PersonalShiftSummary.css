@@ -1,0 +1,67 @@
+/*
+ * Personal Shift Summary — 4 key metrics in a grid.
+ * Wrapped in Panel for consistent card styling.
+ */
+
+.shift-summary {
+  /* Panel handles padding, border, radius */
+}
+
+.shift-summary.loading,
+.shift-summary.error {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shift-summary__skeleton {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.shift-summary__error {
+  color: var(--color-muted);
+  padding: var(--space-3);
+  text-align: center;
+}
+
+.shift-summary__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .shift-summary__grid,
+  .shift-summary__skeleton {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 400px) {
+  .shift-summary__grid,
+  .shift-summary__skeleton {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Skeleton styles */
+.skeleton {
+  background: linear-gradient(90deg, var(--color-outline-soft) 25%, var(--color-outline) 50%, var(--color-outline-soft) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-small);
+}
+
+.skeleton--card {
+  height: 80px;
+  border-radius: var(--radius-panel);
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

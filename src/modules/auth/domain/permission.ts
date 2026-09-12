@@ -12,7 +12,7 @@ export type Permission = (typeof PERMISSIONS)[number];
 
 /** RBAC matrix from README → "نقش‌های کاربری". Change access rules here only. */
 const rolePermissions: Record<Role, readonly Permission[]> = {
-  agent: ['tickets.view', 'calls.view', 'calls.receive', 'customers.view'],
+  agent: ['dashboard.view', 'tickets.view', 'calls.view', 'calls.receive', 'customers.view'],
   supervisor: ['dashboard.view', 'tickets.view', 'calls.view', 'calls.receive', 'customers.view'],
   admin: PERMISSIONS,
 };

@@ -11,6 +11,7 @@ import { MockCallRepository, type CallRepository } from '@/modules/calls';
 import { MockCustomerRepository, type CustomerRepository } from '@/modules/customers';
 import { MockAnalyticsRepository, type AnalyticsRepository } from '@/modules/dashboard';
 import { MockTicketRepository, type TicketRepository } from '@/modules/tickets';
+import { MockAgentWorkspaceRepository, type AgentWorkspaceRepository } from '@/modules/agent-workspace';
 
 /** Every port the app needs. Add a field here when a module introduces a new repository. */
 export interface Dependencies {
@@ -22,6 +23,7 @@ export interface Dependencies {
   userRepository: UserRepository;
   settingsRepository: SettingsRepository;
   roleRepository: RoleRepository;
+  agentWorkspaceRepository: AgentWorkspaceRepository;
 }
 
 /**
@@ -38,4 +40,5 @@ export const createDependencies = (): Dependencies => ({
   userRepository: new MockUserRepository(),
   settingsRepository: new MockSettingsRepository(),
   roleRepository: new MockRoleRepository(),
+  agentWorkspaceRepository: new MockAgentWorkspaceRepository(),
 });

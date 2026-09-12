@@ -18,6 +18,8 @@ import { SentimentTab } from '../components/SentimentTab';
 import { TicketAnalyticsTab } from '../components/TicketAnalyticsTab';
 import { useDashboardFilterStore } from '../dashboardFilterStore';
 import { analyticsKeys } from '../hooks/analyticsQueries';
+import { AgentWorkspaceView } from '@/modules/agent-workspace';
+import { useCurrentUser } from '@/modules/auth';
 import './DashboardPage.css';
 
 const TABS = [
@@ -34,8 +36,12 @@ const periodOptions = PERIODS.map((value) => ({ value, label: periodLabels[value
 /**
  * Main dashboard (README → «داشبورد اصلی»). Analytics and reports live here — there is no
  * separate reports page. Filters and the time range are shared across the three tabs.
+ * Agents see an operational "My Desk" workspace instead of analytical tabs.
  */
 export function DashboardPage() {
+  const { role } = useCurrentUser();
+  const isAgent = role === 'agent';
+
   const queryClient = useQueryClient();
   const [params, setParams] = useSearchParams();
   const period = useDashboardFilterStore((state) => state.period);
@@ -44,6 +50,10 @@ export function DashboardPage() {
 
   const changeTab = (id: TabId) =>
     setParams(id === 'tickets' ? {} : { tab: id }, { replace: true });
+
+  if (isAgent) {
+    return <AgentWorkspaceView />;
+  }
 
   return (
     <section className="dashboard">

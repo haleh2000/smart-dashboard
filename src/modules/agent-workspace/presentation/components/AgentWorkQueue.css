@@ -1,0 +1,225 @@
+/*
+ * Agent Work Queue — ticket table with priority/SLA visualization.
+ * Uses shared UI components (PriorityBadge, SentimentBadge) for consistency.
+ */
+
+.agent-work-queue {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  overflow: hidden;
+}
+
+.agent-work-queue__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.agent-work-queue__title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.agent-work-queue__stats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.agent-work-queue__stat--alert {
+  animation: stat-alert 2s ease-in-out infinite;
+}
+
+@keyframes stat-alert {
+  0%, 100% { box-shadow: 0 0 0 0 var(--color-error-soft); }
+  50% { box-shadow: 0 0 0 4px transparent; }
+}
+
+/* Empty state */
+.agent-work-queue__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  color: var(--color-muted);
+}
+
+.agent-work-queue__empty-icon {
+  font-size: 3rem;
+  color: var(--color-success);
+  margin-bottom: var(--space-3);
+  animation: empty-pop 0.5s var(--ease-spring) backwards;
+}
+
+@keyframes empty-pop {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.agent-work-queue__empty-text {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.agent-work-queue__empty-hint {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+/* Table cell styles */
+.work-queue__ticket-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color var(--duration-fast) ease;
+}
+
+.work-queue__ticket-link:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+.work-queue__customer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.work-queue__customer-name {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.work-queue__customer-id {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.work-queue__subject {
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+  display: inline-block;
+}
+
+.work-queue__na {
+  color: var(--color-muted);
+  font-style: italic;
+  font-size: var(--text-sm);
+}
+
+/* SLA column */
+.work-queue__sla {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: var(--font-size-body);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-control);
+  transition: all var(--duration-fast) ease;
+}
+
+.work-queue__sla-value {
+  font-size: var(--font-size-body);
+}
+
+.work-queue__sla-unit {
+  font-size: var(--font-size-small);
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.work-queue__sla--overdue {
+  background: var(--color-error-soft);
+  color: var(--color-error);
+}
+
+.work-queue__sla--critical {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.work-queue__sla-badge {
+  font-size: var(--font-size-small);
+  font-weight: 700;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-small);
+  background: currentColor;
+  color: var(--color-surface);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.work-queue__sla-badge--today {
+  background: var(--color-warning);
+  color: var(--color-on-accent);
+}
+
+/* Action button */
+.work-queue__action-link {
+  text-decoration: none;
+}
+
+.work-queue__action-btn {
+  white-space: nowrap;
+  min-width: 80px;
+}
+
+/* Row hover highlight for priority */
+.agent-work-queue .data-table__row[data-priority="high"] {
+  border-inline-start: 3px solid var(--color-error);
+}
+
+.agent-work-queue .data-table__row[data-priority="medium"] {
+  border-inline-start: 3px solid var(--color-warning);
+}
+
+.agent-work-queue .data-table__row[data-priority="low"] {
+  border-inline-start: 3px solid var(--color-info);
+}
+
+/* Responsive: hide less critical columns on narrow screens */
+@media (max-width: 768px) {
+  .work-queue__subject {
+    max-width: 180px;
+  }
+
+  .work-queue__customer-id {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .agent-work-queue__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .agent-work-queue__stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .agent-work-queue__stats > * {
+    flex: 1;
+    min-width: 0;
+  }
+}
