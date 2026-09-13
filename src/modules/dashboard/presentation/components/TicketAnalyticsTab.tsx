@@ -78,15 +78,15 @@ function SubjectTreePanel() {
 function SentimentPanel() {
   const scope = useDashboardScope();
   const toggle = useDashboardFilterStore((state) => state.toggle);
-  const query = useBreakdown('sentiment', scopeForChart(scope, 'sentiment'));
+  const query = useBreakdown('sentiment', scopeForChart(scope, 'sentimentLevel'));
   return (
     <Panel title="تحلیل احساسات مشتریان">
       <ChartState query={query} isEmpty={(data) => data.length === 0} skeletonRows={2}>
         {(data) => (
           <SentimentBar
             items={data}
-            selected={scope.filters.sentiment}
-            onSelect={(value) => toggle('sentiment', value)}
+            selected={scope.filters.sentimentLevel}
+            onSelect={(value) => toggle('sentimentLevel', value)}
           />
         )}
       </ChartState>

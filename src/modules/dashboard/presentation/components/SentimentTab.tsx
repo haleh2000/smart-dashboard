@@ -1,16 +1,12 @@
-import { CartesianGrid, Line, LineChart, ReferenceLine, Tooltip, XAxis, YAxis } from 'recharts';
 import { cn } from '@/shared/lib/cn';
-import { formatDate, formatPercent, formatPersianNumber } from '@/shared/lib/format';
+import { formatPercent, formatPersianNumber } from '@/shared/lib/format';
 import { Panel } from '@/shared/ui';
 import type { SentimentOverview } from '../../domain/analytics';
 import { scopeForChart } from '../../domain/filters';
 import { useDashboardFilterStore, useDashboardScope } from '../dashboardFilterStore';
 import { useSentimentOverview } from '../hooks/analyticsQueries';
-import { ChartFrame } from './charts/ChartFrame';
-import { ChartTooltipBox } from './charts/ChartTooltipBox';
-import { axisTick, gridStroke } from './charts/chartKit';
-import { SeriesLegend } from './charts/SeriesLegend';
 import { ChartState } from './ChartState';
+import { CustomerSentimentFaces } from './SentimentFaces';
 import { SentimentGauge } from './SentimentGauge';
 import { SentimentMatrix } from './SentimentMatrix';
 import { formatScore, sideColor } from './sentimentKit';
@@ -113,82 +109,22 @@ function MatrixPanel() {
   );
 }
 
-function TrendPanel({ trend }: { trend: SentimentOverview['trend'] }) {
-  const rows = trend.map((bucket) => ({
-    label: formatDate(bucket.start).slice(5),
-    week: formatDate(bucket.start),
-    customer: Math.round(bucket.customerScore * 100),
-    agent: Math.round(bucket.agentScore * 100),
-    count: bucket.count,
-  }));
+function CustomerFacesPanel() {
+  const scope = useDashboardScope();
+  const toggle = useDashboardFilterStore((state) => state.toggle);
+  const query = useSentimentOverview(scopeForChart(scope, 'sentimentLevel'));
   return (
-    <Panel title="روند هفتگی امتیاز احساس دو طرف">
-      <ChartFrame height={260} label="روند امتیاز احساس مشتری و اپراتور">
-        <LineChart data={rows} margin={{ top: 12, right: 8, left: 8, bottom: 4 }}>
-          <CartesianGrid vertical={false} stroke={gridStroke} strokeDasharray="4 4" />
-          <XAxis
-            dataKey="label"
-            reversed
-            tick={axisTick}
-            tickLine={false}
-            axisLine={{ stroke: gridStroke }}
+    <Panel title="احساس مشتریان در یک نگاه">
+      <ChartState query={query} isEmpty={isEmpty} skeletonRows={3}>
+        {(data) => (
+          <CustomerSentimentFaces
+            split={data.customer}
+            analyzed={data.analyzed}
+            selected={scope.filters.sentimentLevel}
+            onSelect={(value) => toggle('sentimentLevel', value)}
           />
-          <YAxis
-            orientation="right"
-            domain={[-100, 100]}
-            ticks={[-100, -50, 0, 50, 100]}
-            tick={axisTick}
-            tickLine={false}
-            axisLine={false}
-            width={44}
-            tickFormatter={(v: number) => formatScore(v / 100)}
-          />
-          <ReferenceLine y={0} stroke="var(--color-outline)" />
-          <Tooltip
-            cursor={{ stroke: 'var(--color-primary)', strokeDasharray: '4 4' }}
-            content={({ active, payload }) => {
-              const row = payload?.[0]?.payload as (typeof rows)[number] | undefined;
-              if (!active || !row) return null;
-              return (
-                <ChartTooltipBox
-                  title={`هفته ${row.week}`}
-                  rows={[
-                    { name: 'مشتری', value: row.customer, color: sideColor.customer },
-                    { name: 'اپراتور', value: row.agent, color: sideColor.agent },
-                  ]}
-                  format={(v) => formatScore(v / 100)}
-                  footer={`${formatPersianNumber(row.count)} مکالمه`}
-                />
-              );
-            }}
-          />
-          <Line
-            type="monotone"
-            dataKey="customer"
-            stroke={sideColor.customer}
-            strokeWidth={3}
-            dot={false}
-            activeDot={{ r: 5 }}
-            animationDuration={800}
-          />
-          <Line
-            type="monotone"
-            dataKey="agent"
-            stroke={sideColor.agent}
-            strokeWidth={3}
-            strokeDasharray="6 4"
-            dot={false}
-            activeDot={{ r: 5 }}
-            animationDuration={800}
-          />
-        </LineChart>
-      </ChartFrame>
-      <SeriesLegend
-        items={[
-          { label: 'مشتری', color: sideColor.customer },
-          { label: 'اپراتور', color: sideColor.agent },
-        ]}
-      />
+        )}
+      </ChartState>
     </Panel>
   );
 }
@@ -288,7 +224,7 @@ export function SentimentTab() {
             <JourneyPanel journey={data.journey} />
             <MatrixPanel />
           </div>
-          <TrendPanel trend={data.trend} />
+          <CustomerFacesPanel />
           <div className="dashboard__grid dashboard__grid--wide">
             <SubjectButterfly rows={data.bySubject} />
             <OperatorSentimentPanel rows={data.byOperator} />

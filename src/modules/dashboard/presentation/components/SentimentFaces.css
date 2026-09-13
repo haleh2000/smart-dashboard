@@ -1,0 +1,258 @@
+.sentiment-faces {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.sentiment-faces__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+}
+
+.sentiment-faces__headline {
+  margin: 0;
+  font-size: var(--font-size-body);
+  color: var(--color-muted);
+}
+
+.sentiment-faces__headline strong {
+  color: var(--color-ink);
+  font-size: var(--font-size-title);
+}
+
+.sentiment-faces__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+
+.sentiment-faces__score {
+  display: inline-grid;
+  place-items: center;
+  min-width: 3rem;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--gradient-brand);
+  color: var(--color-on-primary);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.sentiment-faces__grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sentiment-faces__grid li {
+  min-width: 0;
+}
+
+.sentiment-faces__card {
+  --face-line: var(--color-info);
+  --face-disc: var(--color-info-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  width: 100%;
+  height: 100%;
+  padding: var(--space-4) var(--space-2);
+  border: 1px solid var(--color-outline-soft);
+  border-radius: var(--radius-large);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    transform var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out),
+    border-color var(--duration-fast) ease,
+    opacity var(--duration-base) ease;
+  animation: faces-in 0.6s var(--ease-out) both;
+}
+
+.sentiment-faces__grid li:nth-child(2) .sentiment-faces__card {
+  animation-delay: 0.06s;
+}
+
+.sentiment-faces__grid li:nth-child(3) .sentiment-faces__card {
+  animation-delay: 0.12s;
+}
+
+.sentiment-faces__grid li:nth-child(4) .sentiment-faces__card {
+  animation-delay: 0.18s;
+}
+
+.sentiment-faces__grid li:nth-child(5) .sentiment-faces__card {
+  animation-delay: 0.24s;
+}
+
+.sentiment-faces__card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-raised);
+  border-color: var(--face-line);
+}
+
+.sentiment-faces__card:hover .face {
+  transform: scale(1.08) rotate(-2deg);
+}
+
+.sentiment-faces__card:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.sentiment-faces__card--active {
+  border-color: var(--color-primary);
+  box-shadow:
+    var(--shadow-raised),
+    inset 0 0 0 1px var(--color-primary);
+}
+
+.sentiment-faces__card--dimmed {
+  opacity: 0.45;
+}
+
+.sentiment-faces__card--angry {
+  --face-line: var(--color-error);
+  --face-disc: var(--color-error-soft);
+}
+
+.sentiment-faces__card--dissatisfied {
+  --face-line: var(--color-accent);
+  --face-disc: var(--color-accent-soft);
+}
+
+.sentiment-faces__card--neutral {
+  --face-line: var(--color-info);
+  --face-disc: var(--color-info-soft);
+}
+
+.sentiment-faces__card--satisfied {
+  --face-line: var(--color-primary);
+  --face-disc: var(--color-primary-soft);
+}
+
+.sentiment-faces__card--verySatisfied {
+  --face-line: var(--color-success);
+  --face-disc: var(--color-success-soft);
+}
+
+.face {
+  width: 4.5rem;
+  height: 4.5rem;
+  transition: transform var(--duration-base) var(--ease-spring);
+}
+
+.face__disc {
+  fill: var(--face-disc);
+  stroke: var(--face-line);
+  stroke-width: 2;
+}
+
+.face__features path {
+  fill: none;
+  stroke: var(--face-line);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.face__features .face__dot {
+  fill: var(--face-line);
+  stroke: none;
+}
+
+.face__features .face__cheek {
+  fill: var(--face-line);
+  stroke: none;
+  opacity: 0.28;
+}
+
+.face__features .face__smile {
+  fill: var(--face-line);
+  stroke: none;
+}
+
+.sentiment-faces__label {
+  font-weight: 600;
+  font-size: var(--font-size-body);
+  color: var(--color-ink);
+}
+
+.sentiment-faces__count {
+  font-weight: 700;
+  font-size: var(--font-size-display);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.sentiment-faces__share {
+  font-size: var(--font-size-small);
+  color: var(--face-line);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.sentiment-faces__meter {
+  display: block;
+  width: 100%;
+  height: 0.4rem;
+  margin-top: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--chart-track);
+  overflow: hidden;
+}
+
+.sentiment-faces__meter-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--face-line);
+  transition: width var(--duration-slow) var(--ease-out);
+}
+
+@keyframes faces-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@media (max-width: 900px) {
+  .sentiment-faces__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .sentiment-faces__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .face {
+    width: 3.75rem;
+    height: 3.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sentiment-faces__card {
+    animation: none;
+  }
+
+  .sentiment-faces__card:hover {
+    transform: none;
+  }
+}

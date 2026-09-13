@@ -73,7 +73,7 @@
 .stacked__bar {
   display: flex;
   gap: calc(var(--space-1) / 4);
-  height: 1.25rem;
+  height: 1rem;
   border-radius: var(--radius-small);
   background: var(--chart-track);
   overflow: hidden;

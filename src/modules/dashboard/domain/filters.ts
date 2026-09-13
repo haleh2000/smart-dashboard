@@ -14,6 +14,7 @@ export const DIMENSIONS = [
   'insuranceLine',
   'branch',
   'sentiment',
+  'sentimentLevel',
   'operator',
   'weekday',
   'hour',

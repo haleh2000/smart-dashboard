@@ -29,6 +29,7 @@ import type {
   Trend,
 } from '../domain/analytics';
 import type { AnalyticsRepository } from '../domain/AnalyticsRepository';
+import { classifySentimentLevel } from '../domain/sentimentLevels';
 import { persianWeekday, type DashboardScope, type Dimension } from '../domain/filters';
 
 type Accessor<T> = Record<Dimension, (record: T) => string | undefined>;
@@ -42,6 +43,14 @@ const ticketValue: Accessor<Ticket> = {
   insuranceLine: (t) => t.insuranceLine,
   branch: (t) => t.branch,
   sentiment: (t) => t.enrichment?.sentiment,
+  sentimentLevel: (t) => {
+    const lines = t.enrichment?.transcript;
+    const customerSentiments = lines
+      ?.filter((l) => l.speaker === 'customer' && l.sentiment)
+      .map((l) => l.sentiment!);
+    const score = sentimentScore(customerSentiments ?? []);
+    return classifySentimentLevel(t.enrichment?.sentiment, score);
+  },
   operator: (t) => t.followUpOwner,
   weekday: (t) => String(persianWeekday(t.createdAt)),
   hour: (t) => String(t.createdAt.getHours()),
@@ -57,6 +66,13 @@ const callValue: Accessor<Call> = {
   insuranceLine: (c) => customerOfCall(c)?.policies[0]?.line,
   branch: (c) => customerOfCall(c)?.branch,
   sentiment: (c) => c.analysis?.sentiment,
+  sentimentLevel: (c) => {
+    const customerSentiments = c.transcript
+      .filter((l) => l.speaker === 'customer' && l.sentiment)
+      .map((l) => l.sentiment!);
+    const score = sentimentScore(customerSentiments);
+    return classifySentimentLevel(c.analysis?.sentiment, score);
+  },
   operator: (c) => c.agent,
   weekday: (c) => String(persianWeekday(c.startedAt)),
   hour: (c) => String(c.startedAt.getHours()),

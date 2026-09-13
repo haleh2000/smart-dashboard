@@ -4,7 +4,7 @@ import { renderWithProviders } from '@/test/renderWithProviders';
 import type { SentimentOverview } from '../../domain/analytics';
 import type { AnalyticsRepository } from '../../domain/AnalyticsRepository';
 import { AnalyticsRepositoryProvider } from '../analyticsServices';
-import { resetDashboardFilters } from '../dashboardFilterStore';
+import { resetDashboardFilters, useDashboardFilterStore } from '../dashboardFilterStore';
 import { SentimentTab } from './SentimentTab';
 
 const row = (positive: number, neutral: number, negative: number) => ({
@@ -61,5 +61,31 @@ describe('SentimentTab', () => {
     expect(repository.getSentimentOverview).toHaveBeenLastCalledWith(
       expect.objectContaining({ filters: { sentiment: 'negative' } }),
     );
+  });
+
+  it('filters every query when a face is clicked', async () => {
+    const repository = fakeRepository();
+    renderTab(repository);
+
+    await userEvent.click(await screen.findByRole('button', { name: /^کاملا راضی:/ }));
+
+    // The gauges panel queries with the full scope, so it carries the filter.
+    expect(repository.getSentimentOverview).toHaveBeenCalledWith(
+      expect.objectContaining({ filters: { sentimentLevel: 'verySatisfied' } }),
+    );
+  });
+
+  it('keeps the filter when switching faces inside one group, clears on second click', async () => {
+    renderTab(fakeRepository());
+    const filters = () => useDashboardFilterStore.getState().filters.sentimentLevel;
+
+    await userEvent.click(await screen.findByRole('button', { name: /^راضی:/ }));
+    expect(filters()).toBe('satisfied');
+
+    await userEvent.click(screen.getByRole('button', { name: /^کاملا راضی:/ }));
+    expect(filters()).toBe('verySatisfied');
+
+    await userEvent.click(screen.getByRole('button', { name: /^کاملا راضی:/ }));
+    expect(filters()).toBeUndefined();
   });
 });

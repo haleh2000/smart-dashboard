@@ -1,7 +1,16 @@
 import { SENTIMENTS, type Sentiment } from '@/shared/domain/insights';
 import { formatPersianNumber } from '@/shared/lib/format';
 import { sentimentMeta } from '@/shared/ui';
+import type { SentimentLevel } from '../domain/sentimentLevels';
 import type { Dimension } from '../domain/filters';
+
+const SENTIMENT_LEVEL_LABELS: Record<SentimentLevel, string> = {
+  angry: 'عصبانی',
+  dissatisfied: 'ناراضی',
+  neutral: 'خنثی',
+  satisfied: 'راضی',
+  verySatisfied: 'کاملا راضی',
+};
 
 export const dimensionLabels: Record<Dimension, string> = {
   subject1: 'موضوع اصلی',
@@ -12,6 +21,7 @@ export const dimensionLabels: Record<Dimension, string> = {
   insuranceLine: 'رشته بیمه',
   branch: 'شعبه',
   sentiment: 'احساس',
+  sentimentLevel: 'سطح احساس',
   operator: 'اپراتور',
   weekday: 'روز هفته',
   hour: 'ساعت',
@@ -26,9 +36,22 @@ export const hourLabel = (hour: number | string) =>
 const isSentiment = (value: string): value is Sentiment =>
   (SENTIMENTS as readonly string[]).includes(value);
 
+const SENTIMENT_LEVELS: readonly SentimentLevel[] = [
+  'angry',
+  'dissatisfied',
+  'neutral',
+  'satisfied',
+  'verySatisfied',
+];
+
+const isSentimentLevel = (value: string): value is SentimentLevel =>
+  (SENTIMENT_LEVELS as readonly string[]).includes(value);
+
 /** Display text for a filter value (chips, tooltips); most dimensions hold display text already. */
 export const dimensionValueLabel = (dimension: Dimension, value: string) => {
   if (dimension === 'sentiment' && isSentiment(value)) return sentimentMeta[value].label;
+  if (dimension === 'sentimentLevel' && isSentimentLevel(value))
+    return SENTIMENT_LEVEL_LABELS[value];
   if (dimension === 'weekday') return weekdayLabels[Number(value)] ?? value;
   if (dimension === 'hour') return hourLabel(value);
   return value;

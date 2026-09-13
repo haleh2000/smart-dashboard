@@ -49,6 +49,12 @@ export const mockTickets: Ticket[] = Array.from({ length: 480 }, (_, index) => {
     'negative',
     'negative',
   ] as const);
+  const agentSentiment = random.pick([
+    ...Array<'positive'>(11).fill('positive'),
+    ...Array<'neutral'>(7).fill('neutral'),
+    'negative',
+    'negative',
+  ] as const);
   const firstResponseAt = createdAt + Math.floor((0.2 + random.next() * 30) * HOUR);
   const closedAt =
     status === 'closed'
@@ -108,7 +114,7 @@ export const mockTickets: Ticket[] = Array.from({ length: 480 }, (_, index) => {
                   durationSec: 60 + Math.floor(random.next() * 400),
                 }
               : undefined,
-          transcript: buildTranscript(subject, sentiment),
+          transcript: buildTranscript(subject, sentiment, agentSentiment),
         }
       : null,
   };
