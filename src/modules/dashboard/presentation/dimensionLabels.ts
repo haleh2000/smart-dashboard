@@ -47,6 +47,36 @@ const SENTIMENT_LEVELS: readonly SentimentLevel[] = [
 const isSentimentLevel = (value: string): value is SentimentLevel =>
   (SENTIMENT_LEVELS as readonly string[]).includes(value);
 
+/** Display order for channels (top to bottom in heatmap). */
+export const channelOrder: readonly string[] = [
+  'تلفن',
+  'وب',
+  'پیامک',
+  'هپی‌کال',
+  'دی آسا',
+  'مشاوره آنلاین',
+  'چت بات',
+  'دیدار',
+  'ثبت آنلاین',
+  'چت آنلاین',
+  'نرم افزار درمان',
+  'پزشکان',
+  'مرکز ملی ایثار',
+  'وبسایت بیمه مرکز',
+  'نظرسنجی',
+  'صحت سنجی بیمه مرکزی',
+  'نظرسنجی از بیمه گذاران سازمانی',
+  'صندوق انتقادات و پیشنهادات',
+  'مشتریان دی',
+  'ریاست جمهوری',
+  'چهارشنبه های پاسخگویی',
+  'دستگاه نظرسنجی',
+  'باشگاه مشتریان',
+  'رضایت سنجی پس از شکایت',
+  'پشتیبانی هوشمند',
+  'ندارد',
+];
+
 /** Display text for a filter value (chips, tooltips); most dimensions hold display text already. */
 export const dimensionValueLabel = (dimension: Dimension, value: string) => {
   if (dimension === 'sentiment' && isSentiment(value)) return sentimentMeta[value].label;

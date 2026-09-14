@@ -15,6 +15,7 @@ interface BreakdownPanelProps {
   /** `columns`: vertical columns (Power BI branch chart); `bars`: a horizontal ranking. */
   variant?: 'columns' | 'bars';
   className?: string;
+  maxVisible?: number;
 }
 
 /** Wires one dimension to the shared filter store: fetches its breakdown and toggles filters on click. */
@@ -24,6 +25,7 @@ export function BreakdownPanel({
   series,
   variant = 'bars',
   className,
+  maxVisible,
 }: BreakdownPanelProps) {
   const scope = useDashboardScope();
   const toggle = useDashboardFilterStore((state) => state.toggle);
@@ -44,6 +46,7 @@ export function BreakdownPanel({
             series,
             selected: scope.filters[dimension],
             onSelect: (value: string) => toggle(dimension, value),
+            ...(maxVisible !== undefined && { maxVisible }),
           };
           return variant === 'columns' ? (
             <ColumnChart {...props} />

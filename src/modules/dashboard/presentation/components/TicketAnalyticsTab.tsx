@@ -1,8 +1,7 @@
-import { channelOrder } from '@/mocks/reference';
 import { Panel } from '@/shared/ui';
 import { scopeForChart, SUBJECT_DIMENSIONS, type Dimension } from '../../domain/filters';
 import { useDashboardFilterStore, useDashboardScope } from '../dashboardFilterStore';
-import { dimensionLabels } from '../dimensionLabels';
+import { channelOrder, dimensionLabels } from '../dimensionLabels';
 import {
   useBreakdown,
   useCrossBreakdown,
@@ -12,6 +11,7 @@ import {
 } from '../hooks/analyticsQueries';
 import { BreakdownPanel } from './BreakdownPanel';
 import { ChartState } from './ChartState';
+import { CrossHeatmap } from './CrossHeatmap';
 import { DonutChart } from './DonutChart';
 import { SentimentBar } from './SentimentBar';
 import { StackedBars } from './StackedBars';
@@ -51,6 +51,30 @@ function CrossPanel({ title, row, column, rowOrder }: { title: string; row: Dime
       <ChartState query={query} isEmpty={(data) => data.rows.length === 0}>
         {(data) => (
           <StackedBars
+            data={data}
+            selectedRow={scope.filters[row]}
+            selectedColumn={scope.filters[column]}
+            onSelectRow={(value) => toggle(row, value)}
+            onSelectSegment={(r, c) => togglePair([row, r], [column, c])}
+            rowOrder={rowOrder}
+          />
+        )}
+      </ChartState>
+    </Panel>
+  );
+}
+
+function CrossHeatmapPanel({ title, row, column, rowOrder }: { title: string; row: Dimension; column: Dimension; rowOrder?: readonly string[] }) {
+  const scope = useDashboardScope();
+  const toggle = useDashboardFilterStore((state) => state.toggle);
+  const togglePair = useDashboardFilterStore((state) => state.togglePair);
+  const own: Dimension[] = [row, column];
+  const query = useCrossBreakdown(row, column, scopeForChart(scope, ...own));
+  return (
+    <Panel title={title}>
+      <ChartState query={query} isEmpty={(data) => data.rows.length === 0}>
+        {(data) => (
+          <CrossHeatmap
             data={data}
             selectedRow={scope.filters[row]}
             selectedColumn={scope.filters[column]}
@@ -141,12 +165,12 @@ export function TicketAnalyticsTab() {
       </div>
       <div className="dashboard__grid dashboard__grid--wide">
         <CrossPanel
-          title={`${dimensionLabels.subject1} به تفکیک ${dimensionLabels.type} (٪ از کل ردیف)`}
+          title={`${dimensionLabels.subject1} به تفکیک ${dimensionLabels.type}`}
           row="subject1"
           column="type"
         />
-        <CrossPanel
-          title={`${dimensionLabels.channel} به تفکیک ${dimensionLabels.type} (٪ از کل ردیف)`}
+        <CrossHeatmapPanel
+          title={`${dimensionLabels.channel} به تفکیک ${dimensionLabels.type}`}
           row="channel"
           column="type"
           rowOrder={channelOrder}

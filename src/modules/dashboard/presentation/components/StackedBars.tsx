@@ -6,7 +6,7 @@ import { seriesColor } from './chartColors';
 import { useChartTooltip } from './ChartTooltip';
 import './StackedBars.css';
 
-const DEFAULT_MAX_VISIBLE = 4;
+const DEFAULT_MAX_VISIBLE = 5;
 
 interface StackedBarsProps {
   data: CrossBreakdown;
@@ -118,6 +118,7 @@ export function StackedBars({
         </div>
       )}
       {tooltip}
+      <p className="cross-hm__note">اعداد کنار هر عنوان، تعداد کل تیکت‌های آن کانال را نشان می‌دهد.</p>
     </div>
   );
 }
