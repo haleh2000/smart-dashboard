@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { cn } from '@/shared/lib/cn';
 import { formatPercent, formatPersianNumber } from '@/shared/lib/format';
 import type { CrossBreakdown } from '../../domain/analytics';
 import { seriesColor } from './chartColors';
 import { useChartTooltip } from './ChartTooltip';
 import './StackedBars.css';
+
+const DEFAULT_MAX_VISIBLE = 4;
 
 interface StackedBarsProps {
   data: CrossBreakdown;
@@ -14,6 +17,10 @@ interface StackedBarsProps {
   /** A segment filters by both its row and its column. */
   onSelectSegment: (row: string, column: string) => void;
   formatColumn?: (value: string) => string;
+  /** Show this many rows before collapsing with a "more" button. 0 = no limit. */
+  maxVisibleRows?: number;
+  /** Custom display order for rows. Unlisted rows go to the end. */
+  rowOrder?: readonly string[];
 }
 
 /** 100% stacked bars («%GT Count of … by … and ChanelType»): one row per value, split by column. */
@@ -24,15 +31,31 @@ export function StackedBars({
   onSelectRow,
   onSelectSegment,
   formatColumn = (value) => value,
+  maxVisibleRows = DEFAULT_MAX_VISIBLE,
+  rowOrder,
 }: StackedBarsProps) {
   const { bind, tooltip } = useChartTooltip();
+  const [expanded, setExpanded] = useState(false);
   const colorOf = (column: string) => seriesColor(data.columns.indexOf(column));
+
+  const sortedRows = rowOrder
+    ? [...data.rows].sort((a, b) => {
+        const ai = rowOrder.indexOf(a.value);
+        const bi = rowOrder.indexOf(b.value);
+        const aRank = ai >= 0 ? ai : rowOrder.length;
+        const bRank = bi >= 0 ? bi : rowOrder.length;
+        return aRank - bRank;
+      })
+    : data.rows;
+
+  const hasOverflow = maxVisibleRows > 0 && sortedRows.length > maxVisibleRows;
+  const visibleRows = hasOverflow && !expanded ? sortedRows.slice(0, maxVisibleRows) : sortedRows;
 
   return (
     <div className="stacked">
       <Legend items={data.columns.map((c) => ({ label: formatColumn(c), color: colorOf(c) }))} />
-      <ul className="stacked__rows">
-        {data.rows.map((row) => {
+      <ul className={cn('stacked__rows', hasOverflow && !expanded && 'stacked__rows--collapsed')}>
+        {visibleRows.map((row) => {
           const rowDimmed = selectedRow !== undefined && row.value !== selectedRow;
           return (
             <li key={row.value} className={cn('stacked__row', rowDimmed && 'stacked__row--dimmed')}>
@@ -78,6 +101,22 @@ export function StackedBars({
           );
         })}
       </ul>
+      {hasOverflow && (
+        <div className="stacked__toggle-row">
+          <button
+            type="button"
+            className="stacked__toggle"
+            onClick={() => setExpanded((prev) => !prev)}
+          >
+            {expanded ? 'کمتر' : `بیشتر `}
+            <span className={cn('stacked__toggle-icon', expanded && 'stacked__toggle-icon--expanded')}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 4.5L6 7.5L9 4.5" />
+              </svg>
+            </span>
+          </button>
+        </div>
+      )}
       {tooltip}
     </div>
   );

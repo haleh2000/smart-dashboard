@@ -1,3 +1,4 @@
+import { channelOrder } from '@/mocks/reference';
 import { Panel } from '@/shared/ui';
 import { scopeForChart, SUBJECT_DIMENSIONS, type Dimension } from '../../domain/filters';
 import { useDashboardFilterStore, useDashboardScope } from '../dashboardFilterStore';
@@ -38,7 +39,7 @@ function SubjectDonut() {
   );
 }
 
-function CrossPanel({ title, row, column }: { title: string; row: Dimension; column: Dimension }) {
+function CrossPanel({ title, row, column, rowOrder }: { title: string; row: Dimension; column: Dimension; rowOrder?: readonly string[] }) {
   const scope = useDashboardScope();
   const toggle = useDashboardFilterStore((state) => state.toggle);
   const togglePair = useDashboardFilterStore((state) => state.togglePair);
@@ -55,6 +56,7 @@ function CrossPanel({ title, row, column }: { title: string; row: Dimension; col
             selectedColumn={scope.filters[column]}
             onSelectRow={(value) => toggle(row, value)}
             onSelectSegment={(r, c) => togglePair([row, r], [column, c])}
+            rowOrder={rowOrder}
           />
         )}
       </ChartState>
@@ -147,6 +149,7 @@ export function TicketAnalyticsTab() {
           title={`${dimensionLabels.channel} به تفکیک ${dimensionLabels.type} (٪ از کل ردیف)`}
           row="channel"
           column="type"
+          rowOrder={channelOrder}
         />
       </div>
       <TrendPanel />
