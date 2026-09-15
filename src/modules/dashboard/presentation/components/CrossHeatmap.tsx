@@ -70,19 +70,20 @@ export function CrossHeatmap({
         {/* Data rows */}
         {visibleRows.map((row) => {
           const rowTotal = row.total || 1;
-          const isSelected = selectedRow === row.value;
+          const rowDimmed = selectedRow !== undefined && row.value !== selectedRow;
           return (
             <div
               key={row.value}
-              className={cn(
-                'cross-hm__row',
-                hasSelection && !isSelected && !row.cells.some((c) => selectedColumn === c.value) && 'cross-hm__row--dimmed'
-              )}
+              className="cross-hm__row"
               role="row"
             >
               <button
                 type="button"
-                className={cn('cross-hm__row-label', isSelected && 'cross-hm__row-label--active')}
+                className={cn(
+                  'cross-hm__row-label',
+                  selectedRow === row.value && 'cross-hm__row-label--active',
+                  rowDimmed && 'cross-hm__row-label--dimmed',
+                )}
                 onClick={() => onSelectRow(row.value)}
                 title={row.value}
               >
@@ -94,7 +95,8 @@ export function CrossHeatmap({
                 const count = cell?.count ?? 0;
                 const share = count / rowTotal;
                 const intensity = maxCellShare > 0 ? Math.round((share / maxCellShare) * 100) : 0;
-                const cellSelected = isSelected && selectedColumn === col;
+                const colDimmed = selectedColumn !== undefined && col !== selectedColumn;
+                const cellDimmed = rowDimmed || colDimmed;
 
                 // ۵۰٪ و کمتر سفید می‌مانند، بالاتر از ۵۰٪ مشکی می‌شوند
                 const isBrightBackground = intensity > 70;
@@ -105,7 +107,7 @@ export function CrossHeatmap({
                     type="button"
                     className={cn(
                       'cross-hm__cell',
-                      hasSelection && !cellSelected && 'cross-hm__cell--dimmed'
+                      cellDimmed && 'cross-hm__cell--dimmed',
                     )}
                     style={{
                       background: `color-mix(in srgb, var(--chart-series-1) ${intensity}%, var(--chart-track))`,

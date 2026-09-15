@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useId, useEffect, useMemo, useState } from 'react';
 import { Bar, BarChart, Cell, LabelList, Tooltip, XAxis, YAxis } from 'recharts';
 import { formatPercent, formatPersianNumber } from '@/shared/lib/format';
 import { seriesColor } from '../chartColors';
@@ -37,7 +37,15 @@ export function HorizontalBarChart({
   const color = seriesColor(series);
   const [expanded, setExpanded] = useState(false);
   const hasOverflow = items.length > maxVisible;
+  const isSelectedVisible = useMemo(
+    () => !selected || items.slice(0, maxVisible).some((i) => i.label === selected),
+    [items, maxVisible, selected],
+  );
   const visibleItems = hasOverflow && !expanded ? items.slice(0, maxVisible) : items;
+
+  useEffect(() => {
+    if (hasOverflow && !isSelectedVisible) setExpanded(true);
+  }, [hasOverflow, isSelectedVisible]);
 
   const chartHeight = visibleItems.length * ROW_HEIGHT + 16;
 

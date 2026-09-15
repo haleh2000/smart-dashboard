@@ -11,6 +11,7 @@ import {
 } from '@/shared/domain/insights';
 import { isWithinRange } from '@/shared/domain/period';
 import type {
+  BranchResponseTime,
   BreakdownItem,
   CallReasons,
   CallStats,
@@ -571,5 +572,23 @@ export class MockAnalyticsRepository implements AnalyticsRepository {
       aiOnly: calls.filter((c) => !c.subject).length,
       nodes: nodesAt(calls, 0),
     };
+  }
+
+  async getBranchResponseTime(scope: DashboardScope): Promise<BranchResponseTime[]> {
+    await delay(200);
+    const tickets = this.filterTickets(scope);
+    const byBranch = groupBy(tickets, (t) => t.branch);
+    return [...byBranch]
+      .map(([branch, group]) => {
+        const responseTimes = group
+          .filter((t) => t.firstResponseAt)
+          .map((t) => seconds(t.createdAt, t.firstResponseAt!) / 60);
+        return {
+          branch,
+          avgResponseMinutes: average(responseTimes),
+          ticketCount: group.length,
+        };
+      })
+      .sort((a, b) => b.avgResponseMinutes - a.avgResponseMinutes);
   }
 }

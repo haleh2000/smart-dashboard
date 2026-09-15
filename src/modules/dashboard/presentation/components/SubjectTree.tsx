@@ -161,23 +161,23 @@ export function SubjectTree({ rows, filters, onSelect }: SubjectTreeProps) {
           ]}
         />
         <Button variant="ghost" className="btn--small" onClick={exportRows}>
-          خروجی Excel
+          خروجی Excel   
         </Button>
       </div>
       <div className="subject-tree__scroll">
         <table className="subject-tree__table">
           <thead>
             <tr>
-              <th scope="col">Subject1 › Subject2 › Subject3</th>
+              <th scope="col">موضوع اصلی / موضوع فرعی / ریزموضوع</th>
               <th scope="col">تعداد</th>
               <th scope="col">درصد</th>
-              <th scope="col">Importance</th>
+              <th scope="col">فراوانی</th>
             </tr>
           </thead>
           <tbody>{tree.flatMap(renderNode)}</tbody>
           <tfoot>
             <tr>
-              <th scope="row">جمع (Total)</th>
+              <th scope="row">مجموع</th>
               <td className="subject-tree__number">{formatPersianNumber(total.count)}</td>
               <td className="subject-tree__number">{formatPercent(total.share)}</td>
               <td />

@@ -110,7 +110,7 @@ export const insuranceLines = [
   'درمان تکمیلی سازمانی',
   'درمان انفرادی',
   'آتش‌سوزی',
-  
+
 ];
 
 export const branches = [

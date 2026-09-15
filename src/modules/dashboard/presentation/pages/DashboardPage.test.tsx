@@ -79,6 +79,7 @@ const fakeRepository = (): AnalyticsRepository => ({
     confidenceBands: [],
   })),
   getCallReasons: vi.fn(async () => ({ total: 0, aiOnly: 0, nodes: [] })),
+  getBranchResponseTime: vi.fn(async () => []),
 });
 
 const renderPage = (repository: AnalyticsRepository, path = '/dashboard') =>

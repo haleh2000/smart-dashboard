@@ -136,7 +136,7 @@ function Enrichment({ enrichment }: { enrichment: Ticket['enrichment'] }) {
             {enrichment.autoLabel}
           </InfoRow>
           <InfoRow label="موضوع تشخیصی">{enrichment.topic}</InfoRow>
-          <InfoRow label="برچسب‌های AI" wide>
+          <InfoRow label="کلیدواژه‌ها" wide>
             <TagList tags={enrichment.aiTags} />
           </InfoRow>
         </InfoGrid>

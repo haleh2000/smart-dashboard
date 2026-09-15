@@ -77,10 +77,10 @@ export function SubjectLineTable({ data, filters, onSelect }: SubjectLineTablePr
         <table className="subject-tree__table">
           <thead>
             <tr>
-              <th scope="col">Subject1</th>
-              <th scope="col">Subject2</th>
-              <th scope="col">Subject3</th>
-              {header('share', 'Percent_Subject3')}
+              <th scope="col">موضوع اصلی</th>
+              <th scope="col"> موضوع فرعی</th>
+              <th scope="col">ریزموضوع</th>
+              {header('share', 'درصد از کل تیکت‌ها')}
               {data.lines.map((line) => header(line, line))}
             </tr>
           </thead>

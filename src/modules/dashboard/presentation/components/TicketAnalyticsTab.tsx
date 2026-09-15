@@ -13,6 +13,7 @@ import { BreakdownPanel } from './BreakdownPanel';
 import { ChartState } from './ChartState';
 import { CrossHeatmap } from './CrossHeatmap';
 import { DonutChart } from './DonutChart';
+import { ResponseTimeChart } from './ResponseTimeChart';
 import { SentimentBar } from './SentimentBar';
 import { StackedBars } from './StackedBars';
 import { SubjectLineTable } from './SubjectLineTable';
@@ -93,7 +94,7 @@ function SubjectTreePanel() {
   const selectSubject = useDashboardFilterStore((state) => state.selectSubject);
   const query = useSubjectTable(scopeForChart(scope, ...SUBJECT_DIMENSIONS));
   return (
-    <Panel title="Subject1، Subject2، Subject3 — جدول سلسله‌مراتبی موضوعات">
+    <Panel title=" جدول سلسله‌مراتبی موضوعات">
       <ChartState query={query} isEmpty={(data) => data.length === 0} skeletonRows={6}>
         {(data) => <SubjectTree rows={data} filters={scope.filters} onSelect={selectSubject} />}
       </ChartState>
@@ -125,11 +126,11 @@ function TrendPanel() {
   const toggle = useDashboardFilterStore((state) => state.toggle);
   const query = useTrend('type', scopeForChart(scope, 'type'));
   return (
-    <Panel title="روند هفتگی کانال‌های ارتباطی (نوع کانال)">
+    <Panel title="روند هفتگی کانال‌های ارتباطی (نوع تیکت)">
       <ChartState query={query} isEmpty={(data) => data.buckets.length === 0}>
         {(data) => (
           <AreaTrendChart
-            label="روند هفتگی نوع کانال"
+            label="روند هفتگی نوع تیکت"
             data={data}
             selected={scope.filters.type}
             onSelect={(v) => toggle('type', v)}
@@ -145,7 +146,7 @@ function SubjectLinePanel() {
   const selectSubject = useDashboardFilterStore((state) => state.selectSubject);
   const query = useSubjectLineTable(scopeForChart(scope, ...SUBJECT_DIMENSIONS, 'insuranceLine'));
   return (
-    <Panel title="درصد سهم هر علت (Subject3) به تفکیک رشته بیمه">
+    <Panel title="درصد سهم هر علت (ریز موضوع) به تفکیک رشته بیمه">
       <ChartState query={query} isEmpty={(data) => data.rows.length === 0} skeletonRows={6}>
         {(data) => (
           <SubjectLineTable data={data} filters={scope.filters} onSelect={selectSubject} />
@@ -185,7 +186,7 @@ export function TicketAnalyticsTab() {
       />
       <div className="dashboard__grid dashboard__grid--wide">
         <BreakdownPanel title="رشته بیمه" dimension="insuranceLine" series={3} />
-        <BreakdownPanel title="کانال ورودی" dimension="channel" series={2} />
+        <ResponseTimeChart title="میانگین پاسخ‌دهی تیکت (شعب)" series={2} />
       </div>
       <SubjectTreePanel />
       <SubjectLinePanel />

@@ -1,4 +1,5 @@
 import type {
+  BranchResponseTime,
   BreakdownItem,
   CallReasons,
   CallStats,
@@ -40,4 +41,6 @@ export interface AnalyticsRepository {
   getSubjectDetection(scope: DashboardScope): Promise<SubjectDetectionStats>;
   /** Multi-level call reasons (Subject1 → 2 → 3), largest first at every level. */
   getCallReasons(scope: DashboardScope): Promise<CallReasons>;
+  /** Average first-response time per branch, slowest first. */
+  getBranchResponseTime(scope: DashboardScope): Promise<BranchResponseTime[]>;
 }

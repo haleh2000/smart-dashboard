@@ -189,3 +189,11 @@ export interface CallReasons {
   aiOnly: number;
   nodes: ReasonNode[];
 }
+
+/** Average first-response time per branch, in minutes. */
+export interface BranchResponseTime {
+  branch: string;
+  /** Average minutes from ticket creation to first response. */
+  avgResponseMinutes: number;
+  ticketCount: number;
+}

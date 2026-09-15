@@ -20,6 +20,8 @@ export const analyticsKeys = {
   sentiment: (scope: DashboardScope) => [...analyticsKeys.all, 'sentiment', scope] as const,
   detection: (scope: DashboardScope) => [...analyticsKeys.all, 'detection', scope] as const,
   reasons: (scope: DashboardScope) => [...analyticsKeys.all, 'reasons', scope] as const,
+  branchResponseTime: (scope: DashboardScope) =>
+    [...analyticsKeys.all, 'branchResponseTime', scope] as const,
 };
 
 const shared = { placeholderData: keepPreviousData } as const;
@@ -137,6 +139,15 @@ export function useCallReasons(scope: DashboardScope) {
   return useQuery({
     queryKey: analyticsKeys.reasons(scope),
     queryFn: () => repository.getCallReasons(scope),
+    ...shared,
+  });
+}
+
+export function useBranchResponseTime(scope: DashboardScope) {
+  const repository = useAnalyticsRepository();
+  return useQuery({
+    queryKey: analyticsKeys.branchResponseTime(scope),
+    queryFn: () => repository.getBranchResponseTime(scope),
     ...shared,
   });
 }

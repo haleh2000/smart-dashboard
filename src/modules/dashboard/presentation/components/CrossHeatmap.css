@@ -58,6 +58,10 @@
   font-weight: 500;
 }
 
+.cross-hm__row-label--dimmed {
+  opacity: 0.4;
+}
+
 .cross-hm__row-total {
   color: var(--color-muted);
   font-variant-numeric: tabular-nums;

@@ -101,7 +101,7 @@ export const ticketColumns = (listSearch = ''): TicketColumn[] => [
     exportValue: (t) => t.enrichment && priorityMeta[t.enrichment.priority].label,
   },
   {
-    header: 'برچسب‌های AI',
+    header: 'کلیدواژه‌ها',
     cell: (t) => t.enrichment && <TagList tags={t.enrichment.aiTags} />,
     exportValue: (t) => t.enrichment?.aiTags.join('، '),
   },
