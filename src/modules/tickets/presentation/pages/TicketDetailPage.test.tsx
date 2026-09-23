@@ -81,7 +81,7 @@ describe('TicketDetailPage', () => {
   it('shows CRM key fields next to the SMART enrichment', async () => {
     renderPage(ticketRepository());
 
-    expect(await screen.findByText('تیکت ۹۰۰۱')).toBeInTheDocument();
+    expect(await screen.findByText('تیکت T-۹۰۰۱')).toBeInTheDocument();
     expect(screen.getByText('پرداخت خسارت انجام نشده است.')).toBeInTheDocument();
     expect(screen.getByText('پیگیری فوری پرونده خسارت')).toBeInTheDocument();
     expect(screen.getByText('هنوز پرداخت نشده.')).toBeInTheDocument();
@@ -90,7 +90,7 @@ describe('TicketDetailPage', () => {
 
   it('links to the previous ticket and disables «next» at the end of the list', async () => {
     renderPage(ticketRepository());
-    await screen.findByText('تیکت ۹۰۰۱');
+    await screen.findByText('تیکت T-۹۰۰۱');
 
     // The neighbours load after the ticket itself.
     expect(

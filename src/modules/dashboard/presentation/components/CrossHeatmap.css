@@ -91,6 +91,33 @@
   z-index: 1;
 }
 
+.cross-hm__value {
+  color: #fff;
+  font-weight: 500;
+  font-size: 14px;
+
+}
+
+.cross-hm__cell--bright .cross-hm__value {
+  color: #000;
+  font-size: 14px;
+
+}
+
+/* Light mode: percentage labels on the green cells are always black. */
+:root[data-theme='light'] .cross-hm__value {
+  color: #000;
+  font-size: 14px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) .cross-hm__value {
+    color: #000;
+  font-size: 14px;
+
+  }
+}
+
 .cross-hm__cell--dimmed {
   opacity: 0.25;
 }

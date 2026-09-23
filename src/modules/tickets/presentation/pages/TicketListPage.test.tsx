@@ -64,14 +64,14 @@ describe('TicketListPage', () => {
   it('renders tickets from the injected repository with a status badge', async () => {
     renderPage(fakeTicketRepository());
 
-    expect(await screen.findByRole('link', { name: '۹۰۰۱' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'T-۹۰۰۱' })).toBeInTheDocument();
     expect(within(screen.getByRole('table')).getByText('در انتظار')).toBeInTheDocument();
   });
 
   it('passes the status filter to the repository and keeps it in the URL', async () => {
     const repository = fakeTicketRepository();
     const { router } = renderPage(repository);
-    await screen.findByRole('link', { name: '۹۰۰۱' });
+    await screen.findByRole('link', { name: 'T-۹۰۰۱' });
 
     await userEvent.selectOptions(screen.getByLabelText('وضعیت'), 'closed');
 
@@ -84,7 +84,7 @@ describe('TicketListPage', () => {
   it('filters by priority and operator', async () => {
     const repository = fakeTicketRepository();
     const { router } = renderPage(repository);
-    await screen.findByRole('link', { name: '۹۰۰۱' });
+    await screen.findByRole('link', { name: 'T-۹۰۰۱' });
 
     await userEvent.selectOptions(screen.getByLabelText('اولویت'), 'high');
     await userEvent.selectOptions(await screen.findByLabelText('اپراتور'), 'اپراتور');
@@ -98,7 +98,7 @@ describe('TicketListPage', () => {
   it('sorts by a CRM column from its header', async () => {
     const repository = fakeTicketRepository();
     renderPage(repository);
-    await screen.findByRole('link', { name: '۹۰۰۱' });
+    await screen.findByRole('link', { name: 'T-۹۰۰۱' });
 
     await userEvent.click(screen.getByRole('button', { name: /نام شعبه/ }));
 

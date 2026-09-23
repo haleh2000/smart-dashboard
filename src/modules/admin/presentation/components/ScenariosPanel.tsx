@@ -80,15 +80,19 @@ function ScenarioFormDialog({ onClose }: { onClose: () => void }) {
             onChange={(e) => setDescription(e.target.value)}
           />
         </label>
-        <label className="form-field">
-          <span className="form-field__label">موضوع اصلی فعال‌کننده</span>
-          <input
-            className="form-input"
-            value={triggerSubject}
-            placeholder="مثلاً «پس از صدور» — خالی یعنی همه موضوع‌ها"
-            onChange={(e) => setTriggerSubject(e.target.value)}
-          />
+       <label className="form-field">
+  <span className="form-field__label">تگ‌های AI</span> {/* تغییر از 'کلیدواژه‌ها' */}
+  <textarea
+    className="form-input form-textarea"
+    value={keywords}
+    placeholder="با ویرگول جدا کنید: خسارت، تاخیر، پرداخت"
+    onChange={(e) => setKeywords(e.target.value)}
+  />
+  <span className="form-field__hint">
+    هنگامی که این تگ‌ها در متن مکالمه دیده شوند، AI سناریو را پیشنهاد می‌دهد.
+  </span>
         </label>
+
         <label className="form-field">
           <span className="form-field__label">کلیدواژه‌ها</span>
           <textarea
@@ -153,10 +157,11 @@ export function ScenariosPanel() {
   return (
     <div className="scenarios">
       <div className="scenarios__toolbar">
-        <p className="scenarios__hint">
-          سناریوها بر اساس موضوع و کلیدواژه‌های مکالمه، به‌عنوان «Suggested Scenario» به اپراتور
-          پیشنهاد می‌شوند.
-        </p>
+     <p className="scenarios__hint">
+      سناریوها بر اساس موضوع و تگ‌های AI مکالمه، به‌عنوان «Suggested Scenario» به اپراتور
+      پیشنهاد می‌شوند.
+    </p>
+
         <Button onClick={() => setCreating(true)}>سناریوی جدید</Button>
       </div>
       {isPending ? (

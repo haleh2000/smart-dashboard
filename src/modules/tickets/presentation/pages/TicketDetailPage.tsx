@@ -34,7 +34,7 @@ const genderLabels = { male: 'مرد', female: 'زن' } as const;
 /** «فیلدهای کلیدی», mirroring the CRM detail page (CRM is the source of truth). */
 function KeyFields({ ticket }: { ticket: Ticket }) {
   return (
-    <InfoCard title="فیلدهای کلیدی">
+    <InfoCard title="اطلاعات پرونده">
       <InfoGrid>
         <InfoRow label="کدملی">{formatPersianNumber(ticket.customer.nationalId)}</InfoRow>
         <InfoRow label="نام مشتری">
@@ -136,7 +136,7 @@ function Enrichment({ enrichment }: { enrichment: Ticket['enrichment'] }) {
             {enrichment.autoLabel}
           </InfoRow>
           <InfoRow label="موضوع تشخیصی">{enrichment.topic}</InfoRow>
-          <InfoRow label="کلیدواژه‌ها" wide>
+          <InfoRow label="تگ‌های AI" wide>
             <TagList tags={enrichment.aiTags} />
           </InfoRow>
         </InfoGrid>
@@ -213,7 +213,7 @@ export function TicketDetailPage() {
   return (
     <section key={ticket.id}>
       <PageHeader
-        title={<span className="ticket-heading">تیکت {formatPersianNumber(ticket.id)}</span>}
+        title={<span className="ticket-heading">تیکت T-{formatPersianNumber(ticket.id)}</span>}
         subtitle={
           <span className="ticket-heading-meta">
             <StatusBadge tone="info">{ticket.type}</StatusBadge>

@@ -107,6 +107,7 @@ export function CrossHeatmap({
                     type="button"
                     className={cn(
                       'cross-hm__cell',
+                      isBrightBackground && 'cross-hm__cell--bright',
                       cellDimmed && 'cross-hm__cell--dimmed',
                     )}
                     style={{
@@ -120,12 +121,7 @@ export function CrossHeatmap({
                     })}
                   >
                     {count > 0 ? (
-                      <span
-                        style={{
-                          color: isBrightBackground ? '#000000' : '#ffffff',
-                          fontWeight: 500,
-                        }}
-                        >
+                      <span className="cross-hm__value">
                         {formatPersianNumber(Math.round(share * 100))}٪
                       </span>
                     ) : ''}
