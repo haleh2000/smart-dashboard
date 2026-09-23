@@ -17,6 +17,7 @@ const kpis: Kpis = {
   fcrRate: 0.7,
   repeatCallRate: 0.2,
   avgResolutionSec: 3600,
+  hourDelta: { total: 0.025 },
 };
 
 const fakeRepository = (): AnalyticsRepository => ({

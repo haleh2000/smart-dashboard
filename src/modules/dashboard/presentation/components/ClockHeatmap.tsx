@@ -66,6 +66,9 @@ export function ClockHeatmap({
   const topKeys = new Set(peaks.topSlots.slice(0, 3).map((s) => `${s.weekday}-${s.hour}`));
   const handAngle = peaks.peak.hour * 15 + 7.5;
   const shown: Focus = focus ?? peaks.peak;
+  const tipLabel = `${weekdayLabels[peaks.peak.weekday]} ${hourLabel(peaks.peak.hour)}`;
+  const [tipX, tipY] = point(BEZEL_FROM - 12, handAngle);
+  const tipWidth = Math.round(tipLabel.length * 7 + 18);
 
   return (
     <div className="clock-heatmap">
@@ -185,6 +188,16 @@ export function ClockHeatmap({
           >
             <line x1={C} y1={C} x2={C} y2={C - (BEZEL_FROM - 12)} />
             <circle cx={C} cy={C - (BEZEL_FROM - 12)} r={4.5} />
+          </g>
+        )}
+
+        {/* Tooltip at the hand tip: the peak weekday × hour, blinking with the hand. */}
+        {peaks.total > 0 && (
+          <g className="clock-heatmap__tip" role="tooltip">
+            <rect x={tipX - tipWidth / 2} y={tipY - 11} width={tipWidth} height={22} />
+            <text x={tipX} y={tipY} textAnchor="middle" dominantBaseline="central">
+              {tipLabel}
+            </text>
           </g>
         )}
 

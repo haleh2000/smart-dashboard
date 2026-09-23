@@ -13,7 +13,8 @@ describe('ClockHeatmap', () => {
 
     expect(screen.getAllByRole('button')).toHaveLength(7 * 24);
     expect(screen.getByText('پیک هفته')).toBeInTheDocument();
-    expect(screen.getByText('سه‌شنبه ۱۱:۰۰')).toBeInTheDocument();
+    expect(screen.getAllByText('سه‌شنبه ۱۱:۰۰').length).toBeGreaterThan(0);
+    expect(screen.getByRole('tooltip')).toHaveTextContent('سه‌شنبه ۱۱:۰۰');
   });
 
   it('filters by the clicked weekday and hour', async () => {

@@ -11,6 +11,10 @@ export const formatPersianNumber = (value: number | string) =>
 export const formatPercent = (ratio: number) =>
   `${formatPersianNumber((ratio * 100).toFixed(1)).replace('.', '٫')}٪`;
 
+/** Signed ratio for period deltas: «+۲٫۵٪» / «−۳٫۰٪»; 0 renders without a sign. */
+export const formatSignedPercent = (ratio: number) =>
+  `${ratio > 0 ? '+' : ratio < 0 ? '−' : ''}${formatPercent(Math.abs(ratio))}`;
+
 // Latin digits here so the parts can be re-assembled in a fixed order, then localized once.
 const jalaliParts = new Intl.DateTimeFormat('fa-IR-u-ca-persian-nu-latn', {
   year: 'numeric',

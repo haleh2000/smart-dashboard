@@ -6,7 +6,7 @@ export interface BreakdownItem {
 }
 
 /** Headline figures (README → «KPIهای کلیدی»). Ticket figures come from the ticket table. */
-export interface Kpis {
+export interface KpiFigures {
   total: number;
   open: number;
   /** In progress or under review. */
@@ -23,6 +23,32 @@ export interface Kpis {
   /** Mean time to close a ticket, in seconds (0 when none closed). */
   avgResolutionSec: number;
 }
+
+export type KpiKey = keyof KpiFigures;
+
+export interface Kpis extends KpiFigures {
+  /**
+   * Relative change of each figure against the same hour earlier (0.05 = «+۵٪»).
+   * `undefined` when the previous value was 0 but the current one is not.
+   */
+  hourDelta: Partial<Record<KpiKey, number>>;
+}
+
+/** Growth of `now` against `before` as a ratio; `undefined` when rising from zero. */
+export const relativeChange = (now: number, before: number): number | undefined =>
+  before === 0 ? (now === 0 ? 0 : undefined) : (now - before) / before;
+
+/** One hour-over-hour delta per KPI key. */
+export const kpiHourDeltas = (
+  current: KpiFigures,
+  previous: KpiFigures,
+): Partial<Record<KpiKey, number>> => {
+  const deltas: Partial<Record<KpiKey, number>> = {};
+  for (const key of Object.keys(current) as KpiKey[]) {
+    deltas[key] = relativeChange(current[key], previous[key]);
+  }
+  return deltas;
+};
 
 /** Row × column counts for the 100% stacked bars («%GT Count of Major by Major and ChanelType»). */
 export interface CrossBreakdown {

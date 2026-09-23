@@ -27,6 +27,27 @@ describe('MockAnalyticsRepository', () => {
     expect(everything.fcrRate).toBeLessThanOrEqual(1);
   });
 
+  it('returns an hour-over-hour delta for every KPI key', async () => {
+    const kpis = await repository.getKpis(all);
+
+    expect(Object.keys(kpis.hourDelta).sort()).toEqual(
+      [
+        'avgResolutionSec',
+        'closed',
+        'fcrRate',
+        'inReview',
+        'open',
+        'overdue',
+        'repeatCallRate',
+        'resolutionRate',
+        'total',
+      ].sort(),
+    );
+    // Mock tickets only ever gain age, so totals never drop hour over hour.
+    expect(kpis.hourDelta.total).toBeGreaterThanOrEqual(0);
+    expect(kpis.hourDelta.resolutionRate).toBeTypeOf('number');
+  });
+
   it('splits every cross-breakdown row into its columns', async () => {
     const { rows, columns } = await repository.getCrossBreakdown('channel', 'type', all);
 

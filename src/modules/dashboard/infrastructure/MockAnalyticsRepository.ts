@@ -2,6 +2,7 @@ import { reportedSubject, subjectAgreement, type Call, type CallAnalysis } from 
 import type { Ticket } from '@/modules/tickets';
 import { customerOfCall, mockCalls } from '@/mocks/calls';
 import { delay } from '@/mocks/delay';
+import { HOUR } from '@/mocks/reference';
 import { mockTickets } from '@/mocks/tickets';
 import {
   SENTIMENTS,
@@ -10,24 +11,26 @@ import {
   type Sentiment,
 } from '@/shared/domain/insights';
 import { isWithinRange } from '@/shared/domain/period';
-import type {
-  BranchResponseTime,
-  BreakdownItem,
-  CallReasons,
-  CallStats,
-  CrossBreakdown,
-  Heatmap,
-  Kpis,
-  OperatorStats,
-  ReasonNode,
-  RepeatCallStats,
-  ResolutionStep,
-  SentimentOverview,
-  SentimentSplit,
-  SubjectDetectionStats,
-  SubjectLineTable,
-  SubjectRow,
-  Trend,
+import {
+  kpiHourDeltas,
+  type BranchResponseTime,
+  type BreakdownItem,
+  type CallReasons,
+  type CallStats,
+  type CrossBreakdown,
+  type Heatmap,
+  type KpiFigures,
+  type Kpis,
+  type OperatorStats,
+  type ReasonNode,
+  type RepeatCallStats,
+  type ResolutionStep,
+  type SentimentOverview,
+  type SentimentSplit,
+  type SubjectDetectionStats,
+  type SubjectLineTable,
+  type SubjectRow,
+  type Trend,
 } from '../domain/analytics';
 import type { AnalyticsRepository } from '../domain/AnalyticsRepository';
 import { classifySentimentLevel } from '../domain/sentimentLevels';
@@ -166,11 +169,30 @@ export class MockAnalyticsRepository implements AnalyticsRepository {
     );
   }
 
-  async getKpis(scope: DashboardScope): Promise<Kpis> {
-    await delay(200);
-    const tickets = this.filterTickets(scope);
-    const calls = this.filterCalls(scope);
-    const closed = tickets.filter((t) => t.status === 'closed');
+  /**
+   * KPI snapshot of the dataset as it looked at `asOf` (undefined = now).
+   * Tickets are replayed: created before `asOf`, closed only if `closedAt` passed it;
+   * every other status is its current value (the mock data carries no status history).
+   */
+  private kpiFigures({ filters, range }: DashboardScope, asOf?: Date): KpiFigures {
+    const active = Object.entries(filters) as [Dimension, string][];
+    const before = (time: Date) => asOf === undefined || time < asOf;
+    const tickets = this.tickets.filter(
+      (ticket) =>
+        isWithinRange(ticket.createdAt, range) &&
+        before(ticket.createdAt) &&
+        active.every(([dimension, value]) => ticketValue[dimension](ticket) === value),
+    );
+    const calls = this.calls.filter(
+      (call) =>
+        isWithinRange(call.startedAt, range) &&
+        before(call.startedAt) &&
+        active.every(([dimension, value]) => callValue[dimension](call) === value),
+    );
+    const isClosed = (ticket: Ticket) =>
+      ticket.status === 'closed' &&
+      (asOf === undefined || !ticket.closedAt || ticket.closedAt < asOf);
+    const closed = tickets.filter(isClosed);
     const answered = calls.filter((c) => c.status === 'answered');
     const perCaller = countBy(calls, (c) => c.caller.mobile);
     const resolutionTimes = closed.flatMap((t) =>
@@ -184,11 +206,18 @@ export class MockAnalyticsRepository implements AnalyticsRepository {
         .length,
       closed: closed.length,
       resolutionRate: ratio(closed.length, tickets.length),
-      overdue: tickets.filter((t) => t.status !== 'closed' && t.slaRemainingDays < 0).length,
+      overdue: tickets.filter((t) => !isClosed(t) && t.slaRemainingDays < 0).length,
       fcrRate: ratio(answered.filter((c) => c.resolvedOnFirstCall).length, answered.length),
       repeatCallRate: ratio([...perCaller.values()].filter((n) => n > 1).length, perCaller.size),
       avgResolutionSec: average(resolutionTimes),
     };
+  }
+
+  async getKpis(scope: DashboardScope): Promise<Kpis> {
+    await delay(200);
+    const current = this.kpiFigures(scope);
+    const hourAgo = this.kpiFigures(scope, new Date(Date.now() - HOUR));
+    return { ...current, hourDelta: kpiHourDeltas(current, hourAgo) };
   }
 
   async getBreakdown(dimension: Dimension, scope: DashboardScope): Promise<BreakdownItem[]> {

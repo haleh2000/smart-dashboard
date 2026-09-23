@@ -31,6 +31,8 @@ export function useKpis(scope: DashboardScope) {
   return useQuery({
     queryKey: analyticsKeys.kpis(scope),
     queryFn: () => repository.getKpis(scope),
+    // Hour-over-hour deltas must stay fresh on a left-open dashboard.
+    refetchInterval: 3_600_000,
     ...shared,
   });
 }

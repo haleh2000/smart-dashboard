@@ -33,6 +33,11 @@
   font-weight: 500;
 }
 
+.stat-card__subtitle {
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+
 .stat-card__value {
   font-size: var(--font-size-display);
   line-height: 1.2;

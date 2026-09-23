@@ -89,7 +89,9 @@
   transform-box: view-box;
   transform-origin: center;
   pointer-events: none;
-  animation: clock-heatmap-sweep 1.2s var(--ease-spring) both;
+  animation:
+    clock-heatmap-sweep 1.2s var(--ease-spring) both,
+    clock-heatmap-hand-blink 1.4s ease-in-out 1.2s infinite;
 }
 
 .clock-heatmap__hand line {
@@ -109,6 +111,35 @@
   from {
     transform: rotate(0deg);
   }
+}
+
+@keyframes clock-heatmap-hand-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.clock-heatmap__tip {
+  pointer-events: none;
+  font-family: var(--font-family-base);
+  animation: clock-heatmap-hand-blink 1.4s ease-in-out 1.2s infinite;
+}
+
+.clock-heatmap__tip rect {
+  fill: var(--color-surface-raised);
+  stroke: var(--chart-series-2);
+  stroke-width: 1;
+  rx: var(--radius-medium);
+}
+
+.clock-heatmap__tip text {
+  fill: var(--color-ink);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .clock-heatmap__hub {
@@ -181,7 +212,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .clock-heatmap__cell,
-  .clock-heatmap__hand {
+  .clock-heatmap__hand,
+  .clock-heatmap__tip {
     animation: none;
   }
 }

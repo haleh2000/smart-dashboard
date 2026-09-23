@@ -171,7 +171,7 @@ export function SubjectTree({ rows, filters, onSelect }: SubjectTreeProps) {
               <th scope="col">موضوع اصلی / موضوع فرعی / ریزموضوع</th>
               <th scope="col">تعداد</th>
               <th scope="col">درصد</th>
-              <th scope="col">فراوانی</th>
+              <th scope="col">الویت</th>
             </tr>
           </thead>
           <tbody>{tree.flatMap(renderNode)}</tbody>

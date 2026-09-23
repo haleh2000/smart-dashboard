@@ -6,6 +6,7 @@ import {
   formatElapsed,
   formatPercent,
   formatPersianNumber,
+  formatSignedPercent,
   toLatinDigits,
 } from './format';
 
@@ -38,6 +39,12 @@ describe('format', () => {
 
   it('formats ratios as Persian percentages', () => {
     expect(formatPercent(0.452)).toBe('۴۵٫۲٪');
+  });
+
+  it('signs deltas up and down, leaving zero unsigned', () => {
+    expect(formatSignedPercent(0.025)).toBe('+۲٫۵٪');
+    expect(formatSignedPercent(-0.03)).toBe('−۳٫۰٪');
+    expect(formatSignedPercent(0)).toBe('۰٫۰٪');
   });
 
   it('renders Jalali date and time in a fixed order', () => {
