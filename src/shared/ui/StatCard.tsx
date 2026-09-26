@@ -19,8 +19,8 @@ export function StatCard({ label, subtitle, value, hint, tone = 'neutral', icon 
       {icon && <span className="stat-card__icon" aria-hidden="true">{icon}</span>}
       <div className="stat-card__content">
         <span className="stat-card__label">{label}</span>
-        {subtitle && <span className="stat-card__subtitle">{subtitle}</span>}
         <strong className="stat-card__value">{value}</strong>
+        {subtitle && <span className="stat-card__subtitle">{subtitle}</span>}
         {hint && <span className="stat-card__hint">{hint}</span>}
       </div>
     </div>
