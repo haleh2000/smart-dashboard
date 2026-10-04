@@ -5,6 +5,7 @@ import type { SubjectNode, SubjectPath } from '@/shared/domain/insights';
 import type { Page } from '@/shared/domain/pagination';
 import { isWithinRange } from '@/shared/domain/period';
 import { subjectAgreement, type Call } from '../domain/call';
+import { publishCallUpdate } from '../domain/callFeed';
 import type {
   CallFilter,
   CallQuery,
@@ -49,28 +50,26 @@ const toTree = (): SubjectNode[] =>
     })),
   }));
 
-/** Calls added by the dev simulator, shared by every repository instance (it's one fake backend). */
-const simulatedCalls: Call[] = [];
-
+/**
+ * The one fake backend array: the call table, its summary and every dashboard call figure read
+ * this very reference, so a call added here shows up everywhere at once.
+ */
 export const addSimulatedCall = (call: Call) => {
-  simulatedCalls.unshift(call);
+  mockCalls.unshift(call);
+  publishCallUpdate();
 };
 
 /** In-memory adapter. Filtering/sorting/paging here mimics what the backend is expected to do. */
 export class MockCallRepository implements CallRepository {
-  private calls: Call[];
+  private readonly calls: Call[];
 
   constructor(calls: Call[] = mockCalls) {
-    this.calls = [...calls];
-  }
-
-  private all() {
-    return [...simulatedCalls, ...this.calls];
+    this.calls = calls;
   }
 
   private filter(query: CallFilter) {
     const term = query.search?.trim();
-    return this.all().filter(
+    return this.calls.filter(
       (call) =>
         (!term || matchesSearch(call, term)) &&
         (!query.status || call.status === query.status) &&
@@ -119,9 +118,8 @@ export class MockCallRepository implements CallRepository {
       ),
       uncategorized: answered.filter((c) => !c.subject).length,
       aiAgreement: ratio(
-        reviewed.filter(
-          (c) => subjectAgreement(c.subject, c.analysis!.detectedSubject) === 'match',
-        ).length,
+        reviewed.filter((c) => subjectAgreement(c.subject, c.analysis!.detectedSubject) === 'match')
+          .length,
         reviewed.length,
       ),
     };
@@ -129,12 +127,12 @@ export class MockCallRepository implements CallRepository {
 
   async getById(id: string) {
     await delay();
-    return this.all().find((call) => call.id === id) ?? null;
+    return this.calls.find((call) => call.id === id) ?? null;
   }
 
   async getFilterOptions() {
     await delay(100);
-    const all = this.all();
+    const all = this.calls;
     return {
       agents: distinct(all.map((call) => call.agent)),
       queues: distinct(all.map((call) => call.queue)),
@@ -155,8 +153,9 @@ export class MockCallRepository implements CallRepository {
       list[index] = updated;
       return updated;
     };
-    const updated = update(simulatedCalls) ?? update(this.calls);
+    const updated = update(this.calls);
     if (!updated) throw new Error(`Call ${id} not found`);
+    publishCallUpdate();
     return updated;
   }
 

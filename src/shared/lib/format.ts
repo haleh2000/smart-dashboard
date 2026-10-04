@@ -37,6 +37,9 @@ export const formatDateTime = (date: Date) => {
 /** «۱۴۰۵/۰۴/۱۱» — Jalali date only. */
 export const formatDate = (date: Date) => formatDateTime(date).split(' ')[0]!;
 
+/** «۱۰:۳۰» — the clock half of `formatDateTime`, for fields that show the two apart. */
+export const formatTime = (date: Date) => formatDateTime(date).split(' ')[1]!;
+
 const pad = (n: number) => String(n).padStart(2, '0');
 
 /** Call length: «۰۳:۲۵», or «۱:۰۳:۲۵» past an hour. */

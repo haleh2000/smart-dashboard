@@ -5,7 +5,9 @@ import {
   useQueryClient,
   type QueryClient,
 } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import type { Page, Sort } from '@/shared/domain/pagination';
+import { subscribeToTicketFeed } from '../../domain/ticketFeed';
 import type { Ticket, TicketNote } from '../../domain/ticket';
 import type { TicketFilter, TicketQuery, TicketSortField } from '../../domain/TicketRepository';
 import { useTicketRepository } from '../ticketServices';
@@ -26,6 +28,13 @@ export const ticketKeys = {
 
 export function useTickets(query: TicketQuery) {
   const repository = useTicketRepository();
+  const queryClient = useQueryClient();
+  // Live path: a push on the feed refetches every list, so the table total stays equal to the KPI cards.
+  useEffect(
+    () =>
+      subscribeToTicketFeed(() => queryClient.invalidateQueries({ queryKey: ticketKeys.lists() })),
+    [queryClient],
+  );
   return useQuery({
     queryKey: ticketKeys.list(query),
     queryFn: () => repository.list(query),

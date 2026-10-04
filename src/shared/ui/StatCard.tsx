@@ -24,5 +24,5 @@ export function StatCard({ label, subtitle, value, hint, tone = 'neutral', icon 
         {hint && <span className="stat-card__hint">{hint}</span>}
       </div>
     </div>
-  );
+  ); 
 }

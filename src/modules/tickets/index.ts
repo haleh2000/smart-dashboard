@@ -11,9 +11,18 @@ export type {
   TicketEvent,
   TicketNote,
   TicketStatus,
+  TicketStatusFilter,
   TicketUpdate,
 } from './domain/ticket';
-export { isOverdue, TICKET_STATUSES } from './domain/ticket';
+export {
+  isOpenStatus,
+  isOverdue,
+  REVIEWING_STATUSES,
+  statusMatchesFilter,
+  TICKET_STATUSES,
+  TICKET_STATUS_FILTERS,
+} from './domain/ticket';
+export { publishTicketUpdate, subscribeToTicketFeed } from './domain/ticketFeed';
 export type {
   AdjacentTickets,
   TicketFilter,

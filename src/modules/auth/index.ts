@@ -8,7 +8,7 @@ export { setDevRole } from './infrastructure/devSession';
 export { MockAuthRepository } from './infrastructure/MockAuthRepository';
 export { authPaths } from './presentation/authPaths';
 export { AuthRepositoryProvider } from './presentation/authServices';
-export { useCan, useCurrentUser } from './presentation/currentUser';
+export { CurrentUserContext, useCan, useCurrentUser } from './presentation/currentUser';
 export { LoginPage } from './presentation/pages/LoginPage';
 export { RequirePermission } from './presentation/RequirePermission';
 export { permissionLabels, roleDescriptions, roleLabels } from './presentation/roleLabels';

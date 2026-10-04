@@ -1,5 +1,7 @@
 import { mockCalls } from '@/mocks/calls';
 import { mockTickets } from '@/mocks/tickets';
+import { MockCallRepository, simulateIncomingCall } from '@/modules/calls';
+import { MockTicketRepository, type TicketStatusFilter } from '@/modules/tickets';
 import { periodRange } from '@/shared/domain/period';
 import { MockAnalyticsRepository } from './MockAnalyticsRepository';
 
@@ -25,6 +27,25 @@ describe('MockAnalyticsRepository', () => {
     expect(lastWeek.total).toBeLessThan(everything.total);
     expect(everything.fcrRate).toBeGreaterThan(0);
     expect(everything.fcrRate).toBeLessThanOrEqual(1);
+  });
+
+  it('reports the same figures the ticket table lists', async () => {
+    const tickets = new MockTicketRepository();
+    const listed = async (status?: TicketStatusFilter) =>
+      (
+        await tickets.list({
+          page: 1,
+          pageSize: 1,
+          sort: { field: 'createdAt', direction: 'desc' },
+          status,
+        })
+      ).total;
+    const kpis = await repository.getKpis({ filters: {}, range: undefined });
+
+    expect(kpis.total).toBe(await listed());
+    expect(kpis.open).toBe(await listed('open'));
+    expect(kpis.inReview).toBe(await listed('inReview'));
+    expect(kpis.closed).toBe(await listed('closed'));
   });
 
   it('returns an hour-over-hour delta for every KPI key', async () => {
@@ -135,6 +156,50 @@ describe('MockAnalyticsRepository', () => {
       expect(node.children.reduce((sum, n) => sum + n.count, 0)).toBe(node.count);
       for (const child of node.children)
         expect(child.children.reduce((sum, n) => sum + n.count, 0)).toBe(child.count);
+    }
+  });
+
+  it('reports the same call figures the call table lists', async () => {
+    const calls = new MockCallRepository();
+    const summary = await calls.summarize({});
+    const inbound = (
+      await calls.list({
+        page: 1,
+        pageSize: 1,
+        sort: { field: 'startedAt', direction: 'desc' },
+        direction: 'inbound',
+      })
+    ).total;
+    const stats = await repository.getCallStats(all);
+
+    expect(stats.ringing + stats.ongoing).toBe(summary.live);
+    expect(stats.answered).toBe(summary.answered);
+    expect(stats.missed).toBe(summary.missed);
+    expect(stats.avgWaitSec).toBe(summary.avgWaitSec);
+    expect(stats.avgTalkSec).toBe(summary.avgTalkSec);
+    expect(stats.answerRate).toBe(summary.answered / (summary.answered + summary.missed));
+    expect(stats.incoming).toBe(inbound);
+  });
+
+  it('moves the call figures when the table gains a call, and stays equal to it', async () => {
+    const calls = new MockCallRepository();
+    const before = await repository.getCallStats(all);
+    const tableBefore = await calls.summarize({});
+    const incoming = simulateIncomingCall();
+
+    try {
+      const stats = await repository.getCallStats(all);
+      const table = await calls.summarize({});
+
+      expect(stats.ringing).toBe(before.ringing + 1);
+      expect(stats.incoming).toBe(before.incoming + 1);
+      expect(table.live).toBe(tableBefore.live + 1);
+      expect(stats.ringing + stats.ongoing).toBe(table.live);
+      expect(stats.answered).toBe(table.answered);
+      expect(stats.missed).toBe(table.missed);
+    } finally {
+      const index = mockCalls.findIndex((call) => call.id === incoming.callId);
+      if (index >= 0) mockCalls.splice(index, 1);
     }
   });
 });

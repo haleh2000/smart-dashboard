@@ -95,6 +95,11 @@
   --color-accent-soft: rgb(228 87 61 / 10%);
   --color-on-primary: #ffffff;
   --color-on-accent: #ffffff;
+  /* Translucent white for controls sitting ON a brand surface (the date
+     picker's header pills and month arrows) — theme-independent, because that
+     surface is always the teal gradient. */
+  --color-on-primary-soft: rgb(255 255 255 / 18%);
+  --color-on-primary-soft-hover: rgb(255 255 255 / 30%);
 
   /* Modal/scrim overlay behind dialogs */
   --color-overlay: rgb(12 32 31 / 45%);

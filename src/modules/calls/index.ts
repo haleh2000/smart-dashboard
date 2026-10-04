@@ -22,7 +22,12 @@ export type {
   CallRepository,
   CallSortField,
 } from './domain/CallRepository';
-export { simulateIncomingCall } from './infrastructure/devCallSimulator';
+export { publishCallUpdate, subscribeToCallFeed } from './domain/callFeed';
+export {
+  simulateIncomingCall,
+  startCallSimulator,
+  stopCallSimulator,
+} from './infrastructure/devCallSimulator';
 export { MockCallRepository } from './infrastructure/MockCallRepository';
 export { callStatusMeta } from './presentation/callLabels';
 export { callPaths } from './presentation/callPaths';

@@ -1,0 +1,77 @@
+.custom-range {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+/* Trigger and the chosen range share one row: stacking them made the button
+   jump a level up the moment a range was applied, breaking alignment with the
+   period switch and «به‌روزرسانی» beside it. */
+.custom-range__trigger-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.custom-range__trigger--active,
+.custom-range__trigger--active:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  box-shadow: var(--focus-ring);
+}
+
+.custom-range__summary {
+  min-width: 0;
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+  line-height: 1.6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.custom-range__panel {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  inset-inline-end: 0;
+  z-index: 45;
+  width: min(420px, calc(100vw - var(--space-6)));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-medium);
+  box-shadow: var(--shadow-raised);
+}
+
+.custom-range__hint {
+  margin: 0;
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+  line-height: 1.7;
+}
+
+.custom-range__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr));
+  gap: var(--space-3);
+}
+
+.custom-range__error {
+  margin: 0;
+  font-size: var(--font-size-small);
+  color: var(--color-error);
+  line-height: 1.7;
+}
+
+.custom-range__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}

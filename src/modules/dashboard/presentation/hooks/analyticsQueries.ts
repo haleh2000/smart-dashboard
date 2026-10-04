@@ -1,4 +1,7 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { subscribeToCallFeed } from '@/modules/calls';
+import { subscribeToTicketFeed } from '@/modules/tickets';
 import type { DashboardScope, Dimension } from '../../domain/filters';
 import { useAnalyticsRepository } from '../analyticsServices';
 
@@ -28,11 +31,26 @@ const shared = { placeholderData: keepPreviousData } as const;
 
 export function useKpis(scope: DashboardScope) {
   const repository = useAnalyticsRepository();
+  const queryClient = useQueryClient();
+  // Live path: a push on either feed refetches every cached snapshot (KPI cards and charts
+  // alike; tickets and calls both live in the same aggregation) immediately.
+  useEffect(() => {
+    const stopTickets = subscribeToTicketFeed(() =>
+      queryClient.invalidateQueries({ queryKey: analyticsKeys.all }),
+    );
+    const stopCalls = subscribeToCallFeed(() =>
+      queryClient.invalidateQueries({ queryKey: analyticsKeys.all }),
+    );
+    return () => {
+      stopTickets();
+      stopCalls();
+    };
+  }, [queryClient]);
   return useQuery({
     queryKey: analyticsKeys.kpis(scope),
     queryFn: () => repository.getKpis(scope),
-    // Hour-over-hour deltas must stay fresh on a left-open dashboard.
-    refetchInterval: 3_600_000,
+    // Safety net so a left-open dashboard stays fresh even when no push arrives.
+    refetchInterval: 30_000,
     ...shared,
   });
 }
@@ -96,6 +114,8 @@ export function useCallStats(scope: DashboardScope) {
   return useQuery({
     queryKey: analyticsKeys.calls(scope),
     queryFn: () => repository.getCallStats(scope),
+    // Safety net so a left-open dashboard stays fresh even when no push arrives.
+    refetchInterval: 30_000,
     ...shared,
   });
 }
@@ -114,6 +134,7 @@ export function useRepeatCalls(scope: DashboardScope) {
   return useQuery({
     queryKey: analyticsKeys.repeatCalls(scope),
     queryFn: () => repository.getRepeatCalls(scope),
+    refetchInterval: 30_000,
     ...shared,
   });
 }

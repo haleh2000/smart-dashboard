@@ -12,6 +12,7 @@ import type {
   TicketNote,
   TicketUpdate,
 } from '../domain/ticket';
+import { statusMatchesFilter } from '../domain/ticket';
 import type {
   AdjacentTickets,
   TicketFilter,
@@ -61,7 +62,7 @@ const matches = (ticket: Ticket, filter: TicketFilter) => {
         ticket.customer.nationalId,
         ticket.customer.fullName,
       ].some((value) => value.includes(term))) &&
-    (!filter.status || ticket.status === filter.status) &&
+    (!filter.status || statusMatchesFilter(ticket.status, filter.status)) &&
     (!filter.priority || ticket.enrichment?.priority === filter.priority) &&
     (!filter.sentiment || ticket.enrichment?.sentiment === filter.sentiment) &&
     (!filter.type || ticket.type === filter.type) &&
@@ -200,11 +201,15 @@ const historyOf = (ticket: Ticket) => {
 
 /** In-memory adapter. Filtering/sorting/paging here mimics what the backend is expected to do. */
 export class MockTicketRepository implements TicketRepository {
+  /**
+   * Holds the source array itself, not a copy: the analytics repository and the dev KPI simulator
+   * read and write the same tickets, so the table total always equals the KPI figures.
+   */
   private readonly tickets: Ticket[];
   private readonly addedNotes = new Map<string, TicketNote[]>();
 
   constructor(tickets: Ticket[] = mockTickets) {
-    this.tickets = tickets.map((ticket) => ({ ...ticket }));
+    this.tickets = tickets;
   }
 
   private filtered(filter: TicketFilter, sort: Sort<TicketSortField>) {

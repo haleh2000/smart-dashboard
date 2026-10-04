@@ -11,11 +11,11 @@ import {
   priorityMeta,
   sentimentMeta,
 } from '@/shared/ui';
-import { TICKET_STATUSES } from '../../domain/ticket';
+import { TICKET_STATUS_FILTERS } from '../../domain/ticket';
 import { useTicketFilterOptions } from '../hooks/ticketQueries';
 import { isFiltered, type TicketListState } from '../hooks/ticketListParams';
 import type { TicketListChanges } from '../hooks/useTicketListParams';
-import { statusMeta } from '../ticketLabels';
+import { statusFilterLabel } from '../ticketLabels';
 
 interface TicketFiltersProps {
   state: TicketListState;
@@ -75,7 +75,10 @@ export function TicketFilters({ state, onChange, onReset, meta }: TicketFiltersP
         label="وضعیت"
         allLabel="همه وضعیت‌ها"
         value={state.status}
-        options={TICKET_STATUSES.map((value) => ({ value, label: statusMeta[value].label }))}
+        options={TICKET_STATUS_FILTERS.map((value) => ({
+          value,
+          label: statusFilterLabel(value),
+        }))}
         onChange={(status) => onChange({ status })}
       />
       <FilterSelect

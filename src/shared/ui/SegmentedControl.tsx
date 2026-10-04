@@ -4,7 +4,8 @@ import './SegmentedControl.css';
 interface SegmentedControlProps<T extends string> {
   label: string;
   options: readonly { value: T; label: string }[];
-  value: T;
+  /** `null` = nothing highlighted (e.g. a hand-picked range replaced the presets). */
+  value: T | null;
   onChange: (value: T) => void;
 }
 

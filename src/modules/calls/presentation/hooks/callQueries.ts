@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SubjectPath } from '@/shared/domain/insights';
 import type { CallFilter, CallQuery } from '../../domain/CallRepository';
+import { subscribeToCallFeed } from '../../domain/callFeed';
 import { useCallRepository } from '../callServices';
 
 export const callKeys = {
@@ -13,8 +15,18 @@ export const callKeys = {
   subjectTree: () => [...callKeys.all, 'subjectTree'] as const,
 };
 
+/** Live path: a push on the feed refetches the call table and its summary without a reload. */
+function useLiveCalls() {
+  const queryClient = useQueryClient();
+  useEffect(
+    () => subscribeToCallFeed(() => queryClient.invalidateQueries({ queryKey: callKeys.lists() })),
+    [queryClient],
+  );
+}
+
 export function useCalls(query: CallQuery) {
   const repository = useCallRepository();
+  useLiveCalls();
   return useQuery({
     queryKey: callKeys.list(query),
     queryFn: () => repository.list(query),
@@ -24,6 +36,7 @@ export function useCalls(query: CallQuery) {
 
 export function useCallSummary(filter: CallFilter) {
   const repository = useCallRepository();
+  useLiveCalls();
   return useQuery({
     queryKey: callKeys.summary(filter),
     queryFn: () => repository.summarize(filter),

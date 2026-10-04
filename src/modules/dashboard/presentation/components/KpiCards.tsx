@@ -40,11 +40,11 @@ export function KpiCards() {
         value={count(data?.closed)}
         tone="success"
       />
-      <StatCard
+      {/* <StatCard
         label="نرخ حل"
         subtitle={delta('resolutionRate')}
         value={percent(data?.resolutionRate)}
-      />
+      /> */}
       <StatCard
         label="خارج از SLA"
         subtitle={delta('overdue')}
@@ -52,24 +52,25 @@ export function KpiCards() {
         tone="error"
       />
       <StatCard
+      
         label="FCR (حل در اولین تماس)"
         subtitle={delta('fcrRate')}
         value={percent(data?.fcrRate)}
         tone="success"
       />
-      <StatCard
+      {/* <StatCard
         label="نرخ تکرار تماس"
         subtitle={delta('repeatCallRate')}
         value={percent(data?.repeatCallRate)}
         tone="warning"
-      />
-      <StatCard
+      /> */}
+      {/* <StatCard
         label="میانگین زمان حل"
         subtitle={delta('avgResolutionSec')}
         value={
           data ? (data.avgResolutionSec ? formatElapsed(data.avgResolutionSec) : '—') : PLACEHOLDER
         }
-      />
+      /> */}
     </div>
   );
 }

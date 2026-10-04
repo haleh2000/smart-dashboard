@@ -1,5 +1,10 @@
 import type { BadgeTone } from '@/shared/ui';
-import type { NoteError, TicketEventKind, TicketStatus } from '../domain/ticket';
+import type {
+  NoteError,
+  TicketEventKind,
+  TicketStatus,
+  TicketStatusFilter,
+} from '../domain/ticket';
 
 interface Meta {
   label: string;
@@ -15,6 +20,16 @@ export const statusMeta: Record<TicketStatus, Meta & { live: boolean }> = {
   referred: { label: 'ارجاع‌شده', tone: 'success', live: false },
   closed: { label: 'بسته‌شده', tone: 'neutral', live: false },
 };
+
+/** The two list-filter groups, named after the KPI cards whose figures they reproduce. */
+export const statusGroupLabels: Record<'open' | 'inReview', string> = {
+  open: 'باز (غیر بسته‌شده)',
+  inReview: 'در حال بررسی',
+};
+
+/** Label of any status-filter option: a CRM status or one of the KPI groups. */
+export const statusFilterLabel = (value: TicketStatusFilter): string =>
+  value === 'open' || value === 'inReview' ? statusGroupLabels[value] : statusMeta[value].label;
 
 export const eventMeta: Record<TicketEventKind, Meta> = {
   created: { label: 'ایجاد', tone: 'info' },

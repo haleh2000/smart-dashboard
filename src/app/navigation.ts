@@ -71,22 +71,18 @@ export const navigation: NavItem[] = [
     shortLabel: 'تنظیمات',
     path: adminPaths.settings,
     permission: 'admin.manage',
-    icon: 'settings',
+    icon: 'settings', 
     group: 'مدیریت',
   },
 ];
 
-/** The single entry owning the current route: the longest nav path the location falls under. */
 export const activeNavPath = (items: NavItem[], pathname: string) =>
   items
     .map((item) => item.path)
     .filter((path) => pathname === path || pathname.startsWith(`${path}/`))
     .sort((a, b) => b.length - a.length)[0];
 
-/**
- * Bottom-bar entries: one per group (its first item, labelled with the group's short label),
- * so seven sections still fit a phone. `paths` lists every path the entry stands for.
- */
+
 export const bottomNavItems = (items: NavItem[]) => {
   const entries: (NavItem & { paths: string[] })[] = [];
   for (const item of items) {

@@ -1,4 +1,5 @@
 import { mockTickets } from '@/mocks/tickets';
+import { isOpenStatus, REVIEWING_STATUSES } from '../domain/ticket';
 import { MockTicketRepository } from './MockTicketRepository';
 
 const repository = new MockTicketRepository();
@@ -32,6 +33,19 @@ describe('MockTicketRepository', () => {
 
   it('returns null for an unknown id', async () => {
     expect(await repository.getById('missing')).toBeNull();
+  });
+
+  it('filters by the KPI groups «باز» and «در حال بررسی»', async () => {
+    const query = { ...baseQuery, pageSize: 1000 };
+    const open = await repository.list({ ...query, status: 'open' });
+    const reviewing = await repository.list({ ...query, status: 'inReview' });
+
+    expect(open.total).toBe(mockTickets.filter((t) => isOpenStatus(t.status)).length);
+    expect(open.total + (await repository.list({ ...query, status: 'closed' })).total).toBe(
+      mockTickets.length,
+    );
+    expect(reviewing.total).toBeGreaterThan(0);
+    expect(reviewing.items.every((t) => REVIEWING_STATUSES.includes(t.status))).toBe(true);
   });
 
   it('filters by enrichment fields and operator', async () => {

@@ -1,0 +1,382 @@
+/*
+ * Jalali date picker — the modal mirrors the Day date-picker design: a teal
+ * gradient header carrying the month/year dropdowns and the month arrows, a
+ * Saturday-first day grid, an hour/minute row, and a three-button footer.
+ * Every value is a design token; the header chips are the only elements that
+ * sit on the brand surface, so they use the on-primary translucent pair.
+ */
+
+.jdp {
+  min-width: 0;
+}
+
+/* ── Trigger (reads as a form field) ─────────────────────────────────── */
+
+.jdp__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-width: 0;
+  text-align: right;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* The two halves stay glued together at the field's start edge while the
+   calendar icon keeps the far end. */
+.jdp__trigger-value {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  white-space: nowrap;
+  gap: 5px;
+}
+
+/* The clock leads; the rule and the muted tone hand the date its own slot. */
+.jdp__trigger-time {
+  padding-inline-end: var(--space-2);
+  border-inline-end: 1px solid var(--color-outline);
+  color: var(--color-muted);
+  /* Stops the minutes shifting sideways as they tick over. */
+  font-variant-numeric: tabular-nums;
+}
+
+.jdp__placeholder {
+  color: var(--color-muted);
+}
+
+.jdp__trigger-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+  color: var(--color-muted);
+}
+
+/* ── Modal shell ─────────────────────────────────────────────────────── */
+
+.jdp-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: var(--color-overlay);
+  animation: fade-up var(--duration-base) var(--ease-out) both;
+}
+
+.jdp-modal {
+  display: flex;
+  flex-direction: column;
+  width: min(25rem, 100%);
+  max-height: calc(100vh - var(--space-6));
+  overflow: hidden;
+  background: var(--color-surface-raised);
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadow-modal);
+  animation: pop-in var(--duration-base) var(--ease-spring) both;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────── */
+
+.jdp-header {
+  padding: var(--space-3) var(--space-4);
+  background: var(--gradient-brand);
+  color: var(--color-on-primary);
+}
+
+.jdp-header-selectors {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.jdp-header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 2rem;
+  padding: var(--space-1) var(--space-3);
+  border: none;
+  border-radius: var(--radius-control);
+  background: var(--color-on-primary-soft);
+  color: inherit;
+  font-family: inherit;
+  font-size: var(--font-size-small);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) ease;
+}
+
+.jdp-header-btn:hover {
+  background: var(--color-on-primary-soft-hover);
+}
+
+.jdp-header-btn--on {
+  background: var(--color-surface-raised);
+  color: var(--color-primary);
+}
+
+.jdp-caret {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex-shrink: 0;
+}
+
+.jdp-header-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.jdp-nav-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-on-primary-soft);
+  color: inherit;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) ease;
+}
+
+.jdp-nav-arrow:hover {
+  background: var(--color-on-primary-soft-hover);
+}
+
+.jdp-nav-arrow svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.jdp-header-title {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: 500;
+  color: inherit;
+  text-align: center;
+}
+
+/* ── Body ────────────────────────────────────────────────────────────── */
+
+.jdp-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  padding-bottom: var(--space-3);
+  overflow-y: auto;
+}
+
+.jdp-weekdays,
+.jdp-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-1);
+}
+
+.jdp-weekday {
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  text-align: center;
+  padding-bottom: var(--space-1);
+}
+
+.jdp-day-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) ease,
+    color var(--duration-fast) ease;
+}
+
+.jdp-day-cell--pad {
+  cursor: default;
+}
+
+.jdp-day-cell:hover:not(:disabled):not(.jdp-day-cell--selected) {
+  background: var(--color-primary-soft);
+}
+
+.jdp-day-cell--today {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.jdp-day-cell--selected,
+.jdp-day-cell--selected:hover {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: 700;
+}
+
+/* Month / year panels */
+
+.jdp-options-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+
+.jdp-years-scroll {
+  max-height: 17rem;
+  overflow-y: auto;
+}
+
+.jdp-option-btn {
+  padding: var(--space-2) var(--space-1);
+  border: none;
+  border-radius: var(--radius-control);
+  background: var(--color-background);
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: var(--font-size-small);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) ease,
+    color var(--duration-fast) ease;
+}
+
+.jdp-option-btn:hover {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.jdp-option-btn--selected,
+.jdp-option-btn--selected:hover {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: 700;
+}
+
+/* Hour / minute row — deliberately not in the reference design, but the range
+   filter needs hour precision. It sits in its own tinted band, outside
+   `.jdp-body`, so the clock never reads as part of the day grid. */
+
+.jdp-time {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-background);
+  border-top: 1px solid var(--color-outline);
+}
+
+.jdp-time-label {
+  font-size: var(--font-size-small);
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+.jdp-time-fields {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.jdp-time-select {
+  min-width: 3.5rem;
+  min-height: 2.25rem;
+  padding: var(--space-1) var(--space-2);
+  border: 1.5px solid var(--color-outline);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: var(--font-size-small);
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) ease,
+    box-shadow var(--duration-fast) ease;
+}
+
+.jdp-time-select:hover {
+  border-color: var(--color-primary);
+}
+
+.jdp-time-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
+}
+
+.jdp-time-sep {
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────── */
+
+.jdp-footer {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+}
+
+.jdp-btn {
+  flex: 1;
+  min-height: 2.5rem;
+  padding: var(--space-1) var(--space-2);
+  border: 1.5px solid var(--color-outline);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: var(--font-size-small);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease,
+    color var(--duration-fast) ease;
+}
+
+.jdp-btn:hover:not(:disabled) {
+  background: var(--color-background);
+}
+
+.jdp-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jdp-btn--primary {
+  border-color: transparent;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: 500;
+}
+
+.jdp-btn--primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.jdp-btn--accent {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.jdp-btn--accent:hover:not(:disabled) {
+  background: var(--color-primary-soft);
+}

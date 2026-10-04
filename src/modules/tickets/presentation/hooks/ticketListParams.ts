@@ -1,6 +1,6 @@
 import { PRIORITIES, SENTIMENTS } from '@/shared/domain/insights';
 import { isPeriod, periodRange, type Period } from '@/shared/domain/period';
-import { TICKET_STATUSES } from '../../domain/ticket';
+import { TICKET_STATUS_FILTERS } from '../../domain/ticket';
 import {
   TICKET_SORT_FIELDS,
   type TicketFilter,
@@ -29,7 +29,7 @@ export const parseTicketListParams = (params: URLSearchParams): TicketListState 
     page: Math.max(1, Number(params.get('page')) || 1),
     pageSize: PAGE_SIZES.find((size) => size === pageSize) ?? PAGE_SIZES[0],
     search: text('q'),
-    status: oneOf(TICKET_STATUSES, params.get('status')),
+    status: oneOf(TICKET_STATUS_FILTERS, params.get('status')),
     priority: oneOf(PRIORITIES, params.get('priority')),
     sentiment: oneOf(SENTIMENTS, params.get('sentiment')),
     type: text('type'),

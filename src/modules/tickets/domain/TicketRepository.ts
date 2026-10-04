@@ -6,7 +6,7 @@ import type {
   TicketDocument,
   TicketEvent,
   TicketNote,
-  TicketStatus,
+  TicketStatusFilter,
   TicketUpdate,
 } from './ticket';
 
@@ -33,7 +33,8 @@ export type TicketSortField = (typeof TICKET_SORT_FIELDS)[number];
 export interface TicketFilter {
   /** Free text matched against ticket id, mobile, national id and customer name. */
   search?: string;
-  status?: TicketStatus;
+  /** A single CRM status or one of the KPI groups («باز»، «در حال بررسی»). */
+  status?: TicketStatusFilter;
   priority?: Priority;
   sentiment?: Sentiment;
   type?: string;

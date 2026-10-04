@@ -71,7 +71,7 @@ function CallInfoCard({ call }: { call: Call }) {
         <InfoRow label="تیکت مرتبط">
           {call.ticketId && (
             <Link to={callPaths.ticket(call.ticketId)}>
-              تیکت {formatPersianNumber(call.ticketId)}
+              تیکت  {formatPersianNumber(call.ticketId)}
             </Link>
           )}
         </InfoRow>

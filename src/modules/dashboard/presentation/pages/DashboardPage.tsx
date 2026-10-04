@@ -10,6 +10,7 @@ import {
   type TabItem,
 } from '@/shared/ui';
 import { CallsTab } from '../components/CallsTab';
+import { CustomRangeFilter } from '../components/CustomRangeFilter';
 import { FilterChips } from '../components/FilterChips';
 import { KpiCards } from '../components/KpiCards';
 import { OperatorsTab } from '../components/OperatorsTab';
@@ -22,14 +23,14 @@ import { AgentWorkspaceView } from '@/modules/agent-workspace';
 import { useCurrentUser } from '@/modules/auth';
 import './DashboardPage.css';
 
-const TABS = [
+const TABS = [  
   { id: 'tickets', label: 'تحلیل تیکت‌ها' },
   { id: 'reasons', label: 'دلایل تماس و تشخیص AI' },
   { id: 'sentiment', label: 'تحلیل احساسات' },
   { id: 'operators', label: 'عملکرد اپراتورها' },
   { id: 'calls', label: 'تماس‌ها و ساعات پیک' },
 ] as const satisfies readonly TabItem<string>[];
-type TabId = (typeof TABS)[number]['id'];
+type TabId = (typeof TABS)[number]['id']; 
 
 const periodOptions = PERIODS.map((value) => ({ value, label: periodLabels[value] }));
 
@@ -46,6 +47,7 @@ export function DashboardPage() {
   const [params, setParams] = useSearchParams();
   const period = useDashboardFilterStore((state) => state.period);
   const setPeriod = useDashboardFilterStore((state) => state.setPeriod);
+  const customRange = useDashboardFilterStore((state) => state.customRange);
   const tab: TabId = TABS.find((t) => t.id === params.get('tab'))?.id ?? 'tickets';
 
   const changeTab = (id: TabId) =>
@@ -65,9 +67,10 @@ export function DashboardPage() {
             <SegmentedControl
               label="فیلتر زمانی"
               options={periodOptions}
-              value={period}
+              value={customRange ? null : period}
               onChange={setPeriod}
             />
+            <CustomRangeFilter />
             <Button
               variant="ghost"
               onClick={() => queryClient.invalidateQueries({ queryKey: analyticsKeys.all })}
@@ -86,7 +89,7 @@ export function DashboardPage() {
         {tab === 'reasons' && <ReasonsTab />}
         {tab === 'sentiment' && <SentimentTab />}
         {tab === 'operators' && <OperatorsTab />}
-        {tab === 'calls' && <CallsTab />}
+        {tab === 'calls' && <CallsTab />}  
       </Tabs>
     </section>
   );

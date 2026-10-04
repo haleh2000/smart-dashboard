@@ -1,5 +1,6 @@
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { CurrentUserContext } from '@/modules/auth';
 import { renderWithProviders } from '@/test/renderWithProviders';
 import type { Kpis } from '../../domain/analytics';
 import type { AnalyticsRepository } from '../../domain/AnalyticsRepository';
@@ -88,12 +89,43 @@ const renderPage = (repository: AnalyticsRepository, path = '/dashboard') =>
     initialPath: path,
     routes: [{ path: '/dashboard', element: <DashboardPage /> }],
     wrapper: (children) => (
-      <AnalyticsRepositoryProvider value={repository}>{children}</AnalyticsRepositoryProvider>
+      <CurrentUserContext
+        value={{ id: '1', fullName: 'کاربر آزمایشی', mobile: '09120000000', role: 'supervisor' }}
+      >
+        <AnalyticsRepositoryProvider value={repository}>{children}</AnalyticsRepositoryProvider>
+      </CurrentUserContext>
     ),
   });
 
 beforeEach(() => resetDashboardFilters());
 
+interface PickerTarget {
+  /** Jalali year, Persian digits. */
+  year: string;
+  month: string;
+  day: string;
+  hours: number;
+  minutes: number;
+}
+
+/** Opens the Jalali picker on `field` and walks year → month → day → time → «تأیید». */
+/** Opens the Jalali picker on `field` and walks year → month → day → time → «تأیید». */
+const pickInJalaliPicker = (field: string, target: PickerTarget) => {
+  // Every query is scoped to the range panel or the modal, never the dashboard.
+  const panel = () => within(screen.getByRole('dialog', { name: 'بازه زمانی سفارشی' }));
+  fireEvent.click(panel().getByRole('button', { name: field }));
+
+  const modal = within(screen.getByRole('dialog', { name: field }));
+  fireEvent.click(modal.getByRole('button', { name: 'انتخاب سال' }));
+  fireEvent.click(modal.getByRole('button', { name: target.year }));
+  fireEvent.click(modal.getByRole('button', { name: target.month }));
+  fireEvent.click(
+    modal.getByRole('button', { name: `${target.day} ${target.month} ${target.year}` }),
+  );
+  fireEvent.change(modal.getByLabelText('ساعت'), { target: { value: String(target.hours) } });
+  fireEvent.change(modal.getByLabelText('دقیقه'), { target: { value: String(target.minutes) } });
+  fireEvent.click(modal.getByRole('button', { name: 'تأیید' }));
+};
 describe('DashboardPage', () => {
   it('cross-filters every query when a donut segment is clicked, and clears it from the chip', async () => {
     const repository = fakeRepository();
@@ -109,7 +141,7 @@ describe('DashboardPage', () => {
     const chip = await screen.findByRole('button', { name: 'حذف فیلتر موضوع اصلی: پس از صدور' });
     expect(repository.getKpis).toHaveBeenLastCalledWith({
       filters: { subject1: 'پس از صدور' },
-      range: expect.any(Object),
+      range: undefined,
     });
 
     await userEvent.click(chip);
@@ -121,9 +153,79 @@ describe('DashboardPage', () => {
     renderPage(repository);
     await screen.findByText('۱۰');
 
-    await userEvent.click(screen.getByRole('radio', { name: 'همه زمان‌ها' }));
+    await userEvent.click(screen.getByRole('radio', { name: '۳۰ روز اخیر' }));
+    expect(repository.getKpis).toHaveBeenLastCalledWith({
+      filters: {},
+      range: expect.any(Object),
+    });
 
+    await userEvent.click(screen.getByRole('radio', { name: 'همه زمان‌ها' }));
     expect(repository.getKpis).toHaveBeenLastCalledWith({ filters: {}, range: undefined });
+  });
+
+  it('filters every query with a hand-picked date and hour range, until a preset is picked', async () => {
+    const repository = fakeRepository();
+    renderPage(repository);
+    await screen.findByText('۱۰');
+
+    await userEvent.click(screen.getByRole('button', { name: 'انتخاب محدوده زمانی' }));
+    // ۲۰ دی ۱۴۰۴ = 2026-01-10, ۲۲ دی ۱۴۰۴ = 2026-01-12.
+    pickInJalaliPicker('از (تاریخ و ساعت)', {
+      year: '۱۴۰۴',
+      month: 'دی',
+      day: '۲۰',
+      hours: 8,
+      minutes: 30,
+    });
+    pickInJalaliPicker('تا (تاریخ و ساعت)', {
+      year: '۱۴۰۴',
+      month: 'دی',
+      day: '۲۲',
+      hours: 18,
+      minutes: 45,
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'اعمال' }));
+
+    expect(repository.getKpis).toHaveBeenLastCalledWith({
+      filters: {},
+      range: { from: new Date(2026, 0, 10, 8, 30), to: new Date(2026, 0, 12, 18, 45) },
+    });
+    // No preset stays highlighted while the custom range drives the queries.
+    for (const radio of screen.getAllByRole('radio')) {
+      expect(radio).toHaveAttribute('aria-checked', 'false');
+    }
+
+    await userEvent.click(screen.getByRole('radio', { name: '۳۰ روز اخیر' }));
+    expect(repository.getKpis).toHaveBeenLastCalledWith({
+      filters: {},
+      range: expect.any(Object),
+    });
+  });
+
+  it('refuses to apply an inverted custom range', async () => {
+    renderPage(fakeRepository());
+    await screen.findByText('۱۰');
+
+    await userEvent.click(screen.getByRole('button', { name: 'انتخاب محدوده زمانی' }));
+    // Same Jalali day, so the bounds leave it selectable — the start simply
+    // lands after the end.
+    pickInJalaliPicker('از (تاریخ و ساعت)', {
+      year: '۱۴۰۴',
+      month: 'دی',
+      day: '۲۰',
+      hours: 18,
+      minutes: 0,
+    });
+    pickInJalaliPicker('تا (تاریخ و ساعت)', {
+      year: '۱۴۰۴',
+      month: 'دی',
+      day: '۲۰',
+      hours: 8,
+      minutes: 0,
+    });
+
+    expect(screen.getByRole('button', { name: 'اعمال' })).toBeDisabled();
+    expect(screen.getByRole('alert')).toHaveTextContent('تاریخ شروع باید قبل از تاریخ پایان باشد.');
   });
 
   it('opens the tab named in the URL', async () => {

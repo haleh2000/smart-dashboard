@@ -1,5 +1,5 @@
 import { reportedSubject, subjectAgreement, type Call, type CallAnalysis } from '@/modules/calls';
-import type { Ticket } from '@/modules/tickets';
+import { REVIEWING_STATUSES, type Ticket } from '@/modules/tickets';
 import { customerOfCall, mockCalls } from '@/mocks/calls';
 import { delay } from '@/mocks/delay';
 import { HOUR } from '@/mocks/reference';
@@ -135,7 +135,10 @@ const weekStarts = (range: DashboardScope['range'], dates: readonly Date[]) => {
 /** One issue = one caller's calls about one main subject, oldest first. */
 const issuesOf = (calls: readonly Call[]) =>
   [
-    ...groupBy(calls, (c) => `${c.caller.mobile}${SEP}${reportedSubject(c)?.level1 ?? ''}`).values(),
+    ...groupBy(
+      calls,
+      (c) => `${c.caller.mobile}${SEP}${reportedSubject(c)?.level1 ?? ''}`,
+    ).values(),
   ].map((group) => [...group].sort((a, b) => a.startedAt.getTime() - b.startedAt.getTime()));
 
 const LEVELS = ['level1', 'level2', 'level3'] as const;
@@ -201,9 +204,10 @@ export class MockAnalyticsRepository implements AnalyticsRepository {
 
     return {
       total: tickets.length,
+      // «باز» and «در حال بررسی» reuse the ticket-table groupings, so the list filter can
+      // reproduce both cards row for row.
       open: tickets.length - closed.length,
-      inReview: tickets.filter((t) => t.status === 'inProgress' || t.status === 'underReview')
-        .length,
+      inReview: tickets.filter((t) => REVIEWING_STATUSES.includes(t.status)).length,
       closed: closed.length,
       resolutionRate: ratio(closed.length, tickets.length),
       overdue: tickets.filter((t) => !isClosed(t) && t.slaRemainingDays < 0).length,
@@ -571,7 +575,9 @@ export class MockAnalyticsRepository implements AnalyticsRepository {
   async getCallReasons(scope: DashboardScope): Promise<CallReasons> {
     await delay(200);
     const calls = this.filterCalls(scope).filter((c) => reportedSubject(c) !== undefined);
-    const repeatIssues = new Set(issuesOf(calls).flatMap((issue) => (issue.length > 1 ? issue : [])));
+    const repeatIssues = new Set(
+      issuesOf(calls).flatMap((issue) => (issue.length > 1 ? issue : [])),
+    );
 
     const nodesAt = (group: readonly Call[], depth: number): ReasonNode[] => {
       const level = LEVELS[depth];

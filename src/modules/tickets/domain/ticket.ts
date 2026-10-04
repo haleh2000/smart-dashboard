@@ -22,6 +22,24 @@ export const TICKET_STATUSES = [
 ] as const;
 export type TicketStatus = (typeof TICKET_STATUSES)[number];
 
+/** «در حال بررسی»: the two CRM statuses the KPI card of the same name counts. */
+export const REVIEWING_STATUSES: readonly TicketStatus[] = ['inProgress', 'underReview'];
+
+/** «باز»: everything the CRM has not closed yet — the other side of the «بسته‌شده» KPI card. */
+export const isOpenStatus = (status: TicketStatus) => status !== 'closed';
+
+/** List-filter options: every CRM status plus the two KPI groups, so the table can show the KPI figures. */
+export const TICKET_STATUS_FILTERS = [...TICKET_STATUSES, 'open', 'inReview'] as const;
+export type TicketStatusFilter = (typeof TICKET_STATUS_FILTERS)[number];
+
+/** Matches a ticket against a filter option; the groups (`open`, `inReview`) use the KPI card definitions. */
+export const statusMatchesFilter = (status: TicketStatus, filter: TicketStatusFilter) =>
+  filter === 'open'
+    ? isOpenStatus(status)
+    : filter === 'inReview'
+      ? REVIEWING_STATUSES.includes(status)
+      : status === filter;
+
 export type Gender = 'male' | 'female';
 
 export interface Customer {
