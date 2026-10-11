@@ -23,6 +23,9 @@ const reasons: CallReasons = {
   nodes: [
     node('پس از صدور', 6, [node('اعلام خسارت', 6, [node('ثبت پرونده خسارت', 6)])]),
     node('صدور', 4, [node('خرید', 4, [node('استعلام قیمت', 4)])]),
+    node('ارتباط با مشتری', 3, [node('پیگیری', 3, [node('وضعیت تیکت', 3)])]),
+    node('اطلاع‌رسانی', 2, [node('محصولات', 2, [node('سقف تعهدات', 2)])]),
+    node('سایر', 1, [node('ندارد', 1, [node('تماس مجدد', 1)])]),
   ],
 };
 
@@ -75,6 +78,21 @@ describe('ReasonsTab', () => {
     expect(
       await screen.findByRole('img', { name: 'نرخ تطابق اپراتور و AI: ۶۶٫۷٪' }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/۲ تماس هنوز توسط اپراتور/)).toBeInTheDocument();
+    expect(screen.getByText(/۲ تماس هنوز/)).toBeInTheDocument();
+  });
+
+  it('lists the four biggest root causes and reveals the rest on demand', async () => {
+    renderTab(fakeRepository());
+
+    expect(await screen.findByText('ثبت پرونده خسارت')).toBeInTheDocument();
+    expect(screen.queryByText('تماس مجدد')).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /^نمایش بیشتر/ }));
+
+    expect(screen.getByText('تماس مجدد')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'نمایش کمتر' }));
+
+    expect(screen.queryByText('تماس مجدد')).not.toBeInTheDocument();
   });
 });

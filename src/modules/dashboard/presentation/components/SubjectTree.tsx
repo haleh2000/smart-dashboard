@@ -12,7 +12,6 @@ interface TreeNode {
   label: string;
   count: number;
   share: number;
-  /** The most important (lowest) importance among its leaves. */
   importance: Importance;
   children: TreeNode[];
 }
@@ -53,10 +52,7 @@ interface SubjectTreeProps {
   onSelect: (path: readonly string[]) => void;
 }
 
-/**
- * Power BI's hierarchical Subject table: Subject1 → Subject2 → Subject3 with expand/collapse,
- * Count / Percent / Importance, and an Importance filter. Clicking a row filters the dashboard.
- */
+
 export function SubjectTree({ rows, filters, onSelect }: SubjectTreeProps) {
   const [importance, setImportance] = useState<ImportanceFilter>('all');
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
@@ -69,7 +65,6 @@ export function SubjectTree({ rows, filters, onSelect }: SubjectTreeProps) {
 
   const isSelected = (path: readonly string[]) =>
     path.length === selectedPath.length && path.every((v, i) => selectedPath[i] === v);
-  /** Nodes on the selected path open automatically (Power BI drill-down). */
   const isOpen = (node: TreeNode) =>
     expanded.has(keyOf(node.path)) ||
     (node.path.length < selectedPath.length && node.path.every((v, i) => selectedPath[i] === v));
@@ -168,7 +163,7 @@ export function SubjectTree({ rows, filters, onSelect }: SubjectTreeProps) {
         <table className="subject-tree__table">
           <thead>
             <tr>
-              <th scope="col">موضوع اصلی / موضوع فرعی / ریزموضوع</th>
+              <th scope="col">موضوع اصلی / موضوع فرعی / علت ارتباط</th>
               <th scope="col">تعداد</th>
               <th scope="col">درصد</th>
               <th scope="col">الویت</th>

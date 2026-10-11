@@ -1,16 +1,23 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { SentimentLevelRow } from '../../domain/sentimentLevels';
 import { resetDashboardFilters, useDashboardFilterStore } from '../dashboardFilterStore';
 import { CustomerSentimentFaces } from './SentimentFaces';
 
-const split = { positive: 40, neutral: 30, negative: 30, score: 0.1 };
+const rows: SentimentLevelRow[] = [
+  { level: 'angry', count: 12, share: 0.12 },
+  { level: 'dissatisfied', count: 18, share: 0.18 },
+  { level: 'neutral', count: 30, share: 0.3 },
+  { level: 'satisfied', count: 20, share: 0.2 },
+  { level: 'verySatisfied', count: 20, share: 0.2 },
+];
 
 beforeEach(() => resetDashboardFilters());
 
 describe('CustomerSentimentFaces', () => {
   it('renders five illustrated faces with counts and shares', () => {
     render(
-      <CustomerSentimentFaces split={split} analyzed={100} onSelect={() => undefined} />,
+      <CustomerSentimentFaces rows={rows} score={0.1} analyzed={100} onSelect={() => undefined} />,
     );
 
     for (const label of ['عصبانی', 'ناراضی', 'خنثی', 'راضی', 'کاملا راضی']) {
@@ -27,7 +34,7 @@ describe('CustomerSentimentFaces', () => {
 
   it('toggles the dashboard sentimentLevel filter through the positive faces', async () => {
     render(
-      <CustomerSentimentFaces split={split} analyzed={100} onSelect={(value) => useDashboardFilterStore.getState().toggle('sentimentLevel', value)} />,
+      <CustomerSentimentFaces rows={rows} score={0.1} analyzed={100} onSelect={(value) => useDashboardFilterStore.getState().toggle('sentimentLevel', value)} />,
     );
 
     await userEvent.click(screen.getByRole('button', { name: /^کاملا راضی:/ }));
@@ -41,7 +48,8 @@ describe('CustomerSentimentFaces', () => {
 
     render(
       <CustomerSentimentFaces
-        split={split}
+        rows={rows}
+        score={0.1}
         analyzed={100}
         selected="neutral"
         onSelect={() => undefined}
@@ -64,7 +72,8 @@ describe('CustomerSentimentFaces', () => {
       const selected = useDashboardFilterStore((state) => state.filters.sentimentLevel);
       return (
         <CustomerSentimentFaces
-          split={split}
+          rows={rows}
+          score={0.1}
           analyzed={100}
           selected={selected}
           onSelect={(value) => toggle('sentimentLevel', value)}

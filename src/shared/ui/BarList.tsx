@@ -11,8 +11,8 @@ export interface BarListRow {
 
 interface BarListProps {
   rows: readonly BarListRow[];
-  /** Chart-series token index (1..5) the bars are painted with. */
-  series?: 1 | 2 | 3 | 4 | 5;
+  /** Chart-series token index (1..6) the bars are painted with. */
+  series?: 1 | 2 | 3 | 4 | 5 | 6;
   /** Currently selected row; the others fade out. */
   selected?: string;
   /** Makes every row a button (click-to-filter). */

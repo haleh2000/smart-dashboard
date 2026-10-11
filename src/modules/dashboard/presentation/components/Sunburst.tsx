@@ -12,7 +12,6 @@ interface SunburstProps {
   nodes: readonly ReasonNode[];
   total: number;
   filters: DashboardFilters;
-  /** Clicking a segment selects its subject path (Subject1 → 2 → 3). */
   onSelect: (path: string[]) => void;
 }
 
@@ -25,7 +24,6 @@ interface Segment {
   color: string;
 }
 
-/** Inner / outer radius of each ring (Subject1, Subject2, Subject3). */
 const RINGS = [
   [34, 58],
   [60, 80],
@@ -79,10 +77,7 @@ const onSelectedPath = (path: readonly string[], filters: DashboardFilters) =>
     return filter === undefined || filter === value;
   });
 
-/**
- * «تحلیل دلایل اصلی تماس (چند لایه‌ای)»: Subject1 → Subject2 → Subject3 as concentric rings.
- * Clicking a segment drills down and cross-filters; the centre shows the focused reason.
- */
+
 export function Sunburst({ nodes, total, filters, onSelect }: SunburstProps) {
   const { bind, tooltip } = useChartTooltip();
   const [hovered, setHovered] = useState<Segment | null>(null);

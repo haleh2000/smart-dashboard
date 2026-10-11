@@ -6,7 +6,28 @@
   background: var(--color-surface);
   border: 1px solid var(--color-outline);
   border-radius: var(--radius-large);
-  transition: box-shadow var(--duration-fast) ease, border-color var(--duration-fast) ease;
+  transition:
+    box-shadow var(--duration-fast) ease,
+    border-color var(--duration-fast) ease,
+    opacity var(--duration-fast) ease;
+}
+
+/* Click-to-filter variant: a real <button>, so it must not inherit the UA font/alignment. */
+button.stat-card {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  text-align: right;
+  cursor: pointer;
+}
+
+.stat-card--selected {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-raised);
+}
+
+.stat-card--dimmed {
+  opacity: 0.4;
 }
 
 .stat-card:hover {
@@ -39,7 +60,7 @@
 }
 
 .stat-card__value {
-  font-size: var(--font-size-display);
+  font-size: 15px;
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
   font-weight: 700;

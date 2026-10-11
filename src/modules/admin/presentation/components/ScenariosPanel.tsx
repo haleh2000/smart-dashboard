@@ -19,6 +19,7 @@ function ScenarioFormDialog({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [triggerSubject, setTriggerSubject] = useState('');
+  void setTriggerSubject;
   const [keywords, setKeywords] = useState('');
   const [nameError, setNameError] = useState(false);
   const create = useCreateScenario();

@@ -1,4 +1,4 @@
-import { mockCalls } from '@/mocks/calls';
+import { analyzeAnsweredCall, mockCalls } from '@/mocks/calls';
 import { mockCustomers } from '@/mocks/customers';
 import { mockTickets } from '@/mocks/tickets';
 import { agents, queues } from '@/mocks/reference';
@@ -114,6 +114,8 @@ const progress = (call: Call) => {
   call.status = 'answered';
   call.durationSec = 30 + Math.floor(random.next() * 240);
   call.resolvedOnFirstCall = random.next() < 0.68;
+  // The AI finishes a moment after the hangup, so an answered call is never blank.
+  analyzeAnsweredCall(call, random);
   ages.delete(call.id);
 };
 

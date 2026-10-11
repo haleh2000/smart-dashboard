@@ -108,10 +108,11 @@ export const stopKpiSimulator = () => {
 
 /**
  * Development-only: keeps the dashboard KPIs moving so «نسبت به ساعت قبل» is live without a
- * page reload. Remove together with MockAnalyticsRepository once the real feed exists.
+ * page reload. Remove together with MockAnalyticsRepository once the real feed exists
+ * (the real backend pushes through `publishTicketUpdate`, same as `tickKpiSimulator` does).
  * Returns a stop function; starting twice is a no-op.
  */
-export const startKpiSimulator = (intervalMs = 8_000) => {
+export const startKpiSimulator = (intervalMs = 60_000) => {
   if (timer === undefined) timer = setInterval(tickKpiSimulator, intervalMs);
   return stopKpiSimulator;
 };

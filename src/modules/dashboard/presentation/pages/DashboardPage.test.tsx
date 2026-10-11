@@ -23,14 +23,19 @@ const kpis: Kpis = {
 
 const fakeRepository = (): AnalyticsRepository => ({
   getKpis: vi.fn(async () => kpis),
-  getBreakdown: vi.fn(async (dimension) =>
-    dimension === 'subject1'
-      ? [
-          { value: 'پس از صدور', count: 6, share: 0.6 },
-          { value: 'صدور', count: 4, share: 0.4 },
-        ]
-      : [],
-  ),
+  getBreakdown: vi.fn(async (dimension) => {
+    if (dimension === 'subject1')
+      return [
+        { value: 'پس از صدور', count: 6, share: 0.6 },
+        { value: 'صدور', count: 4, share: 0.4 },
+      ];
+    if (dimension === 'type')
+      return [
+        { value: 'گفت‌وگو', count: 4, share: 0.4 },
+        { value: 'شکایت', count: 6, share: 0.6 },
+      ];
+    return [];
+  }),
   getCrossBreakdown: vi.fn(async () => ({ columns: [], rows: [] })),
   getSubjectTable: vi.fn(async () => []),
   getSubjectLineTable: vi.fn(async () => ({ lines: [], rows: [], totals: {} })),
@@ -61,6 +66,8 @@ const fakeRepository = (): AnalyticsRepository => ({
     return {
       analyzed: 0,
       customer: { ...zero, score: 0 },
+      customerLevels: [],
+      customerScore: 0,
       agent: { ...zero, score: 0 },
       matrix: { positive: zero, neutral: zero, negative: zero },
       journey: { improved: 0, unchanged: 0, worsened: 0 },
@@ -82,6 +89,7 @@ const fakeRepository = (): AnalyticsRepository => ({
   })),
   getCallReasons: vi.fn(async () => ({ total: 0, aiOnly: 0, nodes: [] })),
   getBranchResponseTime: vi.fn(async () => []),
+  getBranchSla: vi.fn(async () => []),
 });
 
 const renderPage = (repository: AnalyticsRepository, path = '/dashboard') =>
@@ -127,22 +135,27 @@ const pickInJalaliPicker = (field: string, target: PickerTarget) => {
   fireEvent.click(modal.getByRole('button', { name: 'تأیید' }));
 };
 describe('DashboardPage', () => {
-  it('cross-filters every query when a donut segment is clicked, and clears it from the chip', async () => {
+  it('cross-filters every query when a type donut segment is clicked, and clears it from the chip', async () => {
     const repository = fakeRepository();
     renderPage(repository);
 
     const donut = (
-      await screen.findByRole('heading', { name: 'پراکندگی موضوع اصلی تماس' })
+      await screen.findByRole('heading', { name: 'سهم هر ماژول از کل' })
     ).closest('section')!;
     // The first match is the SVG slice, the second its legend row; both filter.
-    const [slice] = await within(donut).findAllByRole('button', { name: /^پس از صدور/ });
+    const [slice] = await within(donut).findAllByRole('button', { name: /^شکایت/ });
     await userEvent.click(slice!);
 
-    const chip = await screen.findByRole('button', { name: 'حذف فیلتر موضوع اصلی: پس از صدور' });
+    const chip = await screen.findByRole('button', { name: 'حذف فیلتر نوع تیکت: شکایت' });
+    // KPI «کل» همیشه کل می‌ماند: فیلتر نوع به آن نمی‌رسد.
     expect(repository.getKpis).toHaveBeenLastCalledWith({
-      filters: { subject1: 'پس از صدور' },
+      filters: {},
       range: undefined,
     });
+    // بقیه چارت‌ها با همان نوع فیلتر می‌شوند.
+    expect(vi.mocked(repository.getBreakdown).mock.calls.some(([, scope]) => scope.filters.type === 'شکایت')).toBe(
+      true,
+    );
 
     await userEvent.click(chip);
     expect(screen.queryByRole('button', { name: /حذف فیلتر/ })).not.toBeInTheDocument();
@@ -231,8 +244,8 @@ describe('DashboardPage', () => {
   it('opens the tab named in the URL', async () => {
     renderPage(fakeRepository(), '/dashboard?tab=calls');
 
-    expect(await screen.findByText('تماس‌های ورودی')).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'تماس‌ها و ساعات پیک' })).toHaveAttribute(
+    expect(await screen.findByText('میانگین زمان حل')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'تماس‌ها' })).toHaveAttribute(
       'aria-selected',
       'true',
     );

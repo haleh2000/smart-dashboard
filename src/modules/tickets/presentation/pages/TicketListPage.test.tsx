@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '@/test/renderWithProviders';
 import type { Ticket } from '../../domain/ticket';
@@ -37,6 +37,7 @@ const fakeTicketRepository = (): TicketRepository => ({
     types: ['شکایت'],
     subjects: ['پس از صدور'],
     branches: ['تهران'],
+    channels: ['تلفن', 'وب'],
     operators: ['اپراتور'],
   })),
   getAdjacent: vi.fn(async () => ({ previousId: null, nextId: null })),
@@ -95,6 +96,60 @@ describe('TicketListPage', () => {
     expect(router.state.location.search).toContain('priority=high');
   });
 
+  it('searches as you type, without pressing the جستجو button', async () => {
+    const repository = fakeTicketRepository();
+    const { router } = renderPage(repository);
+    await screen.findByRole('link', { name: 'T-۹۰۰۱' });
+
+    await userEvent.type(screen.getByLabelText('جستجو'), '۹۰۰۱');
+
+    await waitFor(() =>
+      expect(repository.list).toHaveBeenLastCalledWith(
+        expect.objectContaining({ search: '9001' }),
+      ),
+    );
+    expect(router.state.location.search).toBe('?q=9001');
+  });
+
+  it('keeps typing while an earlier search is still settling', async () => {
+    const repository = fakeTicketRepository();
+    renderPage(repository);
+    await screen.findByRole('link', { name: 'T-۹۰۰۱' });
+
+    const input = screen.getByLabelText('جستجو');
+    await userEvent.type(input, 'T-');
+    await userEvent.type(input, '۹۰۰۱');
+
+    await waitFor(() => expect(input).toHaveValue('T-۹۰۰۱'));
+  });
+
+  it('clears the search box when the filters are reset', async () => {
+    renderPage(fakeTicketRepository());
+    await screen.findByRole('link', { name: 'T-۹۰۰۱' });
+
+    const input = screen.getByLabelText('جستجو');
+    await userEvent.type(input, '۹۰۰۱');
+    const reset = await screen.findByRole('button', { name: 'حذف فیلترها' });
+
+    await userEvent.click(reset);
+
+    await waitFor(() => expect(input).toHaveValue(''));
+  });
+
+  it('sends the ticket number as typed from the table to the repository', async () => {
+    const repository = fakeTicketRepository();
+    const { router } = renderPage(repository);
+    await screen.findByRole('link', { name: 'T-۹۰۰۱' });
+
+    await userEvent.type(screen.getByLabelText('جستجو'), 'T-۹۰۰۱');
+    await userEvent.click(screen.getByRole('button', { name: 'جستجو' }));
+
+    expect(repository.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({ search: '9001', page: 1 }),
+    );
+    expect(router.state.location.search).toBe('?q=9001');
+  });
+
   it('sorts by a CRM column from its header', async () => {
     const repository = fakeTicketRepository();
     renderPage(repository);
@@ -104,6 +159,19 @@ describe('TicketListPage', () => {
 
     expect(repository.list).toHaveBeenLastCalledWith(
       expect.objectContaining({ sort: { field: 'branch', direction: 'desc' } }),
+    );
+  });
+
+  it('sorts by the channel column and shows each ticket own channel', async () => {
+    const repository = fakeTicketRepository();
+    renderPage(repository);
+
+    expect(await screen.findByRole('cell', { name: 'تلفن' })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /کانال ورودی/ }));
+
+    expect(repository.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({ sort: { field: 'channel', direction: 'desc' } }),
     );
   });
 

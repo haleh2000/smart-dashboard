@@ -11,7 +11,6 @@ interface Meta {
   tone: BadgeTone;
 }
 
-/** Clean SMART labels for CRM statuses, colored as in README → «نمایش وضعیت به‌صورت Badge رنگی». */
 export const statusMeta: Record<TicketStatus, Meta & { live: boolean }> = {
   pending: { label: 'در انتظار', tone: 'error', live: true },
   inProgress: { label: 'در جریان', tone: 'warning', live: true },
@@ -21,15 +20,30 @@ export const statusMeta: Record<TicketStatus, Meta & { live: boolean }> = {
   closed: { label: 'بسته‌شده', tone: 'neutral', live: false },
 };
 
-/** The two list-filter groups, named after the KPI cards whose figures they reproduce. */
 export const statusGroupLabels: Record<'open' | 'inReview', string> = {
   open: 'باز (غیر بسته‌شده)',
   inReview: 'در حال بررسی',
 };
 
-/** Label of any status-filter option: a CRM status or one of the KPI groups. */
 export const statusFilterLabel = (value: TicketStatusFilter): string =>
   value === 'open' || value === 'inReview' ? statusGroupLabels[value] : statusMeta[value].label;
+  
+export const detailStatusMeta: Record<string, Meta> = {
+  'ثبت شده': { label: 'ثبت شده', tone: 'neutral' },
+  'در جریان': { label: 'در جریان', tone: 'warning' },
+  'ثبت یادداشت توسط امور مشتریان': { label: 'ثبت یادداشت توسط امور مشتریان', tone: 'info' },
+  'ثبت یادداشت توسط مالک پیگیری': { label: 'ثبت یادداشت توسط مالک پیگیری', tone: 'info' },
+  'در حال اجرا': { label: 'در حال اجرا', tone: 'warning' },
+  'رد شده - عدم آگاهی': { label: 'رد شده - عدم آگاهی', tone: 'neutral' },
+  'رد شده - خارج از ضوابط': { label: 'رد شده - خارج از ضوابط', tone: 'error' },
+  'وارده - رسیدگی شده': { label: 'وارده - رسیدگی شده', tone: 'success' },
+  'وارده - خارج از اختیارات اجرایی': { label: 'وارده - خارج از اختیارات اجرایی', tone: 'warning' },
+  'تبدیل به شکایت': { label: 'تبدیل به شکایت', tone: 'error' },
+  'حل شده': { label: 'حل شده', tone: 'success' },
+  'رد شده': { label: 'رد شده', tone: 'error' },
+  'قابل قبول': { label: 'قابل قبول', tone: 'success' },
+  'غیر قابل قبول': { label: 'غیر قابل قبول', tone: 'error' },
+};
 
 export const eventMeta: Record<TicketEventKind, Meta> = {
   created: { label: 'ایجاد', tone: 'info' },

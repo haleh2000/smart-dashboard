@@ -61,7 +61,7 @@ function RowActions({ ticket, listSearch }: { ticket: Ticket; listSearch: string
             onSelect: () => void navigator.clipboard?.writeText(ticket.id),
           },
           {
-            label: 'پروفایل مشتری (Customer 360)',
+            label: 'پروفایل مشتری ',
             to: customerPaths.profile(ticket.customer.nationalId),
           },
           {

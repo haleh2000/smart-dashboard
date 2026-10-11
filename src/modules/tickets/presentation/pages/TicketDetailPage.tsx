@@ -14,7 +14,7 @@ import {
   SentimentBadge,
   SkeletonTable,
   StatusBadge,
-  TagList,
+  TagList, // TODO: بازگردانی همراه با «تگ‌های AI» در سکشن تحلیل هوشمند
   Tabs,
   Transcript,
   VoicePlayer,
@@ -132,20 +132,20 @@ function Enrichment({ enrichment }: { enrichment: Ticket['enrichment'] }) {
           <InfoRow label="اولویت">
             <PriorityBadge priority={enrichment.priority} />
           </InfoRow>
-          <InfoRow label="Auto Label" wide>
+          {/* <InfoRow label="Auto Label" wide>
             {enrichment.autoLabel}
-          </InfoRow>
+          </InfoRow> */}
           <InfoRow label="موضوع تشخیصی">{enrichment.topic}</InfoRow>
-          <InfoRow label="تگ‌های AI" wide>
+          {/* <InfoRow label="تگ‌های AI" wide>
             <TagList tags={enrichment.aiTags} />
-          </InfoRow>
+          </InfoRow> */}
         </InfoGrid>
-        {enrichment.suggestedScenario && (
+        {/* {enrichment.suggestedScenario && (
           <p className="ticket-scenario">
             <span className="ticket-scenario__label">سناریوی پیشنهادی</span>
             {enrichment.suggestedScenario}
           </p>
-        )}
+        )} */}
       </InfoCard>
       <InfoCard title="مکالمه">
         <div className="ticket-conversation">
@@ -183,9 +183,11 @@ function PrevNext({ ticketId, listSearch }: { ticketId: string; listSearch: stri
       </span>
     );
   return (
+
+
     <span className="ticket-nav">
-      {link(data?.previousId, 'تیکت قبلی', '›')}
-      {link(data?.nextId, 'تیکت بعدی', '‹')}
+      {link(data?.previousId, 'تیکت قبلی', '‹')}
+      {link(data?.nextId, 'تیکت بعدی', '›')}
     </span>
   );
 }
@@ -205,7 +207,7 @@ export function TicketDetailPage() {
     return (
       <EmptyState mascot message="تیکتی با این شماره پیدا نشد.">
         <Link className="btn btn--ghost" to={backTo}>
-          بازگشت به تیکت‌ها
+          بازگشت به تیکت ها
         </Link>
       </EmptyState>
     );
@@ -237,7 +239,7 @@ export function TicketDetailPage() {
               label="بیشتر"
               items={[
                 {
-                  label: 'پروفایل مشتری (Customer 360)',
+                  label: 'پروفایل مشتری ',
                   to: customerPaths.profile(ticket.customer.nationalId),
                 },
                 { label: 'افزودن یادداشت', onSelect: () => setTab('notes') },
@@ -253,7 +255,7 @@ export function TicketDetailPage() {
 
       <Tabs
         label="بخش‌های تیکت"
-        active={tab}
+        active={tab} 
         onChange={setTab}
         tabs={[
           { id: 'summary', label: 'خلاصه' },

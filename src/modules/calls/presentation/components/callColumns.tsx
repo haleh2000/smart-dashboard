@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 import { formatDateTime, formatDuration, formatPersianNumber } from '@/shared/lib/format';
-import { SentimentBadge, StatusBadge, TagList, sentimentMeta, type DataColumn } from '@/shared/ui';
+import { SentimentBadge, StatusBadge, sentimentMeta, type DataColumn } from '@/shared/ui';
 import type { SubjectPath } from '@/shared/domain/insights';
 import { subjectAgreement, type Call } from '../../domain/call';
 import type { CallSortField } from '../../domain/CallRepository';
@@ -121,11 +121,12 @@ export const callColumns: DataColumn<Call, CallSortField>[] = [
     },
     exportValue: (c) => c.analysis && aiSubjectText(c.analysis.detectedSubject),
   },
-  {
-    header: 'برچسب‌ها',
-    cell: (c) => c.analysis && <TagList tags={c.analysis.tags} />,
-    exportValue: (c) => c.analysis?.tags.join('، '),
-  },
+  // TODO: temporarily disabled
+  // {
+  //   header: 'برچسب‌ها',
+  //   cell: (c) => c.analysis && <TagList tags={c.analysis.tags} />,
+  //   exportValue: (c) => c.analysis?.tags.join('، '),
+  // },
 ];
 
 /** The export splits the caller cell into name + mobile, so Excel can sort and filter by number. */

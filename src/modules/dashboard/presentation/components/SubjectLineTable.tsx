@@ -7,7 +7,6 @@ import type { SubjectLineTable as SubjectLineData } from '../../domain/analytics
 import type { DashboardFilters } from '../../domain/filters';
 import './SubjectTree.css';
 
-/** `share` sorts by Percent_Subject3, any other key by that line's column. */
 type SortKey = 'share' | string;
 
 interface SubjectLineTableProps {
@@ -16,7 +15,6 @@ interface SubjectLineTableProps {
   onSelect: (path: readonly string[]) => void;
 }
 
-/** «جدول تفصیلی درصد سهم هر Subject3 به تفکیک نوع بیمه» with a Total row. */
 export function SubjectLineTable({ data, filters, onSelect }: SubjectLineTableProps) {
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: 'share', desc: true });
   const valueOf = (row: SubjectLineData['rows'][number], key: SortKey) =>
@@ -79,7 +77,7 @@ export function SubjectLineTable({ data, filters, onSelect }: SubjectLineTablePr
             <tr>
               <th scope="col">موضوع اصلی</th>
               <th scope="col"> موضوع فرعی</th>
-              <th scope="col">ریزموضوع</th>
+              <th scope="col">علت ارتباط</th>
               {header('share', 'درصد از کل تیکت‌ها')}
               {data.lines.map((line) => header(line, line))}
             </tr>

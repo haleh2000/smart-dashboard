@@ -55,7 +55,6 @@ export function TicketListPage() {
       <PageHeader title="تیکت‌ها" subtitle="تیکت‌های دریافتی از CRM به همراه تحلیل هوشمند" />
 
       <TicketFilters
-        key={state.search}
         state={state}
         onChange={update}
         onReset={() => update({ ...emptyFilters })}
@@ -128,6 +127,7 @@ const emptyFilters = {
   type: undefined,
   subject1: undefined,
   branch: undefined,
+  channel: undefined,
   operator: undefined,
   starredOnly: undefined,
   period: 'all',

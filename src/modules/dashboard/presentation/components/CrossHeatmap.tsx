@@ -31,7 +31,6 @@ export function CrossHeatmap({
 }: CrossHeatmapProps) {
   const { bind, tooltip } = useChartTooltip();
   const [expanded, setExpanded] = useState(false);
-  const hasSelection = selectedRow !== undefined || selectedColumn !== undefined;
 
   const sortedRows = rowOrder
     ? [...data.rows].sort((a, b) => {

@@ -39,7 +39,7 @@ export function VoicePlayer({ recording }: { recording: VoiceRecording }) {
               <span key={i} className="voice-player__bar" style={{ height: `${height}%` }} />
             ))}
           </div>
-          <p className="voice-player__hint">فایل صوتی پس از اتصال به سامانه Voices قابل پخش است.</p>
+          <p className="voice-player__hint">فایل صوتی پس از اتصال به سامانه قابل پخش است.</p>
         </>
       )}
     </div>

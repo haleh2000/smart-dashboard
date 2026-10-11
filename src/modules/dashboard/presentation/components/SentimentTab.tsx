@@ -14,7 +14,6 @@ import './SentimentTab.css';
 
 const isEmpty = (data: SentimentOverview) => data.analyzed === 0;
 
-/** −1..1 as a bar growing from the centre line: right for positive, left for negative. */
 function DivergingBar({ score, color, label }: { score: number; color: string; label: string }) {
   const width = `${Math.min(1, Math.abs(score)) * 50}%`;
   return (
@@ -47,69 +46,68 @@ function GaugesPanel({ data }: { data: SentimentOverview }) {
   );
 }
 
-/** Where the customer's mood ended compared with where it started. */
-function JourneyPanel({ journey }: { journey: SentimentOverview['journey'] }) {
-  const total = journey.improved + journey.unchanged + journey.worsened;
-  const steps = [
-    { key: 'improved', label: 'بهتر شد', arrow: '↗', count: journey.improved },
-    { key: 'unchanged', label: 'تغییری نکرد', arrow: '→', count: journey.unchanged },
-    { key: 'worsened', label: 'بدتر شد', arrow: '↘', count: journey.worsened },
-  ] as const;
-  return (
-    <Panel title="سفر احساس مشتری — از ابتدا تا پایان مکالمه">
-      <div className="journey">
-        <div className="journey__source">
-          <strong>{formatPersianNumber(total)}</strong>
-          <span>مکالمه تحلیل‌شده</span>
-        </div>
-        <ul className="journey__flows">
-          {steps.map((step) => {
-            const share = total ? step.count / total : 0;
-            return (
-              <li key={step.key} className={`journey__flow journey__flow--${step.key}`}>
-                <span
-                  className="journey__ribbon"
-                  style={{ width: `${Math.max(share, 0.04) * 100}%` }}
-                />
-                <span className="journey__label">
-                  <span className="journey__arrow" aria-hidden="true">
-                    {step.arrow}
-                  </span>
-                  {step.label}
-                </span>
-                <span className="journey__figure">
-                  <strong>{formatPercent(share)}</strong>
-                  <small>{formatPersianNumber(step.count)}</small>
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    </Panel>
-  );
-}
+// function JourneyPanel({ journey }: { journey: SentimentOverview['journey'] }) {
+//   const total = journey.improved + journey.unchanged + journey.worsened;
+//   const steps = [
+//     { key: 'improved', label: 'بهتر شد', arrow: '↗', count: journey.improved },
+//     { key: 'unchanged', label: 'تغییری نکرد', arrow: '→', count: journey.unchanged },
+//     { key: 'worsened', label: 'بدتر شد', arrow: '↘', count: journey.worsened },
+//   ] as const;
+//   return (
+//     <Panel title="سفر احساس مشتری — از ابتدا تا پایان مکالمه">
+//       <div className="journey">
+//         <div className="journey__source">
+//           <strong>{formatPersianNumber(total)}</strong>
+//           <span>مکالمه تحلیل‌شده</span>
+//         </div>
+//         <ul className="journey__flows">
+//           {steps.map((step) => {
+//             const share = total ? step.count / total : 0;
+//             return (
+//               <li key={step.key} className={`journey__flow journey__flow--${step.key}`}>
+//                 <span
+//                   className="journey__ribbon"
+//                   style={{ width: `${Math.max(share, 0.04) * 100}%` }}
+//                 />
+//                 <span className="journey__label">
+//                   <span className="journey__arrow" aria-hidden="true">
+//                     {step.arrow}
+//                   </span>
+//                   {step.label}
+//                 </span>
+//                 <span className="journey__figure">
+//                   <strong>{formatPercent(share)}</strong>
+//                   <small>{formatPersianNumber(step.count)}</small>
+//                 </span>
+//               </li>
+//             );
+//           })}
+//         </ul>
+//       </div>
+//     </Panel>
+//   );
+// }
 
-function MatrixPanel() {
-  const scope = useDashboardScope();
-  const toggle = useDashboardFilterStore((state) => state.toggle);
-  const query = useSentimentOverview(scopeForChart(scope, 'sentiment'));
-  return (
-    <Panel title="ماتریس احساس مشتری × اپراتور">
-      <ChartState query={query} isEmpty={isEmpty} skeletonRows={4}>
-        {(data) => (
-          <SentimentMatrix
-            matrix={data.matrix}
-            selected={scope.filters.sentiment}
-            onSelect={(value) => toggle('sentiment', value)}
-          />
-        )}
-      </ChartState>
-    </Panel>
-  );
-}
+// function MatrixPanel() {
+//   const scope = useDashboardScope();
+//   const toggle = useDashboardFilterStore((state) => state.toggle);
+//   const query = useSentimentOverview(scopeForChart(scope, 'sentiment'));
+//   return (
+//     <Panel title="ماتریس احساس مشتری × اپراتور">
+//       <ChartState query={query} isEmpty={isEmpty} skeletonRows={4}>
+//         {(data) => (
+//           <SentimentMatrix
+//             matrix={data.matrix}
+//             selected={scope.filters.sentiment}
+//             onSelect={(value) => toggle('sentiment', value)}
+//           />
+//         )}
+//       </ChartState>
+//     </Panel>
+//   );
+// }
 
-function CustomerFacesPanel() {
+export function CustomerFacesPanel() {
   const scope = useDashboardScope();
   const toggle = useDashboardFilterStore((state) => state.toggle);
   const query = useSentimentOverview(scopeForChart(scope, 'sentimentLevel'));
@@ -118,7 +116,8 @@ function CustomerFacesPanel() {
       <ChartState query={query} isEmpty={isEmpty} skeletonRows={3}>
         {(data) => (
           <CustomerSentimentFaces
-            split={data.customer}
+            rows={data.customerLevels}
+            score={data.customerScore}
             analyzed={data.analyzed}
             selected={scope.filters.sentimentLevel}
             onSelect={(value) => toggle('sentimentLevel', value)}
@@ -211,7 +210,6 @@ function OperatorSentimentPanel({ rows }: { rows: SentimentOverview['byOperator'
   );
 }
 
-/** «تحلیل احساسات مشتری و اپراتور»: both sides of every analyzed call. */
 export function SentimentTab() {
   const scope = useDashboardScope();
   const query = useSentimentOverview(scope);
@@ -221,10 +219,9 @@ export function SentimentTab() {
         <div className="dashboard__section">
           <GaugesPanel data={data} />
           <div className="dashboard__grid dashboard__grid--wide">
-            <JourneyPanel journey={data.journey} />
-            <MatrixPanel />
+            {/* <JourneyPanel journey={data.journey} /> */}
+            {/* <MatrixPanel /> */}
           </div>
-          <CustomerFacesPanel />
           <div className="dashboard__grid dashboard__grid--wide">
             <SubjectButterfly rows={data.bySubject} />
             <OperatorSentimentPanel rows={data.byOperator} />

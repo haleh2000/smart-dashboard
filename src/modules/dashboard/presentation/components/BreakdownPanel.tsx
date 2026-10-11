@@ -10,15 +10,12 @@ import { HorizontalBarChart } from './charts/HorizontalBarChart';
 interface BreakdownPanelProps {
   title: ReactNode;
   dimension: Dimension;
-  /** Index (0-based) into the `--chart-series-*` tokens. */
   series: number;
-  /** `columns`: vertical columns (Power BI branch chart); `bars`: a horizontal ranking. */
   variant?: 'columns' | 'bars';
   className?: string;
   maxVisible?: number;
 }
 
-/** Wires one dimension to the shared filter store: fetches its breakdown and toggles filters on click. */
 export function BreakdownPanel({
   title,
   dimension,
@@ -51,7 +48,7 @@ export function BreakdownPanel({
           return variant === 'columns' ? (
             <ColumnChart {...props} />
           ) : (
-            <HorizontalBarChart {...props} />
+            <HorizontalBarChart {...props} scale="share" />
           );
         }}
       </ChartState>

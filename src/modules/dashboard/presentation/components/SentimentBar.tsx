@@ -1,5 +1,5 @@
 import type { BreakdownItem } from '../../domain/analytics';
-import { splitFromBreakdown } from '../../domain/sentimentLevels';
+import { splitFromBreakdown, toFiveLevelSentiment } from '../../domain/sentimentLevels';
 import { CustomerSentimentFaces } from './SentimentFaces';
 
 interface SentimentBarProps {
@@ -18,7 +18,8 @@ export function SentimentBar({ items, selected, onSelect }: SentimentBarProps) {
   const { split, total } = splitFromBreakdown(items);
   return (
     <CustomerSentimentFaces
-      split={split}
+      rows={toFiveLevelSentiment(split)}
+      score={split.score}
       analyzed={total}
       selected={selected}
       onSelect={onSelect}

@@ -2,7 +2,29 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
   gap: var(--space-4);
-  align-items: start;
+  align-items: stretch;
+}
+
+/* Both panels share one row height; the shorter one spreads its content instead of ending early. */
+.reasons__grid > .panel {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-3);
+}
+
+.reasons__grid > .panel > .sunburst {
+  flex: 1;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+/* The chart and the ranked list are the tallest thing on the tab — keep both compact. */
+.reasons__grid .sunburst__figure {
+  width: min(100%, 16rem);
+}
+
+.reasons__grid > .panel > .root-causes {
+  flex: 1;
 }
 
 @media (max-width: 1100px) {
@@ -11,21 +33,33 @@
   }
 }
 
+/* Too narrow for the side-by-side row: stack the meters under the volume bar again. */
+@media (max-width: 720px) {
+  .root-causes__body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'title'
+      'path'
+      'volume'
+      'meters';
+  }
+}
+
 .reasons__note {
-  margin: var(--space-3) 0 0;
-  padding: var(--space-2) var(--space-3);
+  margin: var(--space-2) 0 0;
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-medium);
   background: var(--color-primary-soft);
   color: var(--color-muted);
   font-size: var(--font-size-small);
-  line-height: 1.8;
+  line-height: 1.6;
 }
 
 /* Ranked root causes */
 .root-causes {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -33,9 +67,9 @@
 
 .root-causes__item {
   display: flex;
-  gap: var(--space-3);
+  gap: var(--space-2);
   width: 100%;
-  padding: var(--space-3);
+  padding: var(--space-2);
   border: 1px solid var(--color-outline-soft);
   border-radius: var(--radius-medium);
   background: var(--color-surface);
@@ -57,8 +91,8 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 1.9rem;
-  height: 1.9rem;
+  width: 1.7rem;
+  height: 1.7rem;
   border-radius: var(--radius-pill);
   background: var(--gradient-brand);
   color: var(--color-on-primary);
@@ -67,14 +101,20 @@
 }
 
 .root-causes__body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+  display: grid;
+  /* Title / path / volume on the right, the three meters beside them — one row instead of four. */
+  grid-template-columns: minmax(0, 1fr) minmax(12.5rem, auto);
+  grid-template-areas:
+    'title  meters'
+    'path   meters'
+    'volume meters';
+  gap: var(--space-1) var(--space-3);
   flex: 1;
   min-width: 0;
 }
 
 .root-causes__title {
+  grid-area: title;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -82,15 +122,17 @@
 }
 
 .root-causes__path {
+  grid-area: path;
   font-size: var(--font-size-small);
   color: var(--color-muted);
 }
 
 .root-causes__volume {
+  grid-area: volume;
   position: relative;
   display: flex;
   align-items: center;
-  min-height: 1.5rem;
+  min-height: 1.35rem;
   padding-inline: var(--space-2);
   border-radius: var(--radius-small);
   background: var(--color-background);
@@ -111,9 +153,11 @@
 }
 
 .root-causes__meters {
+  grid-area: meters;
+  align-self: center;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-  gap: var(--space-1) var(--space-3);
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-1);
 }
 
 .root-causes__meter {
@@ -143,6 +187,12 @@
   display: block;
   height: 100%;
   border-radius: inherit;
+}
+
+.root-causes__more {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-2);
 }
 
 /* AI vs operator detection */

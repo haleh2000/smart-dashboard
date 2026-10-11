@@ -8,6 +8,9 @@ import { useDashboardFilterStore, useDashboardScope } from '../dashboardFilterSt
 import { useCallHeatmap, useCallStats, useRepeatCalls } from '../hooks/analyticsQueries';
 import { ChartState } from './ChartState';
 import { hourLabel, weekdayLabels } from '../dimensionLabels';
+import { OperatorsTab } from './OperatorsTab';
+import { ReasonsTab } from './ReasonsTab';
+import { CustomerFacesPanel, SentimentTab } from './SentimentTab';
 import { ColumnChart } from './charts/ColumnChart';
 import { VolumeAreaChart } from './charts/VolumeAreaChart';
 import { ClockHeatmap } from './ClockHeatmap';
@@ -18,7 +21,6 @@ import './KpiCards.css';
 
 const decimal = (value: number) => formatPersianNumber(value.toFixed(1)).replace('.', '٫');
 
-/** «تعداد تماس‌های ورودی، جاری و پاسخ‌داده‌شده». */
 export function CallStatsCards() {
   const scope = useDashboardScope();
   const query = useCallStats(scope);
@@ -52,7 +54,6 @@ export function CallStatsCards() {
   );
 }
 
-/** Calls per hour and per weekday: the heatmap's margins, as two readable charts. */
 function PeakPanels() {
   const scope = useDashboardScope();
   const toggle = useDashboardFilterStore((state) => state.toggle);
@@ -115,7 +116,6 @@ const viewOptions = [
   { value: 'grid', label: 'جدول' },
 ] as const satisfies readonly { value: HeatmapView; label: string }[];
 
-/** «Heatmap»: when the calls peak, as a 24-hour clock (or the classic grid) plus the peak facts. */
 function HeatmapPanel() {
   const scope = useDashboardScope();
   const togglePair = useDashboardFilterStore((state) => state.togglePair);
@@ -246,10 +246,6 @@ function HeatmapPanel() {
   );
 }
 
-/**
- * «تحلیل نرخ تکرار تماس»: was the issue solved in the first call, and if not, after how many
- * calls — plus the subjects that make customers call back.
- */
 function RepeatCallsPanel() {
   const scope = useDashboardScope();
   const toggle = useDashboardFilterStore((state) => state.toggle);
@@ -332,14 +328,20 @@ function RepeatCallsPanel() {
   );
 }
 
-/** README → «تماس‌ها»: incoming / ongoing / answered calls, peak hours and repeat calls. */
+
 export function CallsTab() {
+  void CallStatsCards;
+  void HeatmapPanel;
+  void PeakPanels;
+  void RepeatCallsPanel;
   return (
     <div className="dashboard__section">
-      <CallStatsCards />
-      <HeatmapPanel />
-      <PeakPanels />
-      <RepeatCallsPanel />
+      {/* میانگین زمان حل در KpiCards سطح DashboardPage (ticketType=calls) نمایش داده می‌شود */}
+      <CustomerFacesPanel />
+      <ReasonsTab />
+      <SentimentTab />
+      <OperatorsTab />
+      {/*<CallStatsCards /> <HeatmapPanel /> <PeakPanels /> <RepeatCallsPanel /> */}
     </div>
   );
 }

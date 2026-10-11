@@ -153,11 +153,37 @@ export interface SentimentSplit {
   score: number;
 }
 
+/**
+ * The five mood levels of one side, from most negative to most positive. A call
+ * is classified into one of them from its three-bucket sentiment plus its own
+ * -1..1 score, so the level is a real per-call figure and not a derived guess.
+ */
+export const SENTIMENT_LEVELS = [
+  'angry',
+  'dissatisfied',
+  'neutral',
+  'satisfied',
+  'verySatisfied',
+] as const;
+
+export type SentimentLevel = (typeof SENTIMENT_LEVELS)[number];
+
+export interface SentimentLevelRow {
+  level: SentimentLevel;
+  count: number;
+  /** Share of the analyzed calls, between 0 and 1. */
+  share: number;
+}
+
 /** «تحلیل احساسات دو طرف»: customer and operator sentiment of the analyzed calls. */
 export interface SentimentOverview {
   analyzed: number;
   customer: SentimentSplit;
   agent: SentimentSplit;
+  /** The customer side per face level, counted call by call. */
+  customerLevels: SentimentLevelRow[];
+  /** Mean customer score (-1..1) of the analyzed calls, from their own transcripts. */
+  customerScore: number;
   /** matrix[customerSentiment][agentSentiment] = calls. */
   matrix: Record<'positive' | 'neutral' | 'negative', Record<'positive' | 'neutral' | 'negative', number>>;
   /** How the customer's mood moved from the start to the end of the call. */
@@ -222,4 +248,15 @@ export interface BranchResponseTime {
   /** Average minutes from ticket creation to first response. */
   avgResponseMinutes: number;
   ticketCount: number;
+}
+
+/** SLA پاسخ‌گویی به تفکیک شعبه (ارجاع به شعب سراسری) — فقط شکایت و پیگیری. */
+export interface BranchSla {
+  branch: string;
+  referred: number;
+  /** میانگین (closedAt - createdAt) به روز، فقط بسته‌شده‌ها — KPI تفاضل closeddate و ایجاد. */
+  avgResolveDays: number;
+  /** سهم خارج از SLA (slaRemainingDays < 0 در بازها). */
+  overdueShare: number;
+  overdue: number;
 }

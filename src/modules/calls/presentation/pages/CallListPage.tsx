@@ -40,7 +40,6 @@ export function CallListPage() {
   const [exporting, setExporting] = useState(false);
   const [exportFailed, setExportFailed] = useState(false);
 
-  // «خروجی Excel»: every row matching the current filters, not only the visible page.
   const exportAll = async () => {
     if (!data) return;
     setExporting(true);

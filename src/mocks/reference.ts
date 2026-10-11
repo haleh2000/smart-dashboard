@@ -1,4 +1,3 @@
-/** Reference vocabularies of the fake backend. Delete with the rest of src/mocks once the API exists. */
 
 export const subjectTree: Record<string, Record<string, string[]>> = {
   'پس از صدور': {
@@ -25,7 +24,6 @@ export const subjectTree: Record<string, Record<string, string[]>> = {
   سایر: { ندارد: ['ندارد'] },
 };
 
-/** Weighted so the donut roughly matches the Power BI reference (پس از صدور ≈ 54%). */
 export const level1Weights = [
   ...Array<string>(11).fill('پس از صدور'),
   ...Array<string>(5).fill('ارتباط با مشتری'),
@@ -33,16 +31,34 @@ export const level1Weights = [
   'صدور',
   'سایر',
 ];
-
-/** «ChanelType» in the Power BI report. */
 export const ticketTypes = [
-  ...Array<string>(8).fill('گفت‌وگو'),
-  ...Array<string>(5).fill('شکایت'),
-  ...Array<string>(4).fill('درخواست'),
-  'پیشنهاد',
-  'ارتباط‌دهی',
-  'ارتباط‌دهی',
+  ...Array<string>(15).fill('گفت‌وگو'),
+  ...Array<string>(10).fill('پیگیری'),
+  ...Array<string>(7).fill('شکایت'),
+  ...Array<string>(5).fill('درخواست'),
+  ...Array<string>(3).fill('ارتباط‌دهی'),
+  ...Array<string>(2).fill('پیشنهاد'),
 ];
+
+
+export const complaintSubjectTree: Record<string, Record<string, string[]>> = {
+  'فرآیند پرداخت خسارت': {
+    'تاخیر در پرداخت': ['دیرکرد حواله بانکی', 'نقص مدارک پرداخت'],
+    'اعتراض به مبلغ': ['کسورات درمانی', 'سقف تعهدات'],
+  },
+  'فرآیند ارزیابی پرونده': {
+    'تاخیر در ارزیابی': ['عودت پرونده', 'ثبت نشدن پرونده'],
+    'نحوه کارشناسی': ['اعتراض به نظر ارزیاب', 'درخواست کارشناسی مجدد'],
+  },
+  'رفتار سازمانی': {
+    'برخورد شعبه': ['تاخیر پاسخگویی شعبه', 'عدم اطلاع‌رسانی'],
+    'برخورد مرکز تماس': ['قطعی تماس', 'انتظار طولانی'],
+  },
+  'صدور و قرارداد': {
+    'تاخیر در صدور': ['استعلام اصالت', 'وضعیت حواله'],
+    'شرایط قرارداد': ['سقف تعهدات', 'فسخ و الحاقیه'],
+  },
+};
 
 export const channels = [
   ...Array<string>(5).fill('تلفن'),
@@ -74,7 +90,6 @@ export const channels = [
   'ندارد',
 ];
 
-/** Display order for channels (top to bottom in stacked bars). */
 export const channelOrder: readonly string[] = [
   'تلفن',
   'وب',
@@ -202,10 +217,8 @@ const MINUTE = 60 * 1000;
 export const HOUR = 60 * MINUTE;
 export const DAY = 24 * HOUR;
 
-/** Data is anchored to the current time so «امروز» / «۷ روز اخیر» always have rows. */
 export const NOW = Date.now();
 
-/** Office-hour weighting (08–20, peaks around 10–12 and 16–18), used for the heatmap. */
 export const busyHours = [
   8, 9, 9, 10, 10, 10, 11, 11, 11, 12, 12, 13, 14, 15, 16, 16, 17, 17, 17, 18, 19, 20, 21,
 ];

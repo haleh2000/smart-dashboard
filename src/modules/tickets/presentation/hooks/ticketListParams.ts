@@ -35,6 +35,7 @@ export const parseTicketListParams = (params: URLSearchParams): TicketListState 
     type: text('type'),
     subject1: text('subject'),
     branch: text('branch'),
+    channel: text('channel'),
     operator: text('operator'),
     starredOnly: params.get('starred') === '1' || undefined,
     period: isPeriod(params.get('period')) ? (params.get('period') as Period) : 'all',
@@ -56,6 +57,7 @@ export const serializeTicketListParams = (state: TicketListState) => {
     type: state.type,
     subject: state.subject1,
     branch: state.branch,
+    channel: state.channel,
     operator: state.operator,
     starred: state.starredOnly ? '1' : undefined,
     period: state.period !== 'all' ? state.period : undefined,
@@ -93,6 +95,7 @@ export const isFiltered = (state: TicketListState) =>
     state.type ||
     state.subject1 ||
     state.branch ||
+    state.channel ||
     state.operator ||
     state.starredOnly ||
     state.period !== 'all',

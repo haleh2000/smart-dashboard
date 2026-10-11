@@ -47,6 +47,15 @@ body {
     color var(--duration-base) ease;
 }
 
+/* Form controls do not inherit the document font by default — without this
+   every dropdown would fall back to the browser's UI font instead of Vazirmatn. */
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+}
+
 /* Ambient brand auras — two fixed, very soft washes (teal top / coral
    bottom) so no screen is ever a flat dead field. Painted on body::before
    to stay behind every stacking context. */

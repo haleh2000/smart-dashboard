@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import type { Sort } from '@/shared/domain/pagination';
 import { downloadCsv } from '@/shared/lib/csv';
-import { formatElapsed, formatPercent, formatPersianNumber } from '@/shared/lib/format';
+import {
+  formatDuration,
+  formatElapsed,
+  formatPercent,
+  formatPersianNumber,
+} from '@/shared/lib/format';
 import { Button, DataTable, StatusBadge, tableExport, type DataColumn } from '@/shared/ui';
 import type { OperatorStats } from '../../domain/analytics';
 
@@ -46,7 +51,7 @@ const columns = (selected?: string): DataColumn<OperatorStats, OperatorSortField
   {
     header: 'زمان رسیدگی (میانگین مکالمه)',
     sortField: 'avgHandlingSec',
-    cell: (s) => formatElapsed(s.avgHandlingSec),
+    cell: (s) => formatDuration(s.avgHandlingSec),
     exportValue: (s) => Math.round(s.avgHandlingSec),
   },
   {

@@ -54,6 +54,17 @@ describe('devCallSimulator', () => {
     const answered = created().filter((call) => call.status === 'answered');
     expect(answered.length).toBeGreaterThan(0);
     expect(answered.every((call) => call.durationSec > 0 && call.agent !== undefined)).toBe(true);
+    // «پاسخ داده شده» always brings the AI analysis with it, never a blank row.
+    expect(
+      answered.every(
+        (call) =>
+          call.analysis !== undefined &&
+          call.analysis.detectionConfidence > 0 &&
+          call.subject !== undefined &&
+          call.voice !== undefined &&
+          call.transcript.length > 0,
+      ),
+    ).toBe(true);
   });
 
   it('moves the dashboard call figures on ticks, and they stay equal to the table', async () => {

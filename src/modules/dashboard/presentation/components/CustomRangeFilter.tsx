@@ -16,10 +16,6 @@ const daysAgo = (days: number) => {
   return date;
 };
 
-/**
- * «بازه دلخواه»: a hand-picked day + hour range next to the preset buttons.
- * While applied it overrides the preset; picking a preset drops it again.
- */
 export function CustomRangeFilter() {
   const customRange = useDashboardFilterStore((state) => state.customRange);
   const setCustomRange = useDashboardFilterStore((state) => state.setCustomRange);
@@ -41,8 +37,7 @@ export function CustomRangeFilter() {
 
   useEffect(() => {
     if (!open) return;
-    // The date pickers render into a portal on <body>, so their clicks land
-    // outside this panel and must not dismiss it.
+
     const isOverlay = (target: EventTarget | null) =>
       target instanceof Element && target.closest('[data-portal-layer]') !== null;
     const closeIfOutside = (event: PointerEvent) => {
@@ -100,13 +95,7 @@ export function CustomRangeFilter() {
             if (event.key === 'Escape') setOpen(false);
           }}
         >
-          {/* <p className="custom-range__hint">
-            شروع و پایان بازه را با تاریخ و ساعت انتخاب کنید؛ کل داشبورد بر اساس آن فیلتر می‌شود.
-          </p> */}
-
           <div className="custom-range__fields">
-            {/* No day is blocked in either picker: the pair is validated below,
-                where an inverted range is explained and «اعمال» held back. */}
             <DateTimePicker
               label="از (تاریخ و ساعت)"
               value={from}
@@ -119,7 +108,7 @@ export function CustomRangeFilter() {
             />
           </div>
 
-          {inverted && (
+          {inverted && ( 
             <p className="custom-range__error" role="alert">
               تاریخ شروع باید قبل از تاریخ پایان باشد.
             </p>
@@ -146,6 +135,6 @@ export function CustomRangeFilter() {
           </div>
         </div>
       )}
-    </div>
+    </div> 
   );
 }

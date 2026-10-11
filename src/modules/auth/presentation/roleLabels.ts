@@ -19,6 +19,6 @@ export const permissionLabels: Record<Permission, string> = {
   'tickets.view': 'مشاهده و پیگیری تیکت‌ها',
   'calls.view': 'مشاهده تماس‌ها، فایل صوتی و تحلیل AI',
   'calls.receive': 'دریافت Popup تماس ورودی و دسته‌بندی سه‌سطحی',
-  'customers.view': 'پروفایل مشتری (Customer 360)',
+  'customers.view': 'پروفایل مشتری',
   'admin.manage': 'مدیریت کاربران، دسترسی‌ها و تنظیمات سیستم',
 };

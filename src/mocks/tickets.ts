@@ -7,6 +7,7 @@ import {
   aiTags,
   branches,
   channels,
+  complaintSubjectTree,
   DAY,
   HOUR,
   insuranceLines,
@@ -17,7 +18,6 @@ import {
   ticketTypes,
 } from './reference';
 
-/** Fake CRM tickets shared by all mock repositories. Delete once api.yml adapters exist. */
 
 const statuses: TicketStatus[] = [
   'pending',
@@ -33,14 +33,107 @@ const statuses: TicketStatus[] = [
 
 const random = createRandom(42);
 
+const isTreatmentLine = (line: string) => line.includes('درمان');
+const NO_CORPORATE = 'بدون مقدار';
+
+const COMPLAINT_OPEN_STATUSES = ['در جریان', 'ثبت یادداشت توسط امور مشتریان', 'ثبت شده'] as const;
+const COMPLAINT_CLOSED_STATUSES = [
+  'رد شده - عدم آگاهی',
+  'رد شده - خارج از ضوابط',
+  'وارده - رسیدگی شده',
+  'وارده - خارج از اختیارات اجرایی',
+] as const;
+const FOLLOWUP_OPEN_STATUSES = [...COMPLAINT_OPEN_STATUSES] as const;
+const FOLLOWUP_CLOSED_STATUSES = [...COMPLAINT_CLOSED_STATUSES, 'تبدیل به شکایت'] as const;
+const REQUEST_OPEN_STATUSES = [
+  'ثبت شده',
+  'در جریان',
+  'ثبت یادداشت توسط مالک پیگیری',
+  'ثبت یادداشت توسط امور مشتریان',
+] as const;
+const REQUEST_CLOSED_STATUSES = ['حل شده', 'رد شده'] as const;
+const SUGGESTION_OPEN_STATUSES = ['ثبت شده', 'در حال اجرا'] as const;
+const SUGGESTION_CLOSED_STATUSES = ['قابل قبول', 'غیر قابل قبول'] as const;
+
+function detailStatusFor(type: string): { detail: string; status: TicketStatus } {
+  const pick = <T>(open: readonly T[], closed: readonly T[]): T =>
+    random.next() < 0.45 ? random.pick([...open]) : random.pick([...closed]);
+  if (type === 'شکایت') {
+    const detail = String(pick(COMPLAINT_OPEN_STATUSES, COMPLAINT_CLOSED_STATUSES));
+    const closed = (COMPLAINT_CLOSED_STATUSES as readonly string[]).includes(detail);
+    return { detail, status: closed ? 'closed' : random.pick(['pending', 'inProgress', 'underReview', 'referred'] as TicketStatus[]) };
+  }
+  if (type === 'پیگیری') {
+    const detail = String(pick(FOLLOWUP_OPEN_STATUSES, FOLLOWUP_CLOSED_STATUSES));
+    const closed = (FOLLOWUP_CLOSED_STATUSES as readonly string[]).includes(detail);
+    return { detail, status: closed ? 'closed' : random.pick(['pending', 'inProgress', 'underReview', 'referred'] as TicketStatus[]) };
+  }
+  if (type === 'درخواست') {
+    const detail = String(pick(REQUEST_OPEN_STATUSES, REQUEST_CLOSED_STATUSES));
+    const closed = (REQUEST_CLOSED_STATUSES as readonly string[]).includes(detail);
+    return { detail, status: closed ? 'closed' : random.pick(['registered', 'inProgress', 'referred'] as TicketStatus[]) };
+  }
+  if (type === 'پیشنهاد') {
+    const detail = String(pick(SUGGESTION_OPEN_STATUSES, SUGGESTION_CLOSED_STATUSES));
+    const closed = (SUGGESTION_CLOSED_STATUSES as readonly string[]).includes(detail);
+    return { detail, status: closed ? 'closed' : random.pick(['registered', 'inProgress'] as TicketStatus[]) };
+  }
+  return { detail: '', status: random.pick(statuses) };
+}
+
+export { NO_CORPORATE };
+
+const typeSequence = (() => {
+  const shuffle = createRandom(1_337);
+
+  const units = ticketTypes.length;
+  const share = new Map<string, number>();
+  for (const type of ticketTypes) share.set(type, (share.get(type) ?? 0) + 1);
+  const names = [...share.keys()];
+  const sequence: string[] = [];
+  let assigned = 0;
+  names.forEach((type, index) => {
+    const exact = (480 * share.get(type)!) / units;
+    const quota = index === names.length - 1 ? 480 - assigned : Math.round(exact);
+    assigned += quota;
+    for (let i = 0; i < quota; i += 1) sequence.push(type);
+  });
+  for (let i = sequence.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(shuffle.next() * (i + 1));
+    const held = sequence[i]!;
+    sequence[i] = sequence[j]!;
+    sequence[j] = held;
+  }
+  return sequence;
+})();
+
+
+const WEEKS = 13;
+const floored = new Map<string, number>();
+const createdAtFor = (type: string) => {
+  const week = floored.get(type) ?? 0;
+  if (week < WEEKS) {
+    floored.set(type, week + 1);
+    const weekStart = NOW - (week + 1) * 7 * DAY;
+    return weekStart + Math.floor(random.next() * 7 * DAY);
+  }
+  return NOW - Math.floor(random.next() * 90 * DAY);
+};
+
 export const mockTickets: Ticket[] = Array.from({ length: 480 }, (_, index) => {
-  const level1 = random.pick(level1Weights);
-  const level2 = random.pick(Object.keys(subjectTree[level1] ?? {}));
-  const level3 = random.pick(subjectTree[level1]?.[level2] ?? ['ندارد']);
-  const subject = { level1, level2, level3 };
+  const type = typeSequence[index]!;
+  // موضوع تماس ۳ لایه برای گفت‌وگو/ارتباط‌دهی، موضوع شکایت ۳ لایه برای بقیه.
+  const useComplaintSubject = ['شکایت', 'پیگیری', 'درخواست', 'پیشنهاد'].includes(type);
+  const tree = useComplaintSubject ? complaintSubjectTree : subjectTree;
+  const roots = Object.keys(tree);
+  const level1 = useComplaintSubject ? random.pick(roots) : random.pick(level1Weights);
+  const safeLevel1 = tree[level1] ? level1 : random.pick(roots);
+  const level2 = random.pick(Object.keys(tree[safeLevel1] ?? {}));
+  const level3 = random.pick(tree[safeLevel1]?.[level2] ?? ['ندارد']);
+  const subject = { level1: safeLevel1, level2, level3 };
   const customer = pickCustomer(random.next);
-  const createdAt = NOW - Math.floor(random.next() * 90 * DAY);
-  const status = random.pick(statuses);
+  const createdAt = createdAtFor(type);
+  const { detail, status } = detailStatusFor(type);
   const hasEnrichment = random.next() > 0.15;
   const sentiment = random.pick([
     'positive',
@@ -61,19 +154,34 @@ export const mockTickets: Ticket[] = Array.from({ length: 480 }, (_, index) => {
       ? firstResponseAt + Math.floor((1 + random.next() * 9 * 24) * HOUR)
       : undefined;
   const line = customer.policies[0]?.line ?? random.pick(insuranceLines);
+  const corporateName = isTreatmentLine(line) ? (customer.corporateName ?? (random.next() < 0.35 ? random.pick(['صندوق بازنشستگی کشوری', 'شرکت ملی نفت', 'بانک ملت', 'شهرداری تهران', 'سازمان آب و برق خوزستان ']) : undefined)) : undefined;
+
+  let convertedFrom: string | undefined;
+  let convertedTo: string | undefined;
+  if ((type === 'شکایت' || type === 'درخواست' || type === 'پیشنهاد') && random.next() < 0.3) {
+    convertedFrom = random.next() < 0.6 ? 'گفت‌وگو' : 'پیگیری';
+  }
+  if (type === 'پیگیری' && detail === 'تبدیل به شکایت') {
+    convertedTo = 'شکایت'; 
+  } else if (type === 'پیگیری' && random.next() < 0.08) {
+    convertedTo = 'شکایت';
+  }
 
   return {
     id: String(140_000 + index),
     createdAt: new Date(createdAt),
-    type: random.pick(ticketTypes),
+    type,
     status,
+    detailStatus: detail || undefined,
+    convertedFrom,
+    convertedTo,
     channel: random.pick(channels),
     customer: {
       nationalId: customer.nationalId,
       mobile: customer.mobile,
       fullName: customer.fullName,
       gender: customer.gender,
-      corporateName: customer.corporateName,
+      corporateName,
     },
     subject,
     insuranceLine: line,
@@ -83,7 +191,7 @@ export const mockTickets: Ticket[] = Array.from({ length: 480 }, (_, index) => {
     complaintText: `مشتری درباره «${level3}» پیگیری دارد و درخواست رسیدگی دارد.`,
     finalResponse:
       status === 'closed' ? 'موضوع بررسی و نتیجه از طریق پیامک به مشتری اعلام شد.' : undefined,
-    fileNumber: level1 === 'پس از صدور' ? `F-${random.digits(8)}` : undefined,
+    fileNumber: safeLevel1 === 'پس از صدور' ? `F-${random.digits(8)}` : undefined,
     description: random.next() < 0.4 ? 'مشتری درخواست تماس در ساعات اداری دارد.' : undefined,
     rootCause:
       status === 'closed' && random.next() < 0.6 ? 'تاخیر در ارسال مدارک از سوی شعبه' : undefined,

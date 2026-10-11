@@ -89,6 +89,12 @@ export const ticketColumns = (listSearch = ''): TicketColumn[] => [
     exportValue: (t) => t.complaintOwner,
   },
   {
+    header: 'کانال ورودی',
+    sortField: 'channel',
+    cell: (t) => t.channel,
+    exportValue: (t) => t.channel,
+  },
+  {
     header: 'احساس',
     sortField: 'sentiment',
     cell: (t) => t.enrichment && <SentimentBadge sentiment={t.enrichment.sentiment} />,

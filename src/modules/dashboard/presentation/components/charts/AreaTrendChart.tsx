@@ -19,8 +19,8 @@ interface AreaTrendChartProps {
 const WEEK = 6 * 86_400_000;
 
 /**
- * Weekly volume per series as stacked areas («روند کانال‌های ارتباطی»), newest on the left (RTL).
- * Hover shows every series for that week; the legend toggles a series filter.
+ * حجم هفتگی هر سری به‌صورت خطوط جدا (غیرانباشته) تا هر سری فراز و نشیب خودش را داشته باشد و
+ * مرزها با کلِ هفته بالا و پایین نروند؛ hover همه سری‌های هفته را نشان می‌دهد و لِجند فیلتر می‌زند.
  */
 export function AreaTrendChart({
   label,
@@ -44,8 +44,8 @@ export function AreaTrendChart({
           <defs>
             {data.series.map((s, i) => (
               <linearGradient key={s} id={`${baseId}-${i}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={seriesColor(i)} stopOpacity={0.55} />
-                <stop offset="100%" stopColor={seriesColor(i)} stopOpacity={0.05} />
+                <stop offset="0%" stopColor={seriesColor(i)} stopOpacity={0.3} />
+                <stop offset="100%" stopColor={seriesColor(i)} stopOpacity={0.02} />
               </linearGradient>
             ))}
           </defs>
@@ -94,7 +94,6 @@ export function AreaTrendChart({
                 type="monotone"
                 dataKey={keyOf(i)}
                 name={s}
-                stackId="trend"
                 stroke={seriesColor(i)}
                 strokeWidth={2}
                 strokeOpacity={dimmed ? 0.25 : 1}

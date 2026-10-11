@@ -12,7 +12,7 @@ import type {
   TicketNote,
   TicketUpdate,
 } from '../domain/ticket';
-import { statusMatchesFilter } from '../domain/ticket';
+import { ticketMatchesStatusFilter, ticketSearchText, ticketSearchTokens } from '../domain/ticket';
 import type {
   AdjacentTickets,
   TicketFilter,
@@ -37,6 +37,7 @@ const sortValue: Record<TicketSortField, (t: Ticket) => string | number> = {
   followUpOwner: (t) => t.followUpOwner,
   branch: (t) => t.branch,
   complaintOwner: (t) => t.complaintOwner,
+  channel: (t) => t.channel,
   // Missing enrichment sorts before everything else.
   sentiment: (t) => (t.enrichment ? SENTIMENTS.indexOf(t.enrichment.sentiment) : -1),
   priority: (t) => (t.enrichment ? PRIORITIES.indexOf(t.enrichment.priority) : -1),
@@ -53,21 +54,17 @@ const compare = (a: Ticket, b: Ticket, { field, direction }: Sort<TicketSortFiel
 };
 
 const matches = (ticket: Ticket, filter: TicketFilter) => {
-  const term = filter.search?.trim();
+  const tokens = filter.search ? ticketSearchTokens(filter.search) : [];
+  const haystack = tokens.length > 0 ? ticketSearchText(ticket) : [];
   return (
-    (!term ||
-      [
-        ticket.id,
-        ticket.customer.mobile,
-        ticket.customer.nationalId,
-        ticket.customer.fullName,
-      ].some((value) => value.includes(term))) &&
-    (!filter.status || statusMatchesFilter(ticket.status, filter.status)) &&
+    tokens.every((token) => haystack.some((value) => value.includes(token))) &&
+    (!filter.status || ticketMatchesStatusFilter(ticket, filter.status)) &&
     (!filter.priority || ticket.enrichment?.priority === filter.priority) &&
     (!filter.sentiment || ticket.enrichment?.sentiment === filter.sentiment) &&
     (!filter.type || ticket.type === filter.type) &&
     (!filter.subject1 || ticket.subject.level1 === filter.subject1) &&
     (!filter.branch || ticket.branch === filter.branch) &&
+    (!filter.channel || ticket.channel === filter.channel) &&
     (!filter.operator ||
       ticket.followUpOwner === filter.operator ||
       ticket.complaintOwner.endsWith(filter.operator)) &&
@@ -244,6 +241,7 @@ export class MockTicketRepository implements TicketRepository {
       types: distinct(this.tickets.map((t) => t.type)),
       subjects: distinct(this.tickets.map((t) => t.subject.level1)),
       branches: distinct(this.tickets.map((t) => t.branch)),
+      channels: distinct(this.tickets.map((t) => t.channel)),
       operators: distinct(this.tickets.map((t) => t.followUpOwner)),
     };
   }

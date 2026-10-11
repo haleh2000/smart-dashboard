@@ -48,6 +48,31 @@ describe('MockAnalyticsRepository', () => {
     expect(kpis.closed).toBe(await listed('closed'));
   });
 
+  it('maps type-tab KPIs to the detail statuses of each module', async () => {
+    const tickets = new MockTicketRepository();
+    for (const type of ['شکایت', 'پیگیری', 'درخواست', 'پیشنهاد'] as const) {
+      const scope = { filters: { type } };
+      const kpis = await repository.getKpis(scope);
+      const listed = async (status?: TicketStatusFilter) =>
+        (
+          await tickets.list({
+            page: 1,
+            pageSize: 1,
+            sort: { field: 'createdAt', direction: 'desc' },
+            status,
+            type,
+          })
+        ).total;
+
+      expect(kpis.open + kpis.closed).toBe(kpis.total);
+      expect(kpis.resolutionRate).toBeCloseTo(kpis.total ? kpis.closed / kpis.total : 0);
+      expect(kpis.inReview).toBeLessThanOrEqual(kpis.open);
+      expect(kpis.open).toBe(await listed('open'));
+      expect(kpis.inReview).toBe(await listed('inReview'));
+      expect(kpis.closed).toBe(await listed('closed'));
+    }
+  });
+
   it('returns an hour-over-hour delta for every KPI key', async () => {
     const kpis = await repository.getKpis(all);
 
@@ -138,6 +163,29 @@ describe('MockAnalyticsRepository', () => {
     );
     expect(cells.reduce((a, b) => a + b, 0)).toBe(analyzed);
     expect(overview.journey.improved).toBeGreaterThan(0);
+  });
+
+  it('counts each customer face level from the calls themselves', async () => {
+    const overview = await repository.getSentimentOverview(all);
+    const analyzed = mockCalls.filter((c) => c.analysis).length;
+    const counts = overview.customerLevels.reduce((sum, row) => sum + row.count, 0);
+
+    expect(overview.customerLevels.map((row) => row.level)).toEqual([
+      'angry',
+      'dissatisfied',
+      'neutral',
+      'satisfied',
+      'verySatisfied',
+    ]);
+    expect(counts).toBe(analyzed);
+    expect(overview.customerScore).toBeGreaterThanOrEqual(-1);
+    expect(overview.customerScore).toBeLessThanOrEqual(1);
+
+    // The counts must be the ones the `sentimentLevel` filter actually selects.
+    for (const row of overview.customerLevels) {
+      const filtered = await repository.getSentimentOverview({ filters: { sentimentLevel: row.level } });
+      expect(filtered.analyzed).toBe(row.count);
+    }
   });
 
   it('splits AI detection into match / partial / mismatch / pending', async () => {

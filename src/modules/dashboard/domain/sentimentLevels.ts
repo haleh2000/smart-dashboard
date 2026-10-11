@@ -1,21 +1,14 @@
 import type { Sentiment } from '@/shared/domain/insights';
-import type { BreakdownItem } from './analytics';
-import type { SentimentSplit } from './analytics';
+import {
+  SENTIMENT_LEVELS,
+  type BreakdownItem,
+  type SentimentLevel,
+  type SentimentLevelRow,
+  type SentimentSplit,
+} from './analytics';
 
-/**
- * Five illustrated mood levels for the customer-sentiment faces panel, ordered
- * from most negative to most positive. Presentation vocabulary only — the
- * backend still reports three buckets (see `SentimentSplit`).
- */
-export const SENTIMENT_LEVELS = [
-  'angry',
-  'dissatisfied',
-  'neutral',
-  'satisfied',
-  'verySatisfied',
-] as const;
-
-export type SentimentLevel = (typeof SENTIMENT_LEVELS)[number];
+export { SENTIMENT_LEVELS };
+export type { SentimentLevel, SentimentLevelRow };
 
 /** Which dashboard `sentiment` filter each face toggles (cross-filtering parity). */
 export const levelFilterValue: Record<SentimentLevel, 'positive' | 'neutral' | 'negative'> = {
@@ -26,21 +19,16 @@ export const levelFilterValue: Record<SentimentLevel, 'positive' | 'neutral' | '
   verySatisfied: 'positive',
 };
 
-export interface SentimentLevelRow {
-  level: SentimentLevel;
-  count: number;
-  /** Share of the analyzed total, between 0 and 1. */
-  share: number;
-}
-
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 
 /**
- * Expands a three-bucket split into the five face levels. The outer buckets
- * are divided by score intensity (a strongly positive score puts most of the
- * positive bucket on «کاملا راضی», a barely positive one on «راضی», and
- * symmetrically for the negative side); the neutral bucket passes through
- * untouched. Counts always add up to the split total exactly.
+ * Estimates the five face levels from a three-bucket split alone. Only for
+ * sources that report no per-call score (the ticket breakdown); call data uses
+ * `classifySentimentLevel` per call instead. The outer buckets are divided by
+ * score intensity (a strongly positive score puts most of the positive bucket
+ * on «کاملا راضی», a barely positive one on «راضی», and symmetrically for the
+ * negative side); the neutral bucket passes through untouched. Counts always
+ * add up to the split total exactly.
  */
 export function toFiveLevelSentiment(split: SentimentSplit): SentimentLevelRow[] {
   const { positive, neutral, negative, score } = split;

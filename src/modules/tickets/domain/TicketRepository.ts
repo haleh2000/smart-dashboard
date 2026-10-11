@@ -24,6 +24,7 @@ export const TICKET_SORT_FIELDS = [
   'subject3',
   'branch',
   'complaintOwner',
+  'channel',
   'sentiment',
   'priority',
 ] as const;
@@ -40,6 +41,8 @@ export interface TicketFilter {
   type?: string;
   subject1?: string;
   branch?: string;
+  /** The channel the customer came in through (تلفن، وب، پیامک، …). */
+  channel?: string;
   /** Matches either the follow-up owner or the complaint owner. */
   operator?: string;
   createdIn?: DateRange;
@@ -55,6 +58,7 @@ export interface TicketFilterOptions {
   types: string[];
   subjects: string[];
   branches: string[];
+  channels: string[];
   operators: string[];
 }
 

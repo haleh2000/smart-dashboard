@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router';
 import { PERIODS } from '@/shared/domain/period';
@@ -13,32 +14,35 @@ import { CallsTab } from '../components/CallsTab';
 import { CustomRangeFilter } from '../components/CustomRangeFilter';
 import { FilterChips } from '../components/FilterChips';
 import { KpiCards } from '../components/KpiCards';
-import { OperatorsTab } from '../components/OperatorsTab';
-import { ReasonsTab } from '../components/ReasonsTab';
-import { SentimentTab } from '../components/SentimentTab';
-import { TicketAnalyticsTab } from '../components/TicketAnalyticsTab';
+import { OverviewTab } from '../components/OverviewTab';
+import { TypeAnalyticsTab } from '../components/TypeAnalyticsTab';
 import { useDashboardFilterStore } from '../dashboardFilterStore';
 import { analyticsKeys } from '../hooks/analyticsQueries';
 import { AgentWorkspaceView } from '@/modules/agent-workspace';
 import { useCurrentUser } from '@/modules/auth';
 import './DashboardPage.css';
 
-const TABS = [  
-  { id: 'tickets', label: 'تحلیل تیکت‌ها' },
-  { id: 'reasons', label: 'دلایل تماس و تشخیص AI' },
-  { id: 'sentiment', label: 'تحلیل احساسات' },
-  { id: 'operators', label: 'عملکرد اپراتورها' },
-  { id: 'calls', label: 'تماس‌ها و ساعات پیک' },
+
+const TABS = [
+  { id: 'overview', label: 'کلی' },
+  { id: 'calls', label: 'تماس‌ها' },
+  { id: 'complaints', label: 'شکایات' },
+  { id: 'followups', label: 'پیگیری‌ها' },
+  { id: 'requests', label: 'درخواست‌ها' },
+  { id: 'suggestions', label: 'پیشنهادها' },
 ] as const satisfies readonly TabItem<string>[];
-type TabId = (typeof TABS)[number]['id']; 
+type TabId = (typeof TABS)[number]['id'];
+
+const TAB_TYPE: Partial<Record<TabId, string>> = {
+  complaints: 'شکایت',
+  followups: 'پیگیری',
+  requests: 'درخواست',
+  suggestions: 'پیشنهاد',
+};
 
 const periodOptions = PERIODS.map((value) => ({ value, label: periodLabels[value] }));
 
-/**
- * Main dashboard (README → «داشبورد اصلی»). Analytics and reports live here — there is no
- * separate reports page. Filters and the time range are shared across the three tabs.
- * Agents see an operational "My Desk" workspace instead of analytical tabs.
- */
+
 export function DashboardPage() {
   const { role } = useCurrentUser();
   const isAgent = role === 'agent';
@@ -48,14 +52,21 @@ export function DashboardPage() {
   const period = useDashboardFilterStore((state) => state.period);
   const setPeriod = useDashboardFilterStore((state) => state.setPeriod);
   const customRange = useDashboardFilterStore((state) => state.customRange);
-  const tab: TabId = TABS.find((t) => t.id === params.get('tab'))?.id ?? 'tickets';
+  const setDimension = useDashboardFilterStore((state) => state.setDimension);
+  const tab: TabId = TABS.find((t) => t.id === params.get('tab'))?.id ?? 'overview';
+
+  useEffect(() => {
+    setDimension('type', TAB_TYPE[tab]);
+  }, [tab, setDimension]);
 
   const changeTab = (id: TabId) =>
-    setParams(id === 'tickets' ? {} : { tab: id }, { replace: true });
+    setParams(id === 'overview' ? {} : { tab: id }, { replace: true });
 
   if (isAgent) {
     return <AgentWorkspaceView />;
   }
+
+  const ticketType = TAB_TYPE[tab];
 
   return (
     <section className="dashboard">
@@ -82,14 +93,21 @@ export function DashboardPage() {
       />
 
       <FilterChips />
-      <KpiCards />
+      {tab === 'calls' ? (
+        <KpiCards ticketType="calls" />
+      ) : ticketType ? (
+        <KpiCards ticketType={ticketType} />
+      ) : (
+        <KpiCards />
+      )}
 
       <Tabs tabs={TABS} active={tab} onChange={changeTab} label="بخش‌های داشبورد">
-        {tab === 'tickets' && <TicketAnalyticsTab />}
-        {tab === 'reasons' && <ReasonsTab />}
-        {tab === 'sentiment' && <SentimentTab />}
-        {tab === 'operators' && <OperatorsTab />}
-        {tab === 'calls' && <CallsTab />}  
+        {tab === 'overview' && <OverviewTab />}
+        {tab === 'calls' && <CallsTab />}
+        {tab === 'complaints' && <TypeAnalyticsTab type="شکایت" />}
+        {tab === 'followups' && <TypeAnalyticsTab type="پیگیری" />}
+        {tab === 'requests' && <TypeAnalyticsTab type="درخواست" />}
+        {tab === 'suggestions' && <TypeAnalyticsTab type="پیشنهاد" />}
       </Tabs>
     </section>
   );

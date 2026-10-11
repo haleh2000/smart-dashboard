@@ -1,5 +1,6 @@
 import type {
   BranchResponseTime,
+  BranchSla,
   BreakdownItem,
   CallReasons,
   CallStats,
@@ -43,4 +44,6 @@ export interface AnalyticsRepository {
   getCallReasons(scope: DashboardScope): Promise<CallReasons>;
   /** Average first-response time per branch, slowest first. */
   getBranchResponseTime(scope: DashboardScope): Promise<BranchResponseTime[]>;
+  /** SLA و ارجاع به تفکیک شعبه — فقط شکایت و پیگیری. */
+  getBranchSla(scope: DashboardScope): Promise<BranchSla[]>;
 }

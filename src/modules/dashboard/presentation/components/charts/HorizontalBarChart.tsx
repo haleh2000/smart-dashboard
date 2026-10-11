@@ -2,6 +2,7 @@ import { useId, useEffect, useMemo, useState } from 'react';
 import { Bar, BarChart, Cell, LabelList, Tooltip, XAxis, YAxis } from 'recharts';
 import { formatPercent, formatPersianNumber } from '@/shared/lib/format';
 import { seriesColor } from '../chartColors';
+import { resolveBarScale, type BarScale } from './barScale';
 import { ChartFrame } from './ChartFrame';
 import { ChartTooltipBox } from './ChartTooltipBox';
 import { axisTick, cursorFill, markOpacity } from './chartKit';
@@ -15,7 +16,10 @@ interface HorizontalBarChartProps {
   onSelect?: (label: string) => void;
   format?: (value: number) => string;
   maxVisible?: number;
+  scale?: BarScale;
 }
+
+
 
 const ROW_HEIGHT = 38;
 const DEFAULT_MAX_VISIBLE = 5;
@@ -32,9 +36,11 @@ export function HorizontalBarChart({
   onSelect,
   format = formatPersianNumber,
   maxVisible = DEFAULT_MAX_VISIBLE,
+  scale = 'max',
 }: HorizontalBarChartProps) {
   const gradientId = `bar-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const color = seriesColor(series);
+  const { dataKey, domain } = resolveBarScale(scale);
   const [expanded, setExpanded] = useState(false);
   const hasOverflow = items.length > maxVisible;
   const isSelectedVisible = useMemo(
@@ -42,6 +48,9 @@ export function HorizontalBarChart({
     [items, maxVisible, selected],
   );
   const visibleItems = hasOverflow && !expanded ? items.slice(0, maxVisible) : items;
+  // `share` scale needs a number on every row; missing shares paint an empty bar, never NaN.
+  const data =
+    dataKey === 'share' ? visibleItems.map((item) => ({ ...item, share: item.share ?? 0 })) : visibleItems;
 
   useEffect(() => {
     if (hasOverflow && !isSelectedVisible) setExpanded(true);
@@ -53,7 +62,7 @@ export function HorizontalBarChart({
     <>
       <ChartFrame height={chartHeight} label={label}>
         <BarChart
-          data={visibleItems}
+          data={data}
           layout="vertical"
           margin={{ top: 4, right: 4, left: 156, bottom: 4 }}
           barCategoryGap="22%"
@@ -64,7 +73,7 @@ export function HorizontalBarChart({
               <stop offset="100%" stopColor={color} stopOpacity={1} />
             </linearGradient>
           </defs>
-          <XAxis type="number" reversed hide domain={[0, 'dataMax']} />
+          <XAxis type="number" reversed hide domain={domain} />
           <YAxis
             type="category"
             dataKey="label"
@@ -89,16 +98,16 @@ export function HorizontalBarChart({
             }}
           />
           <Bar
-            dataKey="value"
+            dataKey={dataKey}
             radius={6}
             background={{ fill: 'var(--chart-track)', radius: 6 }}
             animationDuration={600}
             onClick={(_, index) => {
-              const item = visibleItems[index];
+              const item = data[index];
               if (item) onSelect?.(item.label);
             }}
           >
-            {visibleItems.map((item) => (
+            {data.map((item) => (
               <Cell
                 key={item.label}
                 fill={`url(#${gradientId})`}
@@ -109,7 +118,7 @@ export function HorizontalBarChart({
               dataKey="value"
               position="left"
               content={({ x, y, width, height, index }) => {
-                const item = index === undefined ? undefined : visibleItems[index];
+                const item = index === undefined ? undefined : data[index];
                 if (!item) return null;
                 const end = Math.min(Number(x), Number(x) + Number(width));
                 return (

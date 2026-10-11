@@ -33,13 +33,12 @@ export function LoginPage() {
         <header className="login__brand">
           <span className="login__lockup">
             <img className="login__didi" src="/brand/didi.png" alt="" aria-hidden="true" />
-            <img className="login__logo" src="/brand/daydar-logo.png" alt="دی‌دار — بیمه دی" />
+            <img className="login__logo" src="/brand/daydar-logo.png" alt="دی‌دار" />
           </span>
           <h1 className="login__title">SMART</h1>
-          <p className="login__subtitle">داشبورد پشتیبانی هوشمند — بیمه دی</p>
+          <p className="login__subtitle">داشبورد پشتیبانی هوشمند </p>
         </header>
 
-        {/* key re-mounts the phase so the enter animation plays on every step. */}
         <div key={step.kind} className="login__phase">
           {step.kind === 'mobile' ? (
             <form

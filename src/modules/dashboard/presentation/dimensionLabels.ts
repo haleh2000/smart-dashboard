@@ -17,6 +17,8 @@ export const dimensionLabels: Record<Dimension, string> = {
   subject2: 'موضوع فرعی',
   subject3: 'علت',
   type: 'نوع تیکت',
+  detailStatus: 'وضعیت تفصیلی',
+  corporate: 'مشتری سازمانی',
   channel: 'کانال',
   insuranceLine: 'رشته بیمه',
   branch: 'شعبه',

@@ -7,20 +7,14 @@ import type { NavIconName } from '@/shared/ui';
 
 export interface NavItem {
   label: string;
-  /** Used by the mobile bottom bar, where space is tight. */
   shortLabel: string;
   path: string;
   permission: Permission;
   icon: NavIconName;
-  /** Items sharing a group sit under one heading in the rail and one entry in the bottom bar. */
   group?: string;
 }
 
-/**
- * Sidebar structure from README → «ساختار Sidebar و صفحات»:
- * داشبورد، تیکت‌ها، تماس‌ها، مشتریان، مدیریت (کاربران، دسترسی‌ها، تنظیمات).
- * Items are hidden when the role lacks the permission; the first visible item is the landing page.
- */
+
 export const navigation: NavItem[] = [
   {
     label: 'داشبورد',
@@ -37,7 +31,7 @@ export const navigation: NavItem[] = [
     icon: 'tickets',
   },
   {
-    label: 'تماس‌ها',
+    label: 'تماس‌ها', 
     shortLabel: 'تماس‌ها',
     path: callPaths.list,
     permission: 'calls.view',

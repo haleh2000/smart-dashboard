@@ -1,12 +1,8 @@
 import { useState } from 'react';
 import { cn } from '@/shared/lib/cn';
 import { formatPercent, formatPersianNumber } from '@/shared/lib/format';
-import type { SentimentSplit } from '../../domain/analytics';
-import {
-  dominantLevel,
-  toFiveLevelSentiment,
-  type SentimentLevel,
-} from '../../domain/sentimentLevels';
+import type { SentimentLevel, SentimentLevelRow } from '../../domain/sentimentLevels';
+import { dominantLevel } from '../../domain/sentimentLevels';
 import { formatScore } from './sentimentKit';
 import './SentimentFaces.css';
 
@@ -85,24 +81,23 @@ function FaceIcon({ level }: FaceIconProps) {
 }
 
 interface CustomerSentimentFacesProps {
-  split: SentimentSplit;
+  /** The five levels with the real counts behind them, most negative first. */
+  rows: readonly SentimentLevelRow[];
+  /** The overall -1..1 score of the side these faces describe. */
+  score: number;
+  /** How many conversations the counts add up to. */
   analyzed: number;
   selected?: string;
   onSelect: (sentiment: string) => void;
 }
 
-/**
- * «احساس مشتریان در یک نگاه»: five illustrated faces with counts and shares.
- * Each face toggles the dashboard `sentiment` cross-filter, exactly like the
- * matrix and the ticket-tab bar do.
- */
 export function CustomerSentimentFaces({
-  split,
+  rows,
+  score,
   analyzed,
   selected,
   onSelect,
 }: CustomerSentimentFacesProps) {
-  const rows = toFiveLevelSentiment(split);
   const dominant = dominantLevel(rows);
   const hasSelection = selected !== undefined;
 
@@ -133,7 +128,7 @@ export function CustomerSentimentFaces({
           حال غالب مشتریان: <strong>{SENTIMENT_FACE_LABELS[dominant]}</strong>
         </p>
         <p className="sentiment-faces__meta">
-          <span className="sentiment-faces__score">{formatScore(split.score)}</span>
+          <span className="sentiment-faces__score">{formatScore(score)}</span>
           <span>
             امتیاز کلی از {formatPersianNumber(analyzed)} مکالمه تحلیل‌شده
           </span>

@@ -10,6 +10,8 @@ export const DIMENSIONS = [
   'subject2',
   'subject3',
   'type',
+  'detailStatus',
+  'corporate',
   'channel',
   'insuranceLine',
   'branch',

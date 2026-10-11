@@ -1,7 +1,6 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { PRIORITIES, SENTIMENTS } from '@/shared/domain/insights';
 import { PERIODS } from '@/shared/domain/period';
-import { toLatinDigits } from '@/shared/lib/format';
 import {
   Button,
   FilterBar,
@@ -11,7 +10,7 @@ import {
   priorityMeta,
   sentimentMeta,
 } from '@/shared/ui';
-import { TICKET_STATUS_FILTERS } from '../../domain/ticket';
+import { TICKET_STATUS_FILTERS, ticketSearchTokens } from '../../domain/ticket';
 import { useTicketFilterOptions } from '../hooks/ticketQueries';
 import { isFiltered, type TicketListState } from '../hooks/ticketListParams';
 import type { TicketListChanges } from '../hooks/useTicketListParams';
@@ -28,18 +27,62 @@ interface TicketFiltersProps {
 const asOptions = (values: readonly string[] = []) =>
   values.map((value) => ({ value, label: value }));
 
+/** How long the search box stays quiet before the list follows it. */
+const SEARCH_DEBOUNCE_MS = 300;
+
 /** README → «فیلتر (وضعیت، اولویت، موضوع، اپراتور، تاریخ)» plus the enrichment filters. */
 export function TicketFilters({ state, onChange, onReset, meta }: TicketFiltersProps) {
   const [draft, setDraft] = useState(state.search ?? '');
+  /** The term the URL already carries, so we can tell our own commits from outside changes. */
+  const committed = useRef(state.search ?? '');
+  /** `onChange` is a fresh closure every render; a ref keeps it out of the debounce effect. */
+  const change = useRef(onChange);
+  change.current = onChange;
   const hasAdvanced = Boolean(
-    state.sentiment || state.type || state.subject1 || state.branch || state.starredOnly,
+    state.sentiment ||
+      state.type ||
+      state.subject1 ||
+      state.branch ||
+      state.channel ||
+      state.starredOnly,
   );
   const [showAdvanced, setShowAdvanced] = useState(hasAdvanced);
   const { data: options } = useTicketFilterOptions();
 
+  // «حذف فیلترها», a back/forward navigation or a shared link replaces the text in the box.
+  useEffect(() => {
+    if ((state.search ?? '') !== committed.current) {
+      committed.current = state.search ?? '';
+      setDraft(committed.current);
+    }
+  }, [state.search]);
+
+  // Live search: the list follows the text shortly after typing stops.
+  useEffect(() => {
+    const term = ticketSearchTokens(draft).join(' ');
+    if (term === (state.search ?? '')) return;
+    const timer = setTimeout(() => {
+      committed.current = term;
+      change.current({ search: term || undefined });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [draft, state.search]);
+
+  /** Clearing the box also cancels a search that has not reached the URL yet. */
+  const resetAll = () => {
+    committed.current = '';
+    setDraft('');
+    onReset();
+  };
+
   return (
     <FilterBar
-      onSubmit={() => onChange({ search: toLatinDigits(draft.trim()) || undefined })}
+      onSubmit={() => {
+        const term = ticketSearchTokens(draft).join(' ');
+        if (term === (state.search ?? '')) return;
+        committed.current = term;
+        onChange({ search: term || undefined });
+      }}
       meta={
         <>
           {meta}
@@ -51,7 +94,7 @@ export function TicketFilters({ state, onChange, onReset, meta }: TicketFiltersP
             {showAdvanced ? 'فیلترهای کمتر' : 'فیلترهای بیشتر'}
           </Button>
           {isFiltered(state) && (
-            <Button variant="ghost" onClick={onReset}>
+            <Button variant="ghost" onClick={resetAll}>
               حذف فیلترها
             </Button>
           )}
@@ -65,7 +108,9 @@ export function TicketFilters({ state, onChange, onReset, meta }: TicketFiltersP
             className="form-input"
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
-            placeholder="شماره تیکت، موبایل، کدملی یا نام"
+            // The previous term is still in the box after a search; typing replaces it.
+            onFocus={(event) => event.currentTarget.select()}
+            placeholder="شماره تیکت، موبایل یا کدملی"
           />
           <Button type="submit">جستجو</Button>
         </span>
@@ -133,6 +178,13 @@ export function TicketFilters({ state, onChange, onReset, meta }: TicketFiltersP
             value={state.branch}
             options={asOptions(options?.branches)}
             onChange={(branch) => onChange({ branch })}
+          />
+          <FilterSelect
+            label="کانال ورودی"
+            allLabel="همه کانال‌ها"
+            value={state.channel}
+            options={asOptions(options?.channels)}
+            onChange={(channel) => onChange({ channel })}
           />
           <FilterSelect
             label="احساس مشتری"

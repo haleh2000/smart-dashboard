@@ -42,7 +42,7 @@
 .info-card__row {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
+  /* justify-content: space-between; */
   gap: var(--space-3);
   padding: var(--space-2) 0;
   border-bottom: 1px dashed var(--color-outline-soft);

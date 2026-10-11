@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { formatPercent, formatPersianNumber } from '@/shared/lib/format';
 import { Panel, StatusBadge } from '@/shared/ui';
 import type { CallReasons, ReasonNode, SubjectDetectionStats } from '../../domain/analytics';
@@ -39,72 +40,91 @@ function Meter({ label, value, tone }: { label: string; value: number; tone: str
   );
 }
 
+const VISIBLE_CAUSES = 4;
+
 function RootCauseList({ data }: { data: CallReasons }) {
   const selectSubject = useDashboardFilterStore((state) => state.selectSubject);
+  const [expanded, setExpanded] = useState(false);
   const top = leaves(data.nodes)
     .sort((a, b) => b.count - a.count)
     .slice(0, 8);
+  const visible = expanded ? top : top.slice(0, VISIBLE_CAUSES);
   const negative = overall(data.nodes, (n) => n.negativeShare);
   const repeat = overall(data.nodes, (n) => n.repeatShare);
   const max = Math.max(1, ...top.map((cause) => cause.count));
 
   return (
-    <ol className="root-causes">
-      {top.map((cause, index) => {
-        const alerts = [
-          cause.negativeShare > negative * 1.25 && 'نارضایتی بالا',
-          cause.repeatShare > repeat * 1.2 && 'تکرار تماس بالا',
-        ].filter((a): a is string => Boolean(a));
-        return (
-          <li key={cause.path.join('/')}>
-            <button
-              type="button"
-              className="root-causes__item"
-              onClick={() => selectSubject(cause.path)}
-            >
-              <span className="root-causes__rank">{formatPersianNumber(index + 1)}</span>
-              <span className="root-causes__body">
-                <span className="root-causes__title">
-                  <strong>{cause.label}</strong>
-                  {alerts.map((alert) => (
-                    <StatusBadge key={alert} tone="error">
-                      هشدار: {alert}
-                    </StatusBadge>
-                  ))}
-                </span>
-                <span className="root-causes__path">{cause.path.slice(0, -1).join(' › ')}</span>
-                <span className="root-causes__volume">
-                  <span
-                    className="root-causes__volume-bar"
-                    style={{ width: `${(cause.count / max) * 100}%` }}
-                  />
-                  <span>
-                    {formatPersianNumber(cause.count)} تماس · {formatPercent(cause.share)}
+    <>
+      <ol className="root-causes">
+        {visible.map((cause, index) => {
+          const alerts = [
+            cause.negativeShare > negative * 1.25 && 'نارضایتی بالا',
+            cause.repeatShare > repeat * 1.2 && 'تکرار تماس بالا',
+          ].filter((a): a is string => Boolean(a));
+          return (
+            <li key={cause.path.join('/')}>
+              <button
+                type="button"
+                className="root-causes__item"
+                onClick={() => selectSubject(cause.path)}
+              >
+                <span className="root-causes__rank">{formatPersianNumber(index + 1)}</span>
+                <span className="root-causes__body">
+                  <span className="root-causes__title">
+                    <strong>{cause.label}</strong>
+                    {alerts.map((alert) => (
+                      <StatusBadge key={alert} tone="error">
+                        هشدار: {alert}
+                      </StatusBadge>
+                    ))}
+                  </span>
+                  <span className="root-causes__path">{cause.path.slice(0, -1).join(' › ')}</span>
+                  <span className="root-causes__volume">
+                    <span
+                      className="root-causes__volume-bar"
+                      style={{ width: `${(cause.count / max) * 100}%` }}
+                    />
+                    <span>
+                      {formatPersianNumber(cause.count)} تماس · {formatPercent(cause.share)}
+                    </span>
+                  </span>
+                  <span className="root-causes__meters">
+                    <Meter
+                      label="احساس منفی"
+                      value={cause.negativeShare}
+                      tone="var(--chart-series-2)"
+                    />
+                    <Meter
+                      label="حل در اولین تماس"
+                      value={cause.fcrRate}
+                      tone="var(--chart-series-1)"
+                    />
+                    <Meter
+                      label="تکرار تماس"
+                      value={cause.repeatShare}
+                      tone="var(--chart-series-4)"
+                    />
                   </span>
                 </span>
-                <span className="root-causes__meters">
-                  <Meter
-                    label="احساس منفی"
-                    value={cause.negativeShare}
-                    tone="var(--chart-series-2)"
-                  />
-                  <Meter
-                    label="حل در اولین تماس"
-                    value={cause.fcrRate}
-                    tone="var(--chart-series-1)"
-                  />
-                  <Meter
-                    label="تکرار تماس"
-                    value={cause.repeatShare}
-                    tone="var(--chart-series-4)"
-                  />
-                </span>
-              </span>
-            </button>
-          </li>
-        );
-      })}
-    </ol>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+      {top.length > VISIBLE_CAUSES && (
+        <div className="root-causes__more">
+          <button
+            type="button"
+            className="btn btn--ghost btn--small"
+            onClick={() => setExpanded((value) => !value)}
+          >
+            {expanded
+              ? 'نمایش کمتر'
+              : `نمایش بیشتر (${formatPersianNumber(top.length - VISIBLE_CAUSES)})`}
+          </button>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -288,7 +308,6 @@ function DetectionSection() {
   );
 }
 
-/** «تحلیل دلایل اصلی تماس» + «تشخیص موضوع تماس توسط اپراتور و AI». */
 export function ReasonsTab() {
   return (
     <div className="dashboard__section">

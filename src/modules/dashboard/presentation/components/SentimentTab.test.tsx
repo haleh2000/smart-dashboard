@@ -5,7 +5,7 @@ import type { SentimentOverview } from '../../domain/analytics';
 import type { AnalyticsRepository } from '../../domain/AnalyticsRepository';
 import { AnalyticsRepositoryProvider } from '../analyticsServices';
 import { resetDashboardFilters, useDashboardFilterStore } from '../dashboardFilterStore';
-import { SentimentTab } from './SentimentTab';
+import { CustomerFacesPanel, SentimentTab } from './SentimentTab';
 
 const row = (positive: number, neutral: number, negative: number) => ({
   positive,
@@ -16,6 +16,14 @@ const row = (positive: number, neutral: number, negative: number) => ({
 const overview: SentimentOverview = {
   analyzed: 10,
   customer: { ...row(4, 4, 2), score: 0.2 },
+  customerLevels: [
+    { level: 'angry', count: 1, share: 0.1 },
+    { level: 'dissatisfied', count: 1, share: 0.1 },
+    { level: 'neutral', count: 4, share: 0.4 },
+    { level: 'satisfied', count: 1, share: 0.1 },
+    { level: 'verySatisfied', count: 3, share: 0.3 },
+  ],
+  customerScore: 0.2,
   agent: { ...row(7, 3, 0), score: 0.7 },
   matrix: { positive: row(4, 0, 0), neutral: row(2, 2, 0), negative: row(1, 1, 0) },
   journey: { improved: 3, unchanged: 6, worsened: 1 },
@@ -34,7 +42,17 @@ const fakeRepository = () =>
 const renderTab = (repository: AnalyticsRepository) =>
   renderWithProviders({
     initialPath: '/dashboard',
-    routes: [{ path: '/dashboard', element: <SentimentTab /> }],
+    routes: [
+      {
+        path: '/dashboard',
+        element: (
+          <>
+            <CustomerFacesPanel />
+            <SentimentTab />
+          </>
+        ),
+      },
+    ],
     wrapper: (children) => (
       <AnalyticsRepositoryProvider value={repository}>{children}</AnalyticsRepositoryProvider>
     ),

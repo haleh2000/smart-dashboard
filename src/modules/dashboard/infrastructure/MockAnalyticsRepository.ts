@@ -1,5 +1,10 @@
 import { reportedSubject, subjectAgreement, type Call, type CallAnalysis } from '@/modules/calls';
-import { REVIEWING_STATUSES, type Ticket } from '@/modules/tickets';
+import {
+  isClosedDetailStatus,
+  isOpenDetailStatus,
+  isReviewDetailStatus,
+  type Ticket,
+} from '@/modules/tickets';
 import { customerOfCall, mockCalls } from '@/mocks/calls';
 import { delay } from '@/mocks/delay';
 import { HOUR } from '@/mocks/reference';
@@ -11,38 +16,55 @@ import {
   type Sentiment,
 } from '@/shared/domain/insights';
 import { isWithinRange } from '@/shared/domain/period';
-import {
-  kpiHourDeltas,
-  type BranchResponseTime,
-  type BreakdownItem,
-  type CallReasons,
-  type CallStats,
-  type CrossBreakdown,
-  type Heatmap,
-  type KpiFigures,
-  type Kpis,
-  type OperatorStats,
-  type ReasonNode,
-  type RepeatCallStats,
-  type ResolutionStep,
-  type SentimentOverview,
-  type SentimentSplit,
-  type SubjectDetectionStats,
-  type SubjectLineTable,
-  type SubjectRow,
-  type Trend,
+import type {
+  BranchResponseTime,
+  BranchSla,
+  BreakdownItem,
+  CallReasons,
+  CallStats,
+  CrossBreakdown,
+  Heatmap,
+  KpiFigures,
+  Kpis,
+  OperatorStats,
+  ReasonNode,
+  RepeatCallStats,
+  ResolutionStep,
+  SentimentLevel,
+  SentimentLevelRow,
+  SentimentOverview,
+  SentimentSplit,
+  SubjectDetectionStats,
+  SubjectLineTable,
+  SubjectRow,
+  Trend,
 } from '../domain/analytics';
 import type { AnalyticsRepository } from '../domain/AnalyticsRepository';
-import { classifySentimentLevel } from '../domain/sentimentLevels';
+import { kpiHourDeltas } from '../domain/analytics';
+import { classifySentimentLevel, SENTIMENT_LEVELS } from '../domain/sentimentLevels';
 import { persianWeekday, type DashboardScope, type Dimension } from '../domain/filters';
 
 type Accessor<T> = Record<Dimension, (record: T) => string | undefined>;
+
+/** The customer's own -1..1 score of one call, from their transcript lines. */
+const customerScoreOf = (call: Call) =>
+  sentimentScore(
+    call.transcript
+      .filter((line) => line.speaker === 'customer' && line.sentiment)
+      .map((line) => line.sentiment!),
+  );
+
+/** The face level of one call — the same value the `sentimentLevel` filter uses. */
+const callLevel = (call: Call): SentimentLevel =>
+  classifySentimentLevel(call.analysis?.sentiment, customerScoreOf(call));
 
 const ticketValue: Accessor<Ticket> = {
   subject1: (t) => t.subject.level1,
   subject2: (t) => t.subject.level2,
   subject3: (t) => t.subject.level3,
   type: (t) => t.type,
+  detailStatus: (t) => t.detailStatus,
+  corporate: (t) => t.customer.corporateName ?? 'بدون مقدار',
   channel: (t) => t.channel,
   insuranceLine: (t) => t.insuranceLine,
   branch: (t) => t.branch,
@@ -66,17 +88,13 @@ const callValue: Accessor<Call> = {
   subject2: (c) => reportedSubject(c)?.level2,
   subject3: (c) => reportedSubject(c)?.level3,
   type: () => 'گفت‌وگو',
+  detailStatus: () => undefined,
+  corporate: (c) => customerOfCall(c)?.corporateName ?? 'بدون مقدار',
   channel: () => 'تلفن',
   insuranceLine: (c) => customerOfCall(c)?.policies[0]?.line,
   branch: (c) => customerOfCall(c)?.branch,
   sentiment: (c) => c.analysis?.sentiment,
-  sentimentLevel: (c) => {
-    const customerSentiments = c.transcript
-      .filter((l) => l.speaker === 'customer' && l.sentiment)
-      .map((l) => l.sentiment!);
-    const score = sentimentScore(customerSentiments);
-    return classifySentimentLevel(c.analysis?.sentiment, score);
-  },
+  sentimentLevel: (c) => callLevel(c),
   operator: (c) => c.agent,
   weekday: (c) => String(persianWeekday(c.startedAt)),
   hour: (c) => String(c.startedAt.getHours()),
@@ -192,8 +210,9 @@ export class MockAnalyticsRepository implements AnalyticsRepository {
         before(call.startedAt) &&
         active.every(([dimension, value]) => callValue[dimension](call) === value),
     );
+ 
     const isClosed = (ticket: Ticket) =>
-      ticket.status === 'closed' &&
+      isClosedDetailStatus(ticket.detailStatus, ticket.status) &&
       (asOf === undefined || !ticket.closedAt || ticket.closedAt < asOf);
     const closed = tickets.filter(isClosed);
     const answered = calls.filter((c) => c.status === 'answered');
@@ -204,10 +223,9 @@ export class MockAnalyticsRepository implements AnalyticsRepository {
 
     return {
       total: tickets.length,
-      // «باز» and «در حال بررسی» reuse the ticket-table groupings, so the list filter can
-      // reproduce both cards row for row.
-      open: tickets.length - closed.length,
-      inReview: tickets.filter((t) => REVIEWING_STATUSES.includes(t.status)).length,
+
+      open: tickets.filter((t) => isOpenDetailStatus(t.detailStatus, t.status)).length,
+      inReview: tickets.filter((t) => isReviewDetailStatus(t.detailStatus, t.status)).length,
       closed: closed.length,
       resolutionRate: ratio(closed.length, tickets.length),
       overdue: tickets.filter((t) => !isClosed(t) && t.slaRemainingDays < 0).length,
@@ -427,7 +445,6 @@ export class MockAnalyticsRepository implements AnalyticsRepository {
       timesToResolve.push(seconds(issue[0].startedAt, resolving.startedAt));
     }
 
-    // Missed calls carry no subject: their issues are grouped as «نامشخص».
     const byReason = [...groupBy(issues, (issue) => reportedSubject(issue[0]!)?.level1 ?? UNKNOWN)]
       .map(([subject, group]) => ({
         subject,
@@ -481,6 +498,16 @@ export class MockAnalyticsRepository implements AnalyticsRepository {
     ) as SentimentOverview['matrix'];
 
     const shifts = calls.map((c) => sentimentShift(c.transcript, 'customer'));
+    const levelCounts = new Map<SentimentLevel, number>();
+    for (const call of calls) {
+      const level = callLevel(call);
+      levelCounts.set(level, (levelCounts.get(level) ?? 0) + 1);
+    }
+    const customerLevels: SentimentLevelRow[] = SENTIMENT_LEVELS.map((level) => {
+      const count = levelCounts.get(level) ?? 0;
+      return { level, count, share: calls.length ? count / calls.length : 0 };
+    });
+
     const trend = weekStarts(
       scope.range,
       calls.map((c) => c.startedAt),
@@ -497,6 +524,8 @@ export class MockAnalyticsRepository implements AnalyticsRepository {
     return {
       analyzed: calls.length,
       customer: split(calls.map(customerOf)),
+      customerLevels,
+      customerScore: average(calls.map(customerScoreOf)),
       agent: split(calls.map(agentOf)),
       matrix,
       journey: {
@@ -625,5 +654,33 @@ export class MockAnalyticsRepository implements AnalyticsRepository {
         };
       })
       .sort((a, b) => b.avgResponseMinutes - a.avgResponseMinutes);
+  }
+
+  async getBranchSla(scope: DashboardScope): Promise<BranchSla[]> {
+    await delay(200);
+
+    const scoped: DashboardScope =
+      scope.filters.type === 'شکایت' || scope.filters.type === 'پیگیری'
+        ? scope
+        : scope.filters.type
+          ? { ...scope, filters: { ...scope.filters } }
+          : { ...scope, filters: { ...scope.filters } };
+    const tickets = this.filterTickets(scoped).filter((t) => t.type === 'شکایت' || t.type === 'پیگیری');
+    const byBranch = groupBy(tickets, (t) => t.branch);
+    return [...byBranch]
+      .map(([branch, group]) => {
+        const resolveDays = group.flatMap((t) =>
+          t.closedAt ? [(t.closedAt.getTime() - t.createdAt.getTime()) / (24 * 3600 * 1000)] : [],
+        );
+        const overdue = group.filter((t) => t.status !== 'closed' && t.slaRemainingDays < 0).length;
+        return {
+          branch,
+          referred: group.filter((t) => t.referralCount > 0 || t.status !== 'closed').length,
+          avgResolveDays: average(resolveDays),
+          overdue,
+          overdueShare: ratio(overdue, group.length),
+        };
+      })
+      .sort((a, b) => b.referred - a.referred);
   }
 }

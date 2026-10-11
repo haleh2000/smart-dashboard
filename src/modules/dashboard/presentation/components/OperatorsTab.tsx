@@ -1,4 +1,4 @@
-import { formatElapsed, formatPercent } from '@/shared/lib/format';
+import { formatDuration, formatPercent } from '@/shared/lib/format';
 import { Panel } from '@/shared/ui';
 import { scopeForChart } from '../../domain/filters';
 import { useDashboardFilterStore, useDashboardScope } from '../dashboardFilterStore';
@@ -59,6 +59,7 @@ export function OperatorsTab() {
                   format={formatPercent}
                   selected={selected}
                   onSelect={select}
+                  scale="unit"
                 />
               </Panel>
               <Panel title="میانگین زمان رسیدگی (مکالمه)">
@@ -66,7 +67,7 @@ export function OperatorsTab() {
                   label="میانگین زمان مکالمه"
                   items={ranked((s) => s.avgHandlingSec)}
                   series={3}
-                  format={formatElapsed}
+                  format={formatDuration}
                   selected={selected}
                   onSelect={select}
                 />

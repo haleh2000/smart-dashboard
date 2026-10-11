@@ -11,11 +11,6 @@ import { DevCallButton } from './DevCallButton';
 import { DevRoleSwitcher } from './DevRoleSwitcher';
 import './AppShell.css';
 
-/**
- * RTL-first Daydar-style shell. Desktop: the viewport is the brand teal field with a
- * fixed navigation rail on the RIGHT and the page floating inside a rounded light panel.
- * ≤1024px: the rail disappears and navigation drops to a glass bottom bar (thumb reach).
- */
 export function AppShell() {
   const user = useCurrentUser();
   const can = useCan();
@@ -80,7 +75,7 @@ export function AppShell() {
             <span className="app-brand__divider" aria-hidden="true" />
             <span className="app-brand__text">
               <span className="app-brand__title">SMART</span>
-              <span className="app-brand__subtitle">داشبورد پشتیبانی هوشمند — بیمه دی</span>
+              <span className="app-brand__subtitle">داشبورد پشتیبانی هوشمند </span>
             </span>
           </Link>
 

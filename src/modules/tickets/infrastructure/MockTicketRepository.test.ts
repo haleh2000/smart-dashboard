@@ -1,5 +1,10 @@
 import { mockTickets } from '@/mocks/tickets';
-import { isOpenStatus, REVIEWING_STATUSES } from '../domain/ticket';
+import { formatPersianNumber } from '@/shared/lib/format';
+import {
+  isClosedDetailStatus,
+  isOpenDetailStatus,
+  isReviewDetailStatus,
+} from '../domain/ticket';
 import { MockTicketRepository } from './MockTicketRepository';
 
 const repository = new MockTicketRepository();
@@ -31,21 +36,75 @@ describe('MockTicketRepository', () => {
     expect(result.items.every((t) => t.status === target.status)).toBe(true);
   });
 
+  it('finds a ticket by its number however it was typed or rendered', async () => {
+    const target = mockTickets[3]!;
+    const typed = [
+      target.id,
+      formatPersianNumber(target.id),
+      `T-${target.id}`,
+      `T-${formatPersianNumber(target.id)}`,
+      `تیکت ${formatPersianNumber(target.id)}`,
+      `  ${target.id}  `,
+    ];
+
+    for (const search of typed) {
+      const result = await repository.list({ ...baseQuery, search });
+      expect(result.items.map((t) => t.id)).toContain(target.id);
+    }
+  });
+
+  it('requires every word of a multi-word search to match', async () => {
+    const target = mockTickets[3]!;
+
+    const both = await repository.list({
+      ...baseQuery,
+      search: `${target.id} ${target.customer.nationalId}`,
+    });
+    expect(both.items.map((t) => t.id)).toEqual([target.id]);
+
+    const impossible = await repository.list({
+      ...baseQuery,
+      search: `${target.id} ${target.customer.nationalId} 0000000000`,
+    });
+    expect(impossible.total).toBe(0);
+  });
+
+  it('does not match on the customer name', async () => {
+    const target = mockTickets[3]!;
+
+    const result = await repository.list({ ...baseQuery, search: target.customer.fullName });
+
+    expect(result.total).toBe(0);
+  });
+
   it('returns null for an unknown id', async () => {
     expect(await repository.getById('missing')).toBeNull();
   });
 
-  it('filters by the KPI groups «باز» and «در حال بررسی»', async () => {
+  it('filters by the KPI groups «باز» and «در حال بررسی» (detail-aware)', async () => {
     const query = { ...baseQuery, pageSize: 1000 };
     const open = await repository.list({ ...query, status: 'open' });
     const reviewing = await repository.list({ ...query, status: 'inReview' });
 
-    expect(open.total).toBe(mockTickets.filter((t) => isOpenStatus(t.status)).length);
+    expect(open.total).toBe(
+      mockTickets.filter((t) => isOpenDetailStatus(t.detailStatus, t.status)).length,
+    );
     expect(open.total + (await repository.list({ ...query, status: 'closed' })).total).toBe(
       mockTickets.length,
     );
     expect(reviewing.total).toBeGreaterThan(0);
-    expect(reviewing.items.every((t) => REVIEWING_STATUSES.includes(t.status))).toBe(true);
+    expect(
+      reviewing.items.every((t) => isReviewDetailStatus(t.detailStatus, t.status)),
+    ).toBe(true);
+  });
+
+  it('matches the closed group to the detail statuses, not the CRM status', async () => {
+    const query = { ...baseQuery, pageSize: 1000 };
+    const closed = await repository.list({ ...query, status: 'closed' });
+
+    expect(closed.total).toBe(
+      mockTickets.filter((t) => isClosedDetailStatus(t.detailStatus, t.status)).length,
+    );
   });
 
   it('filters by enrichment fields and operator', async () => {
@@ -75,6 +134,17 @@ describe('MockTicketRepository', () => {
     const branches = items.map((t) => t.branch);
 
     expect(branches).toEqual([...branches].sort((a, b) => a.localeCompare(b, 'fa')));
+  });
+
+  it('filters by the entry channel and offers every channel as an option', async () => {
+    const result = await repository.list({ ...baseQuery, pageSize: 500, channel: 'وب' });
+
+    expect(result.total).toBeGreaterThan(0);
+    expect(result.items.every((t) => t.channel === 'وب')).toBe(true);
+
+    const options = await repository.getFilterOptions();
+    const actual = mockTickets.map((t) => t.channel);
+    expect(options.channels).toEqual([...new Set(actual)].sort((a, b) => a.localeCompare(b, 'fa')));
   });
 
   it('finds the neighbours of a ticket inside the same filtered list', async () => {
