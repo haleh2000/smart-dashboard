@@ -19,7 +19,7 @@ export function CustomerOverviewStrip() {
       <div className="customer-overview__cards">
         <StatCard label="کل مشتریان" value={count(data?.total)} tone="primary" />
         <StatCard label="فعال" value={count(data?.active)} tone="success" />
-        <StatCard label="VIP" value={count(data?.vip)} tone="warning" />
+        {/* TODO(vip): <StatCard label="VIP" value={count(data?.vip)} tone="warning" /> */}
         <StatCard label="سازمانی" value={count(data?.corporate)} />
         <StatCard label="دارای تیکت باز" value={count(data?.withOpenTickets)} tone="warning" />
         <StatCard

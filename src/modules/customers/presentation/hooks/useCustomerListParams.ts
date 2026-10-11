@@ -15,7 +15,8 @@ const PAGE_SIZE = 20;
 const DEFAULT_SORT: CustomerSortField = 'lastInteractionAt';
 
 type Changes = Partial<
-  Pick<CustomerQuery, 'page' | 'search' | 'status' | 'kind' | 'vipOnly' | 'sort'>
+  // TODO(vip): 'vipOnly'
+  Pick<CustomerQuery, 'page' | 'search' | 'status' | 'kind' | 'sort'>
 >;
 
 /** Customer list state lives in the URL so reload / back-navigation restores the view. */
@@ -31,7 +32,7 @@ export function useCustomerListParams() {
     search: params.get('q') ?? undefined,
     status: CUSTOMER_STATUSES.find((s): s is CustomerStatus => s === status),
     kind: CUSTOMER_KINDS.find((k): k is CustomerKind => k === kind),
-    vipOnly: params.get('vip') === '1' || undefined,
+    // TODO(vip): vipOnly: params.get('vip') === '1' || undefined,
     sort: {
       field: CUSTOMER_SORT_FIELDS.find((f) => f === sortField) ?? DEFAULT_SORT,
       direction: params.get('dir') === 'asc' ? 'asc' : 'desc',
@@ -45,7 +46,7 @@ export function useCustomerListParams() {
       q: next.search || undefined,
       status: next.status,
       kind: next.kind,
-      vip: next.vipOnly ? '1' : undefined,
+      // TODO(vip): vip: next.vipOnly ? '1' : undefined,
       sort: next.sort.field === DEFAULT_SORT ? undefined : next.sort.field,
       dir: next.sort.direction === 'desc' ? undefined : next.sort.direction,
     };

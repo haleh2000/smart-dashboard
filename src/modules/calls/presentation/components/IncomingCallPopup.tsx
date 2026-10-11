@@ -81,7 +81,7 @@ function IncomingCallPanel() {
         <strong className="incoming-call__name">
           {customer?.fullName ?? caller.fullName ?? UNKNOWN_CALLER}
         </strong>
-        {customer?.isVip && <StatusBadge tone="warning">VIP</StatusBadge>}
+        {/* TODO(vip): {customer?.isVip && <StatusBadge tone="warning">VIP</StatusBadge>} */}
         {repeatCaller && <StatusBadge tone="error">تماس تکراری</StatusBadge>}
       </div>
 

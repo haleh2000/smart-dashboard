@@ -3,7 +3,8 @@ import { SentimentBadge, sentimentMeta, type DataColumn } from '@/shared/ui';
 import type { CustomerSummary } from '../../domain/customer';
 import type { CustomerSortField } from '../../domain/CustomerRepository';
 import { customerKindLabels, customerStatusMeta } from '../customerLabels';
-import { CustomerStatusBadge, VipBadge } from './CustomerBadges';
+import { CustomerStatusBadge } from './CustomerBadges';
+// TODO(vip): import { VipBadge } from './CustomerBadges';
 
 /** Customer list columns; `exportValue` feeds the Excel export. */
 export const customerColumns: DataColumn<CustomerSummary, CustomerSortField>[] = [
@@ -13,10 +14,11 @@ export const customerColumns: DataColumn<CustomerSummary, CustomerSortField>[] =
     cell: (c) => (
       <span className="customer-table__name">
         {c.fullName}
-        {c.isVip && <VipBadge />}
+        {/* TODO(vip): {c.isVip && <VipBadge />} */}
       </span>
     ),
-    exportValue: (c) => (c.isVip ? `${c.fullName} (VIP)` : c.fullName),
+    // TODO(vip): exportValue: (c) => (c.isVip ? `${c.fullName} (VIP)` : c.fullName),
+    exportValue: (c) => c.fullName,
   },
   {
     header: 'کدملی',

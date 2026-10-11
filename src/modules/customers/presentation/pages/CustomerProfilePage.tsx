@@ -12,7 +12,8 @@ import {
   type TabItem,
 } from '@/shared/ui';
 import { claimTotals, summarizeSentiment, type CustomerProfile } from '../../domain/customer';
-import { CustomerStatusBadge, VipBadge } from '../components/CustomerBadges';
+import { CustomerStatusBadge } from '../components/CustomerBadges';
+// TODO(vip): import { VipBadge } from '../components/CustomerBadges';
 import { CustomerIdentityCard } from '../components/CustomerIdentityCard';
 import { ClaimTable, PolicyTable } from '../components/InsuranceTables';
 import { InteractionTimeline } from '../components/InteractionTimeline';
@@ -118,7 +119,7 @@ export function CustomerProfilePage() {
         title={customer.fullName}
         subtitle={
           <span className="customer-profile__meta">
-            {customer.isVip && <VipBadge />}
+            {/* TODO(vip): {customer.isVip && <VipBadge />} */}
             <CustomerStatusBadge status={customer.status} />
             <StatusBadge tone="info">{customerKindLabels[customer.kind]}</StatusBadge>
             <span>کدملی {formatPersianNumber(customer.nationalId)}</span>

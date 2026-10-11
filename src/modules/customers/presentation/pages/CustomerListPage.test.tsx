@@ -53,6 +53,7 @@ const renderPage = (repository: CustomerRepository) =>
   });
 
 describe('CustomerListPage', () => {
+  /* TODO(vip): restore when the «فقط مشتریان VIP» filter comes back.
   it('passes the VIP filter to the repository and keeps it in the URL', async () => {
     const repository = fakeRepository();
     const { router } = renderPage(repository);
@@ -63,6 +64,7 @@ describe('CustomerListPage', () => {
     expect(repository.list).toHaveBeenLastCalledWith(expect.objectContaining({ vipOnly: true }));
     expect(router.state.location.search).toBe('?vip=1');
   });
+  */
 
   it('opens Customer 360 when a row is clicked', async () => {
     const { router } = renderPage(fakeRepository());

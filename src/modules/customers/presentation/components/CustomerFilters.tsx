@@ -13,12 +13,12 @@ interface CustomerFiltersProps {
   search?: string;
   status?: CustomerStatus;
   kind?: CustomerKind;
-  vipOnly?: boolean;
+  // TODO(vip): vipOnly?: boolean;
   meta?: ReactNode;
   onSearch: (search: string) => void;
   onStatusChange: (status: CustomerStatus | undefined) => void;
   onKindChange: (kind: CustomerKind | undefined) => void;
-  onVipOnlyChange: (vipOnly: boolean) => void;
+  // TODO(vip): onVipOnlyChange: (vipOnly: boolean) => void;
 }
 
 const statusOptions = CUSTOMER_STATUSES.map((value) => ({
@@ -31,12 +31,12 @@ export function CustomerFilters({
   search = '',
   status,
   kind,
-  vipOnly = false,
+  // TODO(vip): vipOnly = false,
   meta,
   onSearch,
   onStatusChange,
   onKindChange,
-  onVipOnlyChange,
+  // TODO(vip): onVipOnlyChange,
 }: CustomerFiltersProps) {
   const [draft, setDraft] = useState(search);
 
@@ -68,6 +68,7 @@ export function CustomerFilters({
         allLabel="فردی و سازمانی"
         onChange={onKindChange}
       />
+      {/* TODO(vip): filter «فقط مشتریان VIP»
       <label className="form-checkbox filter-bar__checkbox">
         <input
           type="checkbox"
@@ -76,6 +77,7 @@ export function CustomerFilters({
         />
         فقط مشتریان VIP
       </label>
+      */}
     </FilterBar>
   );
 }

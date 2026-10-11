@@ -37,7 +37,8 @@ export function CustomerListPage() {
   const { query, update } = useCustomerListParams();
   const { data, isPending, isError, refetch } = useCustomers(query);
   const exportCustomers = useCustomerExport();
-  const isFiltered = Boolean(query.search || query.status || query.kind || query.vipOnly);
+  // TODO(vip): const isFiltered = Boolean(query.search || query.status || query.kind || query.vipOnly);
+  const isFiltered = Boolean(query.search || query.status || query.kind);
 
   return (
     <section>
@@ -53,11 +54,11 @@ export function CustomerListPage() {
         search={query.search}
         status={query.status}
         kind={query.kind}
-        vipOnly={query.vipOnly}
+        // TODO(vip): vipOnly={query.vipOnly}
         onSearch={(search) => update({ search })}
         onStatusChange={(status) => update({ status })}
         onKindChange={(kind) => update({ kind })}
-        onVipOnlyChange={(vipOnly) => update({ vipOnly: vipOnly || undefined })}
+        // TODO(vip): onVipOnlyChange={(vipOnly) => update({ vipOnly: vipOnly || undefined })}
         meta={
           <>
             {data && (
@@ -71,7 +72,7 @@ export function CustomerListPage() {
                     search: undefined,
                     status: undefined,
                     kind: undefined,
-                    vipOnly: undefined,
+                    // TODO(vip): vipOnly: undefined,
                   })
                 }
               >

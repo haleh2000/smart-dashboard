@@ -8,7 +8,7 @@ export const CustomerStatusBadge = ({ status }: { status: CustomerStatus }) => (
   </StatusBadge>
 );
 
-export const VipBadge = () => <StatusBadge tone="warning">VIP</StatusBadge>;
+// TODO(vip): export const VipBadge = () => <StatusBadge tone="warning">VIP</StatusBadge>;
 
 export const PolicyStatusBadge = ({ status }: { status: PolicyStatus }) => (
   <StatusBadge tone={policyStatusMeta[status].tone}>{policyStatusMeta[status].label}</StatusBadge>
