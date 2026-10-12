@@ -101,14 +101,14 @@ function AnalysisCard({ analysis }: { analysis: Call['analysis'] }) {
         <InfoRow label="اولویت">
           <PriorityBadge priority={analysis.priority} />
         </InfoRow>
-        <InfoRow label="برچسب خودکار" wide>
+        {/* <InfoRow label="برچسب خودکار" wide>
           {analysis.autoLabel}
-        </InfoRow>
+        </InfoRow> */}
         <InfoRow label="موضوع تشخیص‌داده‌شده">{analysis.topic}</InfoRow>
-        <InfoRow label="سناریوی پیشنهادی">{analysis.suggestedScenario}</InfoRow>
-        <InfoRow label="برچسب‌ها" wide>
+        {/* <InfoRow label="سناریوی پیشنهادی">{analysis.suggestedScenario}</InfoRow> */}
+        {/* <InfoRow label="برچسب‌ها" wide>
           <TagList tags={analysis.tags} />
-        </InfoRow>
+        </InfoRow> */}
       </InfoGrid>
       <p className="call-detail__summary">{analysis.summary}</p>
     </InfoCard>

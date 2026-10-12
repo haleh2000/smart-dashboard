@@ -61,7 +61,7 @@ export function CustomerFilters({
         allLabel="همه وضعیت‌ها"
         onChange={onStatusChange}
       />
-      <FilterSelect
+      <FilterSelect     
         label="نوع مشتری"
         value={kind}
         options={kindOptions}

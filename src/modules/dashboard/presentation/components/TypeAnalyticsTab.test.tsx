@@ -73,7 +73,9 @@ describe('TypeAnalyticsTab · وضعیت تفصیلی', () => {
     });
     const panel = title.closest('section')!;
     const chart = await within(panel).findByTestId('detail-status-chart');
-    const rows = [...chart.querySelectorAll('span')].map((span) => span.textContent);
+    // const rows = [...chart.querySelectorAll('span')].map((span) => span.textContent);
+
+    const rows = [...chart.querySelectorAll('span')].map((span) => span.textContent)
 
     expect(rows).toEqual([
       'ثبت شده=4',

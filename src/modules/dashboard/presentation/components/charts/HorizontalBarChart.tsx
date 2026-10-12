@@ -48,7 +48,6 @@ export function HorizontalBarChart({
     [items, maxVisible, selected],
   );
   const visibleItems = hasOverflow && !expanded ? items.slice(0, maxVisible) : items;
-  // `share` scale needs a number on every row; missing shares paint an empty bar, never NaN.
   const data =
     dataKey === 'share' ? visibleItems.map((item) => ({ ...item, share: item.share ?? 0 })) : visibleItems;
 

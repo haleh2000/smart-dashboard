@@ -34,7 +34,7 @@ export function CallListPage() {
     agent: query.agent,
     queue: query.queue,
     sentiment: query.sentiment,
-    startedIn: query.startedIn,
+    startedIn: query .startedIn,
     uncategorizedOnly: query.uncategorizedOnly,
   };
   const [exporting, setExporting] = useState(false);
@@ -98,7 +98,7 @@ export function CallListPage() {
       ) : isError ? (
         <ErrorState message="دریافت تماس‌ها با خطا مواجه شد." onRetry={() => refetch()} />
       ) : data.items.length === 0 ? (
-        <EmptyState message="تماسی با این فیلترها پیدا نشد." />
+        <EmptyState message="تماسی با این فیلترها پیدا نشد" />
       ) : (
         <>
           <DataTable
