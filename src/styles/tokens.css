@@ -137,6 +137,9 @@
   --control-height: 46px;
   --control-padding-block: 10px;
   --control-padding-inline: 16px;
+  /* Width of a compact control that sits inside a table header next to a title;
+     fixed, because a percentage in a table cell is circular. */
+  --control-width-compact: 7rem;
 
   /* Elevation — layered, soft, teal-tinted */
   --shadow-card: 0 1px 2px rgb(30 39 38 / 5%), 0 4px 14px -6px rgb(30 39 38 / 8%);

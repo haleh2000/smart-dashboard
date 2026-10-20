@@ -54,9 +54,13 @@ function KeyFields({ ticket }: { ticket: Ticket }) {
         <InfoRow label="وضعیت">
           <TicketStatusBadge status={ticket.status} />
         </InfoRow>
-        <InfoRow label="نوع اصلی شکایت">{ticket.subject.level1}</InfoRow>
-        <InfoRow label="نوع شکایت">{ticket.subject.level2}</InfoRow>
-        <InfoRow label="علت شکایت">{ticket.subject.level3}</InfoRow>
+        {ticket.subject && (
+          <>
+            <InfoRow label="نوع اصلی شکایت">{ticket.subject.level1}</InfoRow>
+            <InfoRow label="نوع شکایت">{ticket.subject.level2}</InfoRow>
+            <InfoRow label="علت شکایت">{ticket.subject.level3}</InfoRow>
+          </>
+        )}
         <InfoRow label="شماره پرونده">
           {ticket.fileNumber && <bdi>{formatPersianNumber(ticket.fileNumber)}</bdi>}
         </InfoRow>

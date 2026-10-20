@@ -17,6 +17,7 @@ export { NavIcon, type NavIconName } from './NavIcon';
 export { PageHeader } from './PageHeader';
 export { Pagination } from './Pagination';
 export { Panel } from './Panel';
+export { RangeFilterControl } from './RangeFilterControl';
 export { SegmentedControl } from './SegmentedControl';
 export { SkeletonTable } from './SkeletonTable';
 export { StatCard } from './StatCard';

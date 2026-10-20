@@ -84,9 +84,13 @@ export interface SubjectLineTable {
   totals: Record<string, number>;
 }
 
-/** Weekly counts per series value («روند کانال‌های ارتباطی»). */
+/** Counts per series value, bucketed to the selected time filter («روند ارتباطات»).
+ *  The bucket width follows the scope range (hourly for a day, daily for weeks,
+ *  weekly for longer spans), so the chart mirrors exactly the filter the user picked. */
 export interface Trend {
   series: string[];
+  /** Width of one bucket in milliseconds. */
+  bucketMs: number;
   buckets: { start: Date; counts: Record<string, number> }[];
 }
 

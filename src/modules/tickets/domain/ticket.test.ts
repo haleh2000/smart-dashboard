@@ -7,6 +7,7 @@ import {
   openDetailStatusesForType,
   reviewDetailStatusesForType,
   ticketMatchesStatusFilter,
+  ticketSearchFields,
   ticketSearchTokens,
 } from './ticket';
 
@@ -102,6 +103,22 @@ describe('ticketSearchTokens', () => {
 
   it('leaves names and subjects exactly as typed', () => {
     expect(ticketSearchTokens('مریم احمدی')).toEqual(['مریم', 'احمدی']);
+  });
+});
+
+describe('ticketSearchFields', () => {
+  it('sends a ۱۰ or ۱۱ digit number to the identity fields', () => {
+    expect(ticketSearchFields('09123456789')).toEqual(['nationalId', 'mobile']);
+    expect(ticketSearchFields('0012345678')).toEqual(['nationalId', 'mobile']);
+  });
+
+  it('sends any other number to the ticket id', () => {
+    expect(ticketSearchFields('140003')).toEqual(['ticketId']);
+    expect(ticketSearchFields('9001')).toEqual(['ticketId']);
+  });
+
+  it('sends letters to the customer name', () => {
+    expect(ticketSearchFields('احمدی')).toEqual(['customerName']);
   });
 });
 

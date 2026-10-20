@@ -43,7 +43,18 @@ export interface AnalyticsRepository {
   /** Multi-level call reasons (Subject1 → 2 → 3), largest first at every level. */
   getCallReasons(scope: DashboardScope): Promise<CallReasons>;
   /** Average first-response time per branch, slowest first. */
-  getBranchResponseTime(scope: DashboardScope): Promise<BranchResponseTime[]>;
-  /** SLA و ارجاع به تفکیک شعبه — فقط شکایت و پیگیری. */
-  getBranchSla(scope: DashboardScope): Promise<BranchSla[]>;
+  /** میانگین زمان اولین پاسخ به تفکیک شعبه یا اپراتور. */
+ /** میانگین زمان اولین پاسخ به تفکیک شعبه، اپراتور یا مشتری سازمانی. */
+getBranchResponseTime(
+  scope: DashboardScope,
+  dimension?: 'branch' | 'operator' | 'corporate',
+): Promise<BranchResponseTime[]>;
+
+
+  /** ارجاع و SLA به تفکیک شعبه یا اپراتور. */
+  getBranchSla(
+    scope: DashboardScope,
+    dimension?: 'branch' | 'operator',
+  ): Promise<BranchSla[]>;
 }
+

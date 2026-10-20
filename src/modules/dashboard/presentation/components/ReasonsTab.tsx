@@ -1,4 +1,4 @@
-import { useState } from 'react';
+// import { useState } from 'react';
 import { formatPercent, formatPersianNumber } from '@/shared/lib/format';
 import { Panel, StatusBadge } from '@/shared/ui';
 import type { CallReasons, ReasonNode, SubjectDetectionStats } from '../../domain/analytics';
@@ -6,7 +6,7 @@ import { scopeForChart, SUBJECT_DIMENSIONS } from '../../domain/filters';
 import { useDashboardFilterStore, useDashboardScope } from '../dashboardFilterStore';
 import { useCallReasons, useSubjectDetection } from '../hooks/analyticsQueries';
 import { ChartState } from './ChartState';
-import { ColumnChart } from './charts/ColumnChart';
+// import { ColumnChart } from './charts/ColumnChart';
 import { Legend } from './StackedBars';
 import { Sunburst } from './Sunburst';
 import './ReasonsTab.css';
@@ -22,140 +22,111 @@ const leaves = (nodes: readonly ReasonNode[], parent: string[] = []): RootCause[
       : [{ ...node, path: [...parent, node.label] }],
   );
 
-/** Weighted mean of a node measure across the whole tree. */
-const overall = (nodes: readonly ReasonNode[], pick: (n: ReasonNode) => number) => {
-  const total = nodes.reduce((sum, n) => sum + n.count, 0);
-  return total ? nodes.reduce((sum, n) => sum + pick(n) * n.count, 0) / total : 0;
-};
-
-function Meter({ label, value, tone }: { label: string; value: number; tone: string }) {
-  return (
-    <span className="root-causes__meter">
-      <span className="root-causes__meter-label">{label}</span>
-      <span className="root-causes__meter-track">
-        <span style={{ width: `${Math.min(1, value) * 100}%`, background: tone }} />
-      </span>
-      <span className="root-causes__meter-value">{formatPercent(value)}</span>
-    </span>
+function buildTopCauseTree(
+  nodes: readonly ReasonNode[],
+  limit = 8,
+): ReasonNode[] {
+  const selectedPaths = new Set(
+    leaves(nodes)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit)
+      .map((cause) => JSON.stringify(cause.path)),
   );
-}
 
-const VISIBLE_CAUSES = 4;
+  const prune = (
+    items: readonly ReasonNode[],
+    parent: string[] = [],
+  ): ReasonNode[] =>
+    items.flatMap((node): ReasonNode[] => {
+      const path = [...parent, node.label];
 
-function RootCauseList({ data }: { data: CallReasons }) {
-  const selectSubject = useDashboardFilterStore((state) => state.selectSubject);
-  const [expanded, setExpanded] = useState(false);
-  const top = leaves(data.nodes)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 8);
-  const visible = expanded ? top : top.slice(0, VISIBLE_CAUSES);
-  const negative = overall(data.nodes, (n) => n.negativeShare);
-  const repeat = overall(data.nodes, (n) => n.repeatShare);
-  const max = Math.max(1, ...top.map((cause) => cause.count));
+      if (node.children.length === 0) {
+        return selectedPaths.has(JSON.stringify(path))
+          ? [{ ...node }]
+          : [];
+      }
 
-  return (
-    <>
-      <ol className="root-causes">
-        {visible.map((cause, index) => {
-          const alerts = [
-            cause.negativeShare > negative * 1.25 && 'نارضایتی بالا',
-            cause.repeatShare > repeat * 1.2 && 'تکرار تماس بالا',
-          ].filter((a): a is string => Boolean(a));
-          return (
-            <li key={cause.path.join('/')}>
-              <button
-                type="button"
-                className="root-causes__item"
-                onClick={() => selectSubject(cause.path)}
-              >
-                <span className="root-causes__rank">{formatPersianNumber(index + 1)}</span>
-                <span className="root-causes__body">
-                  <span className="root-causes__title">
-                    <strong>{cause.label}</strong>
-                    {alerts.map((alert) => (
-                      <StatusBadge key={alert} tone="error">
-                        هشدار: {alert}
-                      </StatusBadge>
-                    ))}
-                  </span>
-                  <span className="root-causes__path">{cause.path.slice(0, -1).join(' › ')}</span>
-                  <span className="root-causes__volume">
-                    <span
-                      className="root-causes__volume-bar"
-                      style={{ width: `${(cause.count / max) * 100}%` }}
-                    />
-                    <span>
-                      {formatPersianNumber(cause.count)} تماس · {formatPercent(cause.share)}
-                    </span>
-                  </span>
-                  <span className="root-causes__meters">
-                    <Meter
-                      label="احساس منفی"
-                      value={cause.negativeShare}
-                      tone="var(--chart-series-2)"
-                    />
-                    <Meter
-                      label="حل در اولین تماس"
-                      value={cause.fcrRate}
-                      tone="var(--chart-series-1)"
-                    />
-                    <Meter
-                      label="تکرار تماس"
-                      value={cause.repeatShare}
-                      tone="var(--chart-series-4)"
-                    />
-                  </span>
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ol>
-      {top.length > VISIBLE_CAUSES && (
-        <div className="root-causes__more">
-          <button
-            type="button"
-            className="btn btn--ghost btn--small"
-            onClick={() => setExpanded((value) => !value)}
-          >
-            {expanded
-              ? 'نمایش کمتر'
-              : `نمایش بیشتر (${formatPersianNumber(top.length - VISIBLE_CAUSES)})`}
-          </button>
-        </div>
-      )}
-    </>
-  );
+      const children = prune(node.children, path);
+      if (children.length === 0) return [];
+
+      return [
+        {
+          ...node,
+          children,
+          count: children.reduce((sum, child) => sum + child.count, 0),
+        },
+      ];
+    });
+
+  const tree = prune(nodes);
+  const total = tree.reduce((sum, node) => sum + node.count, 0);
+
+  const updateShares = (items: readonly ReasonNode[]): ReasonNode[] =>
+    items.map((node) => ({
+      ...node,
+      share: total ? node.count / total : 0,
+      children: updateShares(node.children),
+    }));
+
+  return updateShares(tree);
 }
 
 function ReasonsPanel() {
   const scope = useDashboardScope();
   const selectSubject = useDashboardFilterStore((state) => state.selectSubject);
   const query = useCallReasons(scopeForChart(scope, ...SUBJECT_DIMENSIONS));
+
   return (
-    <ChartState query={query} isEmpty={(data) => data.total === 0} skeletonRows={8}>
-      {(data) => (
-        <div className="reasons__grid">
-          <Panel title="دلایل تماس در سه لایه (Subject1 › Subject2 › Subject3)">
-            <Sunburst
-              nodes={data.nodes}
-              total={data.total}
-              filters={scope.filters}
-              onSelect={selectSubject}
-            />
-          </Panel>
-          <Panel title="ریشه‌های اصلی تماس">
-            <RootCauseList data={data} />
-            <p className="reasons__note">
-              {formatPersianNumber(data.aiOnly)} تماس هنوز توسط اپراتور دسته‌بندی نشده و با موضوع
-              تشخیص‌داده‌شده توسط AI شمرده شده است.
-            </p>
-          </Panel>
-        </div>
-      )}
+    <ChartState
+      query={query}
+      isEmpty={(data) => data.total === 0}
+      skeletonRows={8}
+    >
+      {(data) => {
+        const topCauseNodes = buildTopCauseTree(data.nodes);
+        const topCauseTotal = topCauseNodes.reduce(
+          (sum, node) => sum + node.count,
+          0,
+        );
+
+        return (
+          <div className="reasons__grid">
+            <Panel title="دلایل تماس در سه لایه">
+              <Sunburst
+                nodes={data.nodes}
+                total={data.total}
+                filters={scope.filters}
+                onSelect={selectSubject}
+              />
+            </Panel>
+
+            <Panel title="علت‌های اصلی تماس">
+              <Sunburst
+                nodes={topCauseNodes}
+                total={topCauseTotal}
+                filters={scope.filters}
+                onSelect={selectSubject}
+              />
+
+              <p className="reasons__note">
+                نمایش ۸ علت پرتکرار در مسیر موضوع اصلی ← موضوع فرعی ← علت تماس.
+                اندازه هر بخش متناسب با تعداد تماس‌هاست؛ درصدها سهم هر بخش
+                از تماس‌های علت‌های منتخب را نشان می‌دهند.
+              </p>
+
+              <p className="reasons__note">
+                {formatPersianNumber(data.aiOnly)} تماس در کل این مجموعه هنوز
+                توسط اپراتور دسته‌بندی نشده و بر اساس موضوع تشخیص‌داده‌شده
+                توسط هوش مصنوعی شمرده شده است.
+              </p>
+            </Panel>
+          </div>
+        );
+      }}
     </ChartState>
   );
 }
+
 
 const agreementParts = [
   { key: 'match', label: 'تطابق کامل', color: 'var(--chart-series-1)' },
@@ -216,10 +187,10 @@ function DetectionPanels({ stats }: { stats: SubjectDetectionStats }) {
                 <dt>میانگین اطمینان AI</dt>
                 <dd>{formatPercent(stats.avgConfidence)}</dd>
               </div>
-              <div>
+              {/* <div>
                 <dt>پیشنهاد AI برای دسته‌بندی‌نشده‌ها</dt>
                 <dd>{formatPersianNumber(stats.pending)}</dd>
-              </div>
+              </div> */}
             </dl>
             <div className="detection__bar" role="img" aria-label="توزیع تطابق موضوع">
               {agreementParts.map((part) =>
@@ -241,7 +212,7 @@ function DetectionPanels({ stats }: { stats: SubjectDetectionStats }) {
           </div>
         </div>
       </Panel>
-      <div className="dashboard__grid">
+      {/* <div className="dashboard__grid">
         <Panel title="تطابق به تفکیک موضوع اصلی">
           <ul className="detection__subjects">
             {stats.bySubject.map((row) => (
@@ -293,7 +264,7 @@ function DetectionPanels({ stats }: { stats: SubjectDetectionStats }) {
             }))}
           />
         </Panel>
-      </div>
+      </div> */}
     </div>
   );
 }

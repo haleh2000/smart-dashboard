@@ -5,16 +5,29 @@ export const subjectTree: Record<string, Record<string, string[]>> = {
     'پرداخت خسارت': ['تاخیر در پرداخت', 'اعتراض به مبلغ'],
     'ارزیابی خسارت': ['تاخیر در ارزیابی پرونده', 'عودت پرونده', 'ثبت نشدن پرونده'],
     'بررسی وضعیت پرونده درمانی': ['پرونده مستقیم', 'پرونده غیرمستقیم'],
+    'مدارک و هزینه درمان': [
+      'تاخیر در ثبت هزینه در سامانه بیمه‌گری',
+      'عدم ثبت هزینه در سامانه پس از دریافت',
+      'عدم ارائه رسید',
+      'مدارک ناقص پرونده',
+    ],
+    'اطلاعات پرونده': ['تاریخ ایجاد', 'شماره پرونده', 'پوشش بیمه‌نامه'],
     الحاقیه: ['تغییر پلاک', 'تغییر مالکیت'],
   },
   'ارتباط با مشتری': {
     پیگیری: ['وضعیت تیکت', 'تماس مجدد'],
     'انتقادات و پیشنهادات': ['رفتار کارشناس', 'کیفیت خدمات'],
+    'اطلاعات مشتری': ['نام و نام خانوادگی', 'شماره تماس', 'کدملی'],
   },
   اطلاع‌رسانی: {
     'تعهدات و پوشش‌های قرارداد': ['ندارد', 'سقف تعهدات'],
     'آدرس و اطلاعات بیمه دی': ['شعبه', 'ساعات کاری'],
-    'مراکز ارائه خدمات': ['ارزیاب خودرو', 'مراجع درمانی طرف قرارداد', 'مراکز تحویل اسناد'],
+    'مراکز ارائه خدمات': [
+      'ارزیابان خسارت خودرو',
+      'مراجع درمانی',
+      'مراکز تحویل اسناد',
+      'مراکز خدمات درمانی طرف قرارداد',
+    ],
     محصولات: ['ندارد'],
   },
   صدور: {
@@ -45,6 +58,11 @@ export const complaintSubjectTree: Record<string, Record<string, string[]>> = {
   'فرآیند پرداخت خسارت': {
     'تاخیر در پرداخت': ['دیرکرد حواله بانکی', 'نقص مدارک پرداخت'],
     'اعتراض به مبلغ': ['کسورات درمانی', 'سقف تعهدات'],
+    'هزینه درمان': [
+      'تاخیر در ثبت هزینه در سامانه بیمه‌گری',
+      'عدم ثبت هزینه در سامانه پس از دریافت',
+      'عدم ارائه رسید',
+    ],
   },
   'فرآیند ارزیابی پرونده': {
     'تاخیر در ارزیابی': ['عودت پرونده', 'ثبت نشدن پرونده'],
@@ -59,6 +77,29 @@ export const complaintSubjectTree: Record<string, Record<string, string[]>> = {
     'شرایط قرارداد': ['سقف تعهدات', 'فسخ و الحاقیه'],
   },
 };
+
+/**
+ * Every level1 → level2 → level3 path both trees define. The subject dropdowns offer these
+ * rather than the paths the sampled tickets happen to contain, so every option of the
+ * taxonomy is reachable no matter how small the sample is.
+ */
+export const allSubjectPaths = (
+  trees: Record<string, Record<string, string[]>>[] = [subjectTree, complaintSubjectTree],
+) =>
+  trees
+    .flatMap((tree) =>
+      Object.entries(tree).flatMap(([level1, level2s]) =>
+        Object.entries(level2s).flatMap(([level2, level3s]) =>
+          level3s.map((level3) => ({ level1, level2, level3 })),
+        ),
+      ),
+    )
+    .sort(
+      (a, b) =>
+        a.level1.localeCompare(b.level1, 'fa') ||
+        a.level2.localeCompare(b.level2, 'fa') ||
+        a.level3.localeCompare(b.level3, 'fa'),
+    );
 
 export const channels = [
   ...Array<string>(5).fill('تلفن'),

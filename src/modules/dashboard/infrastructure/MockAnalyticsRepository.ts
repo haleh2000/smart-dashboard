@@ -7,7 +7,7 @@ import {
 } from '@/modules/tickets';
 import { customerOfCall, mockCalls } from '@/mocks/calls';
 import { delay } from '@/mocks/delay';
-import { HOUR } from '@/mocks/reference';
+import { DAY, HOUR } from '@/mocks/reference';
 import { mockTickets } from '@/mocks/tickets';
 import {
   SENTIMENTS,
@@ -59,9 +59,9 @@ const callLevel = (call: Call): SentimentLevel =>
   classifySentimentLevel(call.analysis?.sentiment, customerScoreOf(call));
 
 const ticketValue: Accessor<Ticket> = {
-  subject1: (t) => t.subject.level1,
-  subject2: (t) => t.subject.level2,
-  subject3: (t) => t.subject.level3,
+  subject1: (t) => t.subject?.level1,
+  subject2: (t) => t.subject?.level2,
+  subject3: (t) => t.subject?.level3,
   type: (t) => t.type,
   detailStatus: (t) => t.detailStatus,
   corporate: (t) => t.customer.corporateName ?? 'بدون مقدار',
@@ -102,7 +102,7 @@ const callValue: Accessor<Call> = {
 
 /** Joins a subject path into one grouping key (subjects never contain it). */
 const SEP = '\u241f';
-const WEEK = 7 * 24 * 60 * 60 * 1000;
+const WEEK = 7 * DAY;
 const average = (values: readonly number[]) =>
   values.length ? values.reduce((sum, v) => sum + v, 0) / values.length : 0;
 const ratio = (part: number, whole: number) => (whole ? part / whole : 0);
@@ -142,13 +142,38 @@ const split = (values: readonly Sentiment[]): SentimentSplit => ({
   score: sentimentScore(values),
 });
 
-/** Weekly buckets ending at the range end (or now), at most 12, oldest first. */
-const weekStarts = (range: DashboardScope['range'], dates: readonly Date[]) => {
-  const end = range?.to.getTime() ?? Math.max(Date.now(), ...dates.map((d) => d.getTime() + 1));
-  const earliest = range?.from.getTime() ?? Math.min(end - WEEK, ...dates.map((d) => d.getTime()));
-  const weeks = Math.min(12, Math.max(1, Math.ceil((end - earliest) / WEEK)));
-  return Array.from({ length: weeks }, (_, i) => end - (weeks - i) * WEEK);
+/** Bucket width from the selected span: hourly for a day, daily for weeks, weekly beyond. */
+const trendBucketMs = (span: number) => (span <= 2 * DAY ? HOUR : span <= 45 * DAY ? DAY : WEEK);
+
+const alignDown = (time: number, size: number) => {
+  const date = new Date(time);
+  if (size === DAY) date.setHours(0, 0, 0, 0);
+  else if (size === HOUR) date.setMinutes(0, 0, 0);
+  return date.getTime();
 };
+
+/** Buckets covering the scope range, oldest first — width follows the time filter. */
+const trendBuckets = (range: DashboardScope['range'], dates: readonly Date[]) => {
+  const end = range?.to.getTime() ?? Math.max(Date.now(), ...dates.map((d) => d.getTime() + 1));
+  const earliest =
+    range?.from.getTime() ?? Math.min(end - WEEK, ...dates.map((d) => d.getTime()));
+  if (!range?.from) {
+    const weeks = Math.min(12, Math.max(1, Math.ceil((end - earliest) / WEEK)));
+    return {
+      bucketMs: WEEK,
+      starts: Array.from({ length: weeks }, (_, i) => end - (weeks - i) * WEEK),
+    };
+  }
+  const bucketMs = trendBucketMs(Math.max(1, end - earliest));
+  const aligned = alignDown(range.from.getTime(), bucketMs);
+  const maxBuckets = bucketMs === HOUR ? 48 : bucketMs === DAY ? 45 : 12;
+  const count = Math.min(maxBuckets, Math.max(1, Math.ceil((end - aligned) / bucketMs)));
+  return { bucketMs, starts: Array.from({ length: count }, (_, i) => aligned + i * bucketMs) };
+};
+
+/** Weekly buckets ending at the range end (or now), at most 12, oldest first. */
+const weekStarts = (range: DashboardScope['range'], dates: readonly Date[]) =>
+  trendBuckets(range, dates).starts;
 
 /** One issue = one caller's calls about one main subject, oldest first. */
 const issuesOf = (calls: readonly Call[]) =>
@@ -277,9 +302,9 @@ export class MockAnalyticsRepository implements AnalyticsRepository {
 
   async getSubjectTable(scope: DashboardScope): Promise<SubjectRow[]> {
     await delay(200);
-    const tickets = this.filterTickets(scope);
+    const tickets = this.filterTickets(scope).filter((t) => t.subject !== undefined);
     const counts = countBy(tickets, (t) =>
-      [t.subject.level1, t.subject.level2, t.subject.level3].join(SEP),
+      [t.subject!.level1, t.subject!.level2, t.subject!.level3].join(SEP),
     );
     return sortedEntries(counts).map(([key, count]) => {
       const [subject1 = '', subject2 = '', subject3 = ''] = key.split(SEP);
@@ -290,12 +315,12 @@ export class MockAnalyticsRepository implements AnalyticsRepository {
 
   async getSubjectLineTable(scope: DashboardScope): Promise<SubjectLineTable> {
     await delay(200);
-    const tickets = this.filterTickets(scope);
+    const tickets = this.filterTickets(scope).filter((t) => t.subject !== undefined);
     const lineCounts = countBy(tickets, (t) => t.insuranceLine);
     const lines = sortedEntries(lineCounts).map(([line]) => line);
     const groups = new Map<string, Ticket[]>();
     for (const ticket of tickets) {
-      const key = [ticket.subject.level1, ticket.subject.level2, ticket.subject.level3].join(SEP);
+      const key = [ticket.subject!.level1, ticket.subject!.level2, ticket.subject!.level3].join(SEP);
       groups.set(key, [...(groups.get(key) ?? []), ticket]);
     }
     const rows = [...groups]
@@ -326,14 +351,14 @@ export class MockAnalyticsRepository implements AnalyticsRepository {
     await delay(200);
     const tickets = this.filterTickets(scope);
     const series = sortedEntries(countBy(tickets, ticketValue[dimension])).map(([v]) => v);
-    const starts = weekStarts(
+    const { starts, bucketMs } = trendBuckets(
       scope.range,
       tickets.map((t) => t.createdAt),
     );
     const buckets = starts.map((start) => {
       const inBucket = tickets.filter((t) => {
         const time = t.createdAt.getTime();
-        return time >= start && time < start + WEEK;
+        return time >= start && time < start + bucketMs;
       });
       const counts = countBy(inBucket, ticketValue[dimension]);
       return {
@@ -341,7 +366,7 @@ export class MockAnalyticsRepository implements AnalyticsRepository {
         counts: Object.fromEntries(series.map((value) => [value, counts.get(value) ?? 0])),
       };
     });
-    return { series, buckets };
+    return { series, bucketMs, buckets };
   }
 
   async getOperatorStats(scope: DashboardScope): Promise<OperatorStats[]> {
@@ -638,49 +663,89 @@ export class MockAnalyticsRepository implements AnalyticsRepository {
     };
   }
 
-  async getBranchResponseTime(scope: DashboardScope): Promise<BranchResponseTime[]> {
-    await delay(200);
-    const tickets = this.filterTickets(scope);
-    const byBranch = groupBy(tickets, (t) => t.branch);
-    return [...byBranch]
-      .map(([branch, group]) => {
-        const responseTimes = group
-          .filter((t) => t.firstResponseAt)
-          .map((t) => seconds(t.createdAt, t.firstResponseAt!) / 60);
-        return {
-          branch,
-          avgResponseMinutes: average(responseTimes),
-          ticketCount: group.length,
-        };
-      })
-      .sort((a, b) => b.avgResponseMinutes - a.avgResponseMinutes);
-  }
+ async getBranchResponseTime(
+  scope: DashboardScope,
+  dimension: 'branch' | 'operator' = 'branch',
+): Promise<BranchResponseTime[]> {
+  await delay(200);
 
-  async getBranchSla(scope: DashboardScope): Promise<BranchSla[]> {
-    await delay(200);
+  const tickets = this.filterTickets(scope);
+  const groups = groupBy(tickets, ticketValue[dimension]);
 
-    const scoped: DashboardScope =
-      scope.filters.type === 'شکایت' || scope.filters.type === 'پیگیری'
-        ? scope
-        : scope.filters.type
-          ? { ...scope, filters: { ...scope.filters } }
-          : { ...scope, filters: { ...scope.filters } };
-    const tickets = this.filterTickets(scoped).filter((t) => t.type === 'شکایت' || t.type === 'پیگیری');
-    const byBranch = groupBy(tickets, (t) => t.branch);
-    return [...byBranch]
-      .map(([branch, group]) => {
-        const resolveDays = group.flatMap((t) =>
-          t.closedAt ? [(t.closedAt.getTime() - t.createdAt.getTime()) / (24 * 3600 * 1000)] : [],
-        );
-        const overdue = group.filter((t) => t.status !== 'closed' && t.slaRemainingDays < 0).length;
-        return {
-          branch,
-          referred: group.filter((t) => t.referralCount > 0 || t.status !== 'closed').length,
-          avgResolveDays: average(resolveDays),
-          overdue,
-          overdueShare: ratio(overdue, group.length),
-        };
-      })
-      .sort((a, b) => b.referred - a.referred);
-  }
+  return [...groups]
+    .map(([name, group]) => {
+      const responseTimes = group.flatMap((ticket) =>
+        ticket.firstResponseAt
+          ? [seconds(ticket.createdAt, ticket.firstResponseAt) / 60]
+          : [],
+      );
+
+      return {
+        branch: name,
+        avgResponseMinutes: average(responseTimes),
+        ticketCount: group.length,
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.avgResponseMinutes - a.avgResponseMinutes ||
+        a.branch.localeCompare(b.branch, 'fa'),
+    );
+}
+
+async getBranchSla(
+  scope: DashboardScope,
+  dimension: 'branch' | 'operator' = 'branch',
+): Promise<BranchSla[]> {
+  await delay(200);
+
+  const tickets = this.filterTickets(scope).filter(
+    (ticket) =>
+      ticket.type === 'شکایت' || ticket.type === 'پیگیری',
+  );
+
+  const groups = groupBy(tickets, ticketValue[dimension]);
+
+  return [...groups]
+    .map(([name, group]) => {
+      const resolveDays = group.flatMap((ticket) =>
+        ticket.closedAt
+          ? [
+              (ticket.closedAt.getTime() -
+                ticket.createdAt.getTime()) /
+                DAY,
+            ]
+          : [],
+      );
+
+      const overdue = group.filter(
+        (ticket) =>
+          !isClosedDetailStatus(
+            ticket.detailStatus,
+            ticket.status,
+          ) && ticket.slaRemainingDays < 0,
+      ).length;
+
+      return {
+        branch: name,
+        referred: group.filter(
+          (ticket) =>
+            ticket.referralCount > 0 ||
+            !isClosedDetailStatus(
+              ticket.detailStatus,
+              ticket.status,
+            ),
+        ).length,
+        avgResolveDays: average(resolveDays),
+        overdue,
+        overdueShare: ratio(overdue, group.length),
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.referred - a.referred ||
+        a.branch.localeCompare(b.branch, 'fa'),
+    );
+}
+
 }

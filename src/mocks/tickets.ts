@@ -122,15 +122,19 @@ const createdAtFor = (type: string) => {
 
 export const mockTickets: Ticket[] = Array.from({ length: 480 }, (_, index) => {
   const type = typeSequence[index]!;
-  // موضوع تماس ۳ لایه برای گفت‌وگو/ارتباط‌دهی، موضوع شکایت ۳ لایه برای بقیه.
-  const useComplaintSubject = ['شکایت', 'پیگیری', 'درخواست', 'پیشنهاد'].includes(type);
+  // شکایت موضوع تماس ندارد؛ موضوع شکایت ۳ لایه فقط برای پیگیری/درخواست/پیشنهاد،
+  // موضوع تماس ۳ لایه فقط برای گفت‌وگو/ارتباط‌دهی.
+  const useComplaintSubject = ['پیگیری', 'درخواست', 'پیشنهاد'].includes(type);
+  const hasSubject = type !== 'شکایت';
   const tree = useComplaintSubject ? complaintSubjectTree : subjectTree;
   const roots = Object.keys(tree);
   const level1 = useComplaintSubject ? random.pick(roots) : random.pick(level1Weights);
   const safeLevel1 = tree[level1] ? level1 : random.pick(roots);
   const level2 = random.pick(Object.keys(tree[safeLevel1] ?? {}));
   const level3 = random.pick(tree[safeLevel1]?.[level2] ?? ['ندارد']);
-  const subject = { level1: safeLevel1, level2, level3 };
+  const subject = hasSubject ? { level1: safeLevel1, level2, level3 } : undefined;
+  // فقط برای ساخت متن نمایشی enrichment (transcript)؛ به‌عنوان subject تیکت ذخیره نمی‌شود.
+  const displaySubject = subject ?? { level1: 'پشتیبانی', level2: 'شکایت', level3: 'رسیدگی به شکایت' };
   const customer = pickCustomer(random.next);
   const createdAt = createdAtFor(type);
   const { detail, status } = detailStatusFor(type);
@@ -188,10 +192,12 @@ export const mockTickets: Ticket[] = Array.from({ length: 480 }, (_, index) => {
     branch: random.next() < 0.6 ? customer.branch : random.pick(branches),
     complaintOwner: `کارشناس مرکز ارتباط ${random.pick(agents)}`,
     followUpOwner: random.pick(agents),
-    complaintText: `مشتری درباره «${level3}» پیگیری دارد و درخواست رسیدگی دارد.`,
+    complaintText: subject
+      ? `مشتری درباره «${subject.level3}» پیگیری دارد و درخواست رسیدگی دارد.`
+      : 'مشتری درخواست رسیدگی به شکایت دارد.',
     finalResponse:
       status === 'closed' ? 'موضوع بررسی و نتیجه از طریق پیامک به مشتری اعلام شد.' : undefined,
-    fileNumber: safeLevel1 === 'پس از صدور' ? `F-${random.digits(8)}` : undefined,
+    fileNumber: subject && safeLevel1 === 'پس از صدور' ? `F-${random.digits(8)}` : undefined,
     description: random.next() < 0.4 ? 'مشتری درخواست تماس در ساعات اداری دارد.' : undefined,
     rootCause:
       status === 'closed' && random.next() < 0.6 ? 'تاخیر در ارسال مدارک از سوی شعبه' : undefined,
@@ -212,8 +218,8 @@ export const mockTickets: Ticket[] = Array.from({ length: 480 }, (_, index) => {
           aiTags: [random.pick(aiTags), random.pick(aiTags)].filter(
             (tag, i, all) => all.indexOf(tag) === i,
           ),
-          autoLabel: autoLabelFor(subject),
-          topic: level2,
+          autoLabel: autoLabelFor(displaySubject),
+          topic: subject?.level2 ?? 'شکایت',
           suggestedScenario: random.next() < 0.7 ? random.pick(scenarioNames) : undefined,
           voice:
             random.next() < 0.8
@@ -222,7 +228,7 @@ export const mockTickets: Ticket[] = Array.from({ length: 480 }, (_, index) => {
                   durationSec: 60 + Math.floor(random.next() * 400),
                 }
               : undefined,
-          transcript: buildTranscript(subject, sentiment, agentSentiment),
+          transcript: buildTranscript(displaySubject, sentiment, agentSentiment),
         }
       : null,
   };

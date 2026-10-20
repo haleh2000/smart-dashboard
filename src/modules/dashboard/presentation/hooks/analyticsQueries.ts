@@ -167,20 +167,37 @@ export function useCallReasons(scope: DashboardScope) {
   });
 }
 
-export function useBranchResponseTime(scope: DashboardScope) {
+export function useBranchResponseTime(
+  scope: DashboardScope,
+  dimension: 'branch' | 'operator' | 'corporate' = 'branch',
+) {
   const repository = useAnalyticsRepository();
+
   return useQuery({
-    queryKey: analyticsKeys.branchResponseTime(scope),
-    queryFn: () => repository.getBranchResponseTime(scope),
+    queryKey: [
+      ...analyticsKeys.branchResponseTime(scope),
+      dimension,
+    ],
+    queryFn: () =>
+      repository.getBranchResponseTime(scope, dimension),
     ...shared,
   });
 }
 
-export function useBranchSla(scope: DashboardScope) {
+
+export function useBranchSla(
+  scope: DashboardScope,
+  dimension: 'branch' | 'operator' = 'branch',
+) {
   const repository = useAnalyticsRepository();
+
   return useQuery({
-    queryKey: analyticsKeys.branchSla(scope),
-    queryFn: () => repository.getBranchSla(scope),
+    queryKey: [
+      ...analyticsKeys.branchSla(scope),
+      dimension,
+    ],
+    queryFn: () => repository.getBranchSla(scope, dimension),
     ...shared,
   });
 }
+

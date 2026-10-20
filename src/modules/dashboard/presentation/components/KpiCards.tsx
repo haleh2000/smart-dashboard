@@ -41,64 +41,83 @@ export function KpiCards({ ticketType }: { ticketType?: string }) {
     );
   }
 
-  if (ticketType === 'calls') {
-    return (
-      <div className="cards">
-        <StatCard
-          label="میانگین زمان حل"
-          subtitle={delta('avgResolutionSec')}
-          value={
-            data ? (data.avgResolutionSec ? formatElapsed(data.avgResolutionSec) : '—') : PLACEHOLDER
-          }
-        />
-        <StatCard
-          label="FCR (حل در اولین تماس)"
-          subtitle={delta('fcrRate')}
-          value={percent(data?.fcrRate)}
-          tone="success"
-        />
-        <StatCard
-          label="نرخ تکرار تماس"
-          subtitle={delta('repeatCallRate')}
-          value={percent(data?.repeatCallRate)}
-          tone="warning"
-        />
-      </div>
-    );
-  }
-
+if (ticketType === 'calls') {
   return (
     <div className="cards">
-      <StatCard label="باز" subtitle={delta('open')} value={count(data?.open)} tone="warning" />
-      <StatCard label="در حال بررسی" subtitle={delta('inReview')} value={count(data?.inReview)} />
-      <StatCard
-        label="بسته‌شده"
-        subtitle={delta('closed')}
-        value={count(data?.closed)}
-        tone="success"
-      />
-      <StatCard
-        label="نرخ حل"
-        subtitle={delta('resolutionRate')}
-        value={percent(data?.resolutionRate)}
-      />
-      {hasSla(ticketType) && (
-        <StatCard
-          label="خارج از SLA"
-          subtitle={delta('overdue')}
-          value={count(data?.overdue)}
-          tone="error"
-        />
-      )}
       <StatCard
         label="میانگین زمان حل"
         subtitle={delta('avgResolutionSec')}
         value={
-          data ? (data.avgResolutionSec ? formatElapsed(data.avgResolutionSec) : '—') : PLACEHOLDER
+          data
+            ? data.avgResolutionSec
+              ? formatElapsed(data.avgResolutionSec)
+              : '—'
+            : PLACEHOLDER
         }
+        info={{
+          description:
+            'نشان می‌دهد رسیدگی به مسائل مشتریان به‌طور متوسط چقدر زمان برده تا به نتیجه برسد. این شاخص با مدت مکالمه تلفنی متفاوت است.',
+        }}
+      />
+
+      <StatCard
+        label="FCR (حل در اولین تماس)"
+        subtitle={delta('fcrRate')}
+        value={percent(data?.fcrRate)}
+        tone="success"
+        info={{
+          description:
+            'نشان می‌دهد چه سهمی از مسائل مشتریان در همان تماس اول حل شده‌اند و برای حل آن‌ها نیازی به تماس مجدد نبوده است.',
+        }}
+      />
+
+      <StatCard
+        label="نرخ تکرار تماس"
+        subtitle={delta('repeatCallRate')}
+        value={percent(data?.repeatCallRate)}
+        tone="warning"
+        info={{
+        description:
+          'نشان‌دهنده میزان تماس مجدد مشتریان است. بالا بودن این نرخ می‌تواند نشانه نیاز به پیگیری بیشتر یا حل‌نشدن درخواست در تماس قبلی باشد.',
+            }}
       />
     </div>
   );
+}
+
+
+  // return (
+  //   <div className="cards">
+  //     <StatCard label="باز" subtitle={delta('open')} value={count(data?.open)} tone="warning" />
+  //     <StatCard label="در حال بررسی" subtitle={delta('inReview')} value={count(data?.inReview)} />
+  //     <StatCard
+  //       label="بسته‌شده"
+  //       subtitle={delta('closed')}
+  //       value={count(data?.closed)}
+  //       tone="success"
+  //     />
+  //     <StatCard
+  //       label="نرخ حل"
+  //       subtitle={delta('resolutionRate')}
+  //       value={percent(data?.resolutionRate)}
+  //     />
+  //     {hasSla(ticketType) && (
+  //       <StatCard
+  //         label="خارج از SLA"
+  //         subtitle={delta('overdue')}
+  //         value={count(data?.overdue)}
+  //         tone="error"
+  //       />
+  //     )}
+  //     <StatCard
+  //       label="میانگین زمان حل"
+  //       subtitle={delta('avgResolutionSec')}
+  //       value={
+  //         data ? (data.avgResolutionSec ? formatElapsed(data.avgResolutionSec) : '—') : PLACEHOLDER
+  //       }
+  //     />
+  //   </div>
+  // );
 }
 function TotalSubjectCaption() {
   const scope = useDashboardScope();

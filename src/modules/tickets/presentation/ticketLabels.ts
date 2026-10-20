@@ -27,6 +27,9 @@ export const statusGroupLabels: Record<'open' | 'inReview', string> = {
 
 export const statusFilterLabel = (value: TicketStatusFilter): string =>
   value === 'open' || value === 'inReview' ? statusGroupLabels[value] : statusMeta[value].label;
+
+/** Label of a detail status in the filter select; falls back to the raw value. */
+export const detailStatusLabel = (value: string): string => detailStatusMeta[value]?.label ?? value;
   
 export const detailStatusMeta: Record<string, Meta> = {
   'ثبت شده': { label: 'ثبت شده', tone: 'neutral' },

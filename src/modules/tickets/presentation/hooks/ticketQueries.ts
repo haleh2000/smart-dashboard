@@ -52,7 +52,8 @@ export function useTicketFilterOptions() {
   return useQuery({
     queryKey: ticketKeys.filterOptions(),
     queryFn: () => repository.getFilterOptions(),
-    staleTime: 5 * 60_000,
+    // The taxonomy can change (a new subject tree), so it is never served from a long cache.
+    staleTime: 0,
   });
 }
 

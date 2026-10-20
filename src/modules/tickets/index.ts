@@ -24,6 +24,7 @@ export {
   FOLLOWUP_CLOSED_STATUSES,
   FOLLOWUP_OPEN_STATUSES,
   hasSla,
+  hasTicketSubject,
   isClosedDetailStatus,
   isOpenDetailStatus,
   isOpenStatus,
@@ -37,7 +38,9 @@ export {
   statusMatchesFilter,
   SUGGESTION_CLOSED_STATUSES,
   SUGGESTION_OPEN_STATUSES,
+  ticketMatchesSearch,
   ticketMatchesStatusFilter,
+  ticketSearchFields,
   TICKET_STATUSES,
   TICKET_STATUS_FILTERS,
   TICKET_TYPES,
@@ -45,6 +48,7 @@ export {
 export { publishTicketUpdate, subscribeToTicketFeed } from './domain/ticketFeed';
 export type {
   AdjacentTickets,
+  SubjectFilterPath,
   TicketFilter,
   TicketFilterOptions,
   TicketQuery,

@@ -32,12 +32,30 @@
 /* Input + button share --control-height, so they line up for free. */
 .filter-bar__search {
   display: flex;
+  align-items: center;
   gap: var(--space-2);
+  min-height: var(--control-height);
 }
 
 /* A checkbox sitting in the bar lines up with the controls' baseline. */
 .filter-bar__checkbox {
   min-height: var(--control-height);
+}
+
+/* A select next to a trigger button (the period presets + a custom range). Both
+   keep --control-height so the row sits level with the search box beside it. */
+.filter-bar__inline {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+  min-width: 0;
+}
+
+.filter-bar__inline > .form-select {
+  flex: 1 1 6rem;
+  min-width: 0;
 }
 
 .filter-bar__meta {

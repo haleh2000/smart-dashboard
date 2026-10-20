@@ -5,10 +5,8 @@ import './ChartTooltip.css';
 
 export interface TooltipContent {
   title: string;
-  /** Optional second line, e.g. the column of a stacked segment. */
   subtitle?: string;
   count: number;
-  /** Between 0 and 1. */
   share?: number;
 }
 
@@ -17,10 +15,6 @@ interface TooltipState extends TooltipContent {
   y: number;
 }
 
-/**
- * «Hover → Tooltip با تعداد و درصد». `bind(content)` returns the handlers to spread on a
- * segment; `tooltip` is the floating element to render once per chart.
- */
 export function useChartTooltip() {
   const [state, setState] = useState<TooltipState | null>(null);
 

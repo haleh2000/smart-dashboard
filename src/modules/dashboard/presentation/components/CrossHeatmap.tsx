@@ -119,11 +119,29 @@ export function CrossHeatmap({
                       share: rowTotal ? count / rowTotal : 0,
                     })}
                   >
-                    {count > 0 ? (
-                      <span className="cross-hm__value">
+                  {count > 0 ? (
+                    <span
+                      className="cross-hm__value"
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 4,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      <span>
+                        {formatPersianNumber(count)} تیکت
+                      </span>
+
+                      <span style={{ fontSize: '0.8em' }}>
                         {formatPersianNumber(Math.round(share * 100))}٪
                       </span>
-                    ) : ''}
+                    </span>
+                  ) : (
+                    <span className="cross-hm__value">—</span>
+                  )}
+
                   </button>
                 );
               })}
@@ -153,7 +171,11 @@ export function CrossHeatmap({
         <span className="cross-hm__scale-bar" />
         <span>زیاد</span>
       </div>
-      <p className="cross-hm__note">اعداد کنار هر عنوان، تعداد کل تیکت‌های آن کانال را نشان می‌دهد.</p>
+      <p className="cross-hm__note">
+          عدد کنار نام کانال، تعداد کل تیکت‌های آن است.
+          هر خانه تعداد تیکت‌ها و سهم آن نوع از همان کانال را نشان می‌دهد.
+          برای فیلتر هم‌زمان کانال و نوع تیکت، روی خانه کلیک کنید.
+        </p>
       {tooltip}
     </div>
   );

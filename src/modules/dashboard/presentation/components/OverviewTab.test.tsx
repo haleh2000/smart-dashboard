@@ -23,7 +23,7 @@ const fakeRepository = () => {
     getCrossBreakdown: vi.fn(async () => ({ columns: [], rows: [] })),
     getSubjectTable: vi.fn(async () => []),
     getSubjectLineTable: vi.fn(async () => ({ lines: [], rows: [], totals: {} })),
-    getTrend: vi.fn(async () => ({ series: [], buckets: [] })),
+    getTrend: vi.fn(async () => ({ series: [], bucketMs: 7 * 24 * 3600 * 1000, buckets: [] })),
   } as unknown as AnalyticsRepository;
   return { repository, getBreakdown };
 };

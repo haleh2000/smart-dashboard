@@ -1,14 +1,28 @@
 import {
   parseTicketListParams,
   serializeTicketListParams,
+  ticketCustomRange,
   toTicketFilter,
 } from './ticketListParams';
 
 describe('ticket list URL state', () => {
   it('round-trips every filter through the URL', () => {
-    const search =
-      'q=0912&status=closed&priority=high&sentiment=negative&type=%D8%B4%DA%A9%D8%A7%DB%8C%D8%AA&operator=x&starred=1&period=7d&sort=branch&dir=asc&size=50&page=3';
-    const state = parseTicketListParams(new URLSearchParams(search));
+    const search = new URLSearchParams({
+      q: '0912',
+      status: 'closed',
+      priority: 'high',
+      sentiment: 'negative',
+      type: 'شکایت',
+      subject: 'پس از صدور',
+      subject2: 'خسارت',
+      subject3: 'ثبت پرونده خسارت',
+      period: '7d',
+      sort: 'branch',
+      dir: 'asc',
+      size: '50',
+      page: '3',
+    });
+    const state = parseTicketListParams(search);
 
     expect(state).toMatchObject({
       page: 3,
@@ -18,8 +32,9 @@ describe('ticket list URL state', () => {
       priority: 'high',
       sentiment: 'negative',
       type: 'شکایت',
-      operator: 'x',
-      starredOnly: true,
+      subject1: 'پس از صدور',
+      subject2: 'خسارت',
+      subject3: 'ثبت پرونده خسارت',
       period: '7d',
       sort: { field: 'branch', direction: 'asc' },
     });
@@ -39,5 +54,23 @@ describe('ticket list URL state', () => {
 
     expect(toTicketFilter(state).createdIn).toBeDefined();
     expect(toTicketFilter({ ...state, period: 'all' }).createdIn).toBeUndefined();
+  });
+
+  it('prefers a custom از/تا range over the period preset', () => {
+    const state = parseTicketListParams(
+      new URLSearchParams({
+        period: '30d',
+        from: '2026-08-01T00:00:00.000Z',
+        to: '2026-08-02T00:00:00.000Z',
+      }),
+    );
+
+    expect(toTicketFilter(state).createdIn).toEqual({
+      from: new Date('2026-08-01T00:00:00.000Z'),
+      to: new Date('2026-08-02T00:00:00.000Z'),
+    });
+    expect(parseTicketListParams(serializeTicketListParams(state))).toEqual(state);
+    expect(ticketCustomRange(state.from, state.to)).toEqual(toTicketFilter(state).createdIn);
+    expect(ticketCustomRange('nonsense', undefined)).toBeNull();
   });
 });

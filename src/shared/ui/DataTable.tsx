@@ -5,6 +5,8 @@ import { cn } from '@/shared/lib/cn';
 import './DataTable.css';
 
 export interface DataColumn<T, S extends string = string> {
+  /** Stable key, so a header filter can be attached to this column. */
+  id?: string;
   header: string;
   cell: (row: T) => ReactNode;
   sortField?: S;
@@ -20,6 +22,8 @@ interface DataTableProps<T, S extends string> {
   onSortChange?: (sort: Sort<S>) => void;
   onRowClick?: (row: T) => void;
   selection?: { selected: ReadonlySet<string>; onChange: (selected: Set<string>) => void };
+  /** A filter control per column `id`, rendered under the column title. */
+  columnFilters?: Readonly<Record<string, ReactNode>>;
   caption?: string;
 }
 
@@ -33,6 +37,7 @@ export function DataTable<T, S extends string = string>({
   onSortChange,
   onRowClick,
   selection,
+  columnFilters,
   caption,
 }: DataTableProps<T, S>) {
   const keys = rows.map(rowKey);
@@ -81,7 +86,11 @@ export function DataTable<T, S extends string = string>({
               </th>
             )}
             {columns.map((column) => {
-              const active = sort && column.sortField === sort.field;
+              const filter = column.id ? columnFilters?.[column.id] : undefined;
+              // A column with a filter on its title is not a button: clicking the title
+              // there would read as a filter, so it neither sorts nor filters.
+              const sortable = Boolean(column.sortField && onSortChange) && !filter;
+              const active = sortable && sort && column.sortField === sort.field;
               return (
                 <th
                   key={column.header}
@@ -90,20 +99,29 @@ export function DataTable<T, S extends string = string>({
                     active ? (sort.direction === 'asc' ? 'ascending' : 'descending') : undefined
                   }
                 >
-                  {column.sortField && onSortChange ? (
-                    <button
-                      type="button"
-                      className="queue-table__sort"
-                      onClick={() => toggleSort(column.sortField!)}
-                    >
-                      {column.header}
-                      <span className="queue-table__sort-mark" aria-hidden="true">
-                        {active ? (sort.direction === 'asc' ? '▲' : '▼') : '↕'}
+                  <span className="queue-table__head">
+                    <span className="queue-table__title">
+                      {sortable ? (
+                        <button
+                          type="button"
+                          className="queue-table__sort"
+                          onClick={() => toggleSort(column.sortField!)}
+                        >
+                          {column.header}
+                          <span className="queue-table__sort-mark" aria-hidden="true">
+                            {active ? (sort.direction === 'asc' ? '▲' : '▼') : '↕'}
+                          </span>
+                        </button>
+                      ) : (
+                        column.header
+                      )}
+                    </span>
+                    {filter && (
+                      <span className="queue-table__filter" onClick={stop} onKeyDown={stop}>
+                        {filter}
                       </span>
-                    </button>
-                  ) : (
-                    column.header
-                  )}
+                    )}
+                  </span>
                 </th>
               );
             })}

@@ -26,7 +26,11 @@ export function BreakdownPanel({
 }: BreakdownPanelProps) {
   const scope = useDashboardScope();
   const toggle = useDashboardFilterStore((state) => state.toggle);
-  const query = useBreakdown(dimension, scopeForChart(scope, dimension));
+  const query = useBreakdown(
+    dimension,
+    scopeForChart(scope, dimension),
+  );
+
   const label = typeof title === 'string' ? title : dimension;
 
   return (

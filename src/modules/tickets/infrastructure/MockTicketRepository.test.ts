@@ -1,3 +1,4 @@
+import { allSubjectPaths } from '@/mocks/reference';
 import { mockTickets } from '@/mocks/tickets';
 import { formatPersianNumber } from '@/shared/lib/format';
 import {
@@ -69,12 +70,23 @@ describe('MockTicketRepository', () => {
     expect(impossible.total).toBe(0);
   });
 
-  it('does not match on the customer name', async () => {
+  it('sends a ۱۰ digit token to the national id and an ۱۱ digit one to the mobile', async () => {
     const target = mockTickets[3]!;
 
-    const result = await repository.list({ ...baseQuery, search: target.customer.fullName });
+    for (const search of [target.customer.nationalId, target.customer.mobile]) {
+      const result = await repository.list({ ...baseQuery, search });
+      expect(result.items.map((t) => t.id)).toContain(target.id);
+    }
+  });
 
-    expect(result.total).toBe(0);
+  it('matches letters against the customer name', async () => {
+    const target = mockTickets[3]!;
+    const lastName = target.customer.fullName.split(' ').at(-1)!;
+
+    const result = await repository.list({ ...baseQuery, search: lastName });
+
+    expect(result.total).toBeGreaterThan(0);
+    expect(result.items.every((t) => t.customer.fullName.includes(lastName))).toBe(true);
   });
 
   it('returns null for an unknown id', async () => {
@@ -107,20 +119,30 @@ describe('MockTicketRepository', () => {
     );
   });
 
-  it('filters by enrichment fields and operator', async () => {
+  it('filters by the enrichment fields', async () => {
+    const result = await repository.list({ ...baseQuery, pageSize: 500, priority: 'high' });
+
+    expect(result.total).toBeGreaterThan(0);
+    expect(result.items.every((t) => t.enrichment?.priority === 'high')).toBe(true);
+  });
+
+  it('filters by every level of the subject path', async () => {
+    const target = mockTickets.find((t) => t.subject?.level3.length)!;
     const result = await repository.list({
       ...baseQuery,
       pageSize: 500,
-      priority: 'high',
-      operator: 'سارا احمدی',
+      subject1: target.subject!.level1,
+      subject2: target.subject!.level2,
+      subject3: target.subject!.level3,
     });
 
     expect(result.total).toBeGreaterThan(0);
     expect(
       result.items.every(
         (t) =>
-          t.enrichment?.priority === 'high' &&
-          (t.followUpOwner === 'سارا احمدی' || t.complaintOwner.endsWith('سارا احمدی')),
+          t.subject?.level1 === target.subject!.level1 &&
+          t.subject?.level2 === target.subject!.level2 &&
+          t.subject?.level3 === target.subject!.level3,
       ),
     ).toBe(true);
   });
@@ -136,15 +158,11 @@ describe('MockTicketRepository', () => {
     expect(branches).toEqual([...branches].sort((a, b) => a.localeCompare(b, 'fa')));
   });
 
-  it('filters by the entry channel and offers every channel as an option', async () => {
-    const result = await repository.list({ ...baseQuery, pageSize: 500, channel: 'وب' });
-
-    expect(result.total).toBeGreaterThan(0);
-    expect(result.items.every((t) => t.channel === 'وب')).toBe(true);
-
+  it('offers every path of the reference taxonomy, not only the sampled tickets', async () => {
     const options = await repository.getFilterOptions();
-    const actual = mockTickets.map((t) => t.channel);
-    expect(options.channels).toEqual([...new Set(actual)].sort((a, b) => a.localeCompare(b, 'fa')));
+
+    expect(options.subjectPaths).toEqual(allSubjectPaths());
+    expect(options.subjectPaths.length).toBeGreaterThan(mockTickets.length / 10);
   });
 
   it('finds the neighbours of a ticket inside the same filtered list', async () => {
@@ -164,6 +182,6 @@ describe('MockTicketRepository', () => {
     await own.setStarred(id, true);
 
     expect((await own.getNotes(id))[0]?.text).toBe('یادداشت تست');
-    expect((await own.list({ ...baseQuery, starredOnly: true, search: id })).total).toBe(1);
+    expect((await own.getById(id))?.starred).toBe(true);
   });
 });

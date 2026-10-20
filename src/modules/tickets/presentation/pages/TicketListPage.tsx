@@ -20,8 +20,11 @@ import { useTicketExport, useTickets } from '../hooks/ticketQueries';
 import { useTicketListParams } from '../hooks/useTicketListParams';
 import './TicketListPage.css';
 
-const exportTickets = (tickets: Ticket[]) => {
-  const { headers, rows } = tableExport(ticketColumns(), tickets);
+const exportTickets = (tickets: Ticket[], complaintView = false) => {
+  const columns = complaintView
+    ? ticketColumns().filter((c) => !['subject1', 'subject2', 'subject3'].includes(c.id ?? ''))
+    : ticketColumns();
+  const { headers, rows } = tableExport(columns, tickets);
   downloadCsv(`smart-tickets-${new Date().toISOString().slice(0, 10)}`, headers, rows);
 };
 
@@ -29,6 +32,7 @@ export function TicketListPage() {
   const { state, query, update, search } = useTicketListParams();
   const { data, isPending, isError, refetch } = useTickets(query);
   const exportAll = useTicketExport();
+  const isComplaintView = state.type === 'شکایت';
 
   // Selection belongs to the current view: a new filter, sort or page starts empty.
   const [selection, setSelection] = useState({ view: search, ids: new Set<string>() });
@@ -37,14 +41,14 @@ export function TicketListPage() {
 
   const exportButton =
     selectedTickets.length > 0 ? (
-      <Button variant="ghost" onClick={() => exportTickets(selectedTickets)}>
+      <Button variant="ghost" onClick={() => exportTickets(selectedTickets, isComplaintView)}>
         خروجی Excel ({formatPersianNumber(selectedTickets.length)} ردیف انتخاب‌شده)
       </Button>
     ) : (
       <Button
         variant="ghost"
         disabled={!data?.total || exportAll.isPending}
-        onClick={() => exportAll.mutate(query, { onSuccess: exportTickets })}
+        onClick={() => exportAll.mutate(query, { onSuccess: (tickets) => exportTickets(tickets, isComplaintView) })}
       >
         {exportAll.isPending ? 'در حال آماده‌سازی…' : 'خروجی Excel'}
       </Button>
@@ -71,7 +75,7 @@ export function TicketListPage() {
       {exportAll.isError && (
         <ErrorState
           message="تهیه خروجی Excel با خطا مواجه شد."
-          onRetry={() => exportAll.mutate(query, { onSuccess: exportTickets })}
+          onRetry={() => exportAll.mutate(query, { onSuccess: (tickets) => exportTickets(tickets, isComplaintView) })}
         />
       )}
 
@@ -85,10 +89,10 @@ export function TicketListPage() {
         <>
           <TicketTable
             tickets={data.items}
-            sort={query.sort}
-            onSortChange={(sort) => update({ sort })}
             selected={selected}
             onSelectionChange={(ids) => setSelection({ view: search, ids })}
+            state={state}
+            onFilterChange={update}
           />
           <div className="ticket-list__footer">
             <label className="ticket-list__page-size">
@@ -126,9 +130,9 @@ const emptyFilters = {
   sentiment: undefined,
   type: undefined,
   subject1: undefined,
-  branch: undefined,
-  channel: undefined,
-  operator: undefined,
-  starredOnly: undefined,
+  subject2: undefined,
+  subject3: undefined,
+  from: undefined,
+  to: undefined,
   period: 'all',
 } as const;

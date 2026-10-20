@@ -126,11 +126,11 @@ function TrendPanel() {
   const toggle = useDashboardFilterStore((state) => state.toggle);
   const query = useTrend('type', scopeForChart(scope, 'type'));
   return (
-    <Panel title="روند هفتگی کانال‌های ارتباطی (نوع تیکت)">
+    <Panel title="روند کانال‌های ارتباطی (نوع تیکت)">
       <ChartState query={query} isEmpty={(data) => data.buckets.length === 0}>
         {(data) => (
           <AreaTrendChart
-            label="روند هفتگی نوع تیکت"
+            label="روند نوع تیکت"
             data={data}
             selected={scope.filters.type}
             onSelect={(v) => toggle('type', v)}

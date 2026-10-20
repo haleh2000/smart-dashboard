@@ -1,6 +1,6 @@
 import { useId } from 'react';
 import { Area, AreaChart, CartesianGrid, Tooltip, XAxis, YAxis } from 'recharts';
-import { formatDate } from '@/shared/lib/format';
+import { formatDate, formatTime } from '@/shared/lib/format';
 import type { Trend } from '../../../domain/analytics';
 import { seriesColor } from '../chartColors';
 import { ChartFrame } from './ChartFrame';
@@ -16,11 +16,18 @@ interface AreaTrendChartProps {
   height?: number;
 }
 
-const WEEK = 6 * 86_400_000;
+const FALLBACK_WEEK = 7 * 86_400_000;
+const DAY = 86_400_000;
+const HOUR = 3_600_000;
+
+/** Granularity word for the selected time filter, so the chart reads daily/hourly/weekly. */
+const granularityOf = (bucketMs: number) =>
+  bucketMs <= HOUR ? 'ساعتی' : bucketMs <= DAY ? 'روزانه' : 'هفتگی';
 
 /**
- * حجم هفتگی هر سری به‌صورت خطوط جدا (غیرانباشته) تا هر سری فراز و نشیب خودش را داشته باشد و
- * مرزها با کلِ هفته بالا و پایین نروند؛ hover همه سری‌های هفته را نشان می‌دهد و لِجند فیلتر می‌زند.
+ * حجم هر بازه برای هر سری به‌صورت خطوط جدا (غیرانباشته) تا هر سری فراز و نشیب خودش را داشته باشد و
+ * مرزها با کلِ بازه بالا و پایین نروند؛ پهنای بازه از فیلتر زمانی می‌آید (ساعتی/روزانه/هفتگی)،
+ * hover همه سری‌های بازه را نشان می‌دهد و لِجند فیلتر می‌زند.
  */
 export function AreaTrendChart({
   label,
@@ -31,15 +38,26 @@ export function AreaTrendChart({
 }: AreaTrendChartProps) {
   const baseId = useId().replace(/[^a-zA-Z0-9]/g, '');
   const keyOf = (index: number) => `s${index}`;
-  const rows = data.buckets.map((bucket) => ({
-    label: formatDate(bucket.start).slice(5),
-    week: `${formatDate(bucket.start)} تا ${formatDate(new Date(bucket.start.getTime() + WEEK))}`,
-    ...Object.fromEntries(data.series.map((s, i) => [keyOf(i), bucket.counts[s] ?? 0])),
-  }));
+  const bucketMs = data.bucketMs ?? FALLBACK_WEEK;
+  const hourly = bucketMs <= HOUR;
+  const title = `${label} (${granularityOf(bucketMs)})`;
+  const rows = data.buckets.map((bucket) => {
+    const end = new Date(bucket.start.getTime() + bucketMs);
+    return {
+      label: hourly ? formatTime(bucket.start) : formatDate(bucket.start).slice(5),
+      range:
+        bucketMs <= DAY
+          ? hourly
+            ? `${formatDate(bucket.start)} ساعت ${formatTime(bucket.start)}`
+            : formatDate(bucket.start)
+          : `${formatDate(bucket.start)} تا ${formatDate(end)}`,
+      ...Object.fromEntries(data.series.map((s, i) => [keyOf(i), bucket.counts[s] ?? 0])),
+    };
+  });
 
   return (
     <>
-      <ChartFrame height={height} label={label}>
+      <ChartFrame height={height} label={title}>
         <AreaChart data={rows} margin={{ top: 12, right: 8, left: 8, bottom: 4 }}>
           <defs>
             {data.series.map((s, i) => (
@@ -80,7 +98,7 @@ export function AreaTrendChart({
               const total = values.reduce((sum, v) => sum + v.value, 0);
               return (
                 <ChartTooltipBox
-                  title={`هفته ${row.week}`}
+                  title={row.range}
                   rows={values.map((v) => ({ ...v, share: total ? v.value / total : 0 }))}
                 />
               );

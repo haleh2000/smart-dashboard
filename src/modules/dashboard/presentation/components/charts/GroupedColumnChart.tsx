@@ -8,7 +8,6 @@ import { SeriesLegend } from './SeriesLegend';
 export interface GroupedSeries {
   key: string;
   name: string;
-  /** Index into the `--chart-series-*` tokens. */
   series: number;
 }
 
@@ -22,7 +21,6 @@ interface GroupedColumnChartProps<T extends { label: string }> {
   height?: number;
 }
 
-/** Side-by-side columns per category (e.g. tickets vs. calls per operator). One shared axis. */
 export function GroupedColumnChart<T extends { label: string }>({
   label,
   rows,

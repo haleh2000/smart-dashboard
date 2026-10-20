@@ -1,7 +1,11 @@
 import { mockCalls } from '@/mocks/calls';
 import { mockTickets } from '@/mocks/tickets';
 import { MockCallRepository, simulateIncomingCall } from '@/modules/calls';
-import { MockTicketRepository, type TicketStatusFilter } from '@/modules/tickets';
+import {
+  MockTicketRepository,
+  ticketMatchesStatusFilter,
+  type TicketStatusFilter,
+} from '@/modules/tickets';
 import { periodRange } from '@/shared/domain/period';
 import { MockAnalyticsRepository } from './MockAnalyticsRepository';
 
@@ -49,27 +53,21 @@ describe('MockAnalyticsRepository', () => {
   });
 
   it('maps type-tab KPIs to the detail statuses of each module', async () => {
-    const tickets = new MockTicketRepository();
     for (const type of ['شکایت', 'پیگیری', 'درخواست', 'پیشنهاد'] as const) {
       const scope = { filters: { type } };
       const kpis = await repository.getKpis(scope);
-      const listed = async (status?: TicketStatusFilter) =>
-        (
-          await tickets.list({
-            page: 1,
-            pageSize: 1,
-            sort: { field: 'createdAt', direction: 'desc' },
-            status,
-            type,
-          })
-        ).total;
+      const listed = (status?: TicketStatusFilter) =>
+        mockTickets.filter(
+          (ticket) =>
+            ticket.type === type && (!status || ticketMatchesStatusFilter(ticket, status)),
+        ).length;
 
       expect(kpis.open + kpis.closed).toBe(kpis.total);
       expect(kpis.resolutionRate).toBeCloseTo(kpis.total ? kpis.closed / kpis.total : 0);
       expect(kpis.inReview).toBeLessThanOrEqual(kpis.open);
-      expect(kpis.open).toBe(await listed('open'));
-      expect(kpis.inReview).toBe(await listed('inReview'));
-      expect(kpis.closed).toBe(await listed('closed'));
+      expect(kpis.open).toBe(listed('open'));
+      expect(kpis.inReview).toBe(listed('inReview'));
+      expect(kpis.closed).toBe(listed('closed'));
     }
   });
 
@@ -205,6 +203,32 @@ describe('MockAnalyticsRepository', () => {
       for (const child of node.children)
         expect(child.children.reduce((sum, n) => sum + n.count, 0)).toBe(child.count);
     }
+  });
+
+  it('buckets the type trend to the selected time filter (hourly / daily / weekly)', async () => {
+    const HOUR = 3600 * 1000;
+    const DAY = 24 * HOUR;
+
+    const today = await repository.getTrend('type', { filters: {}, range: periodRange('today') });
+    expect(today.bucketMs).toBe(HOUR);
+    expect(today.buckets).toHaveLength(24);
+    const todayTotal = today.buckets.reduce(
+      (sum, b) => sum + Object.values(b.counts).reduce((a, n) => a + n, 0),
+      0,
+    );
+    expect(todayTotal).toBe((await repository.getKpis({ filters: {}, range: periodRange('today') })).total);
+
+    const week = await repository.getTrend('type', { filters: {}, range: periodRange('7d') });
+    expect(week.bucketMs).toBe(DAY);
+    expect(week.buckets).toHaveLength(7);
+
+    const month = await repository.getTrend('type', { filters: {}, range: periodRange('30d') });
+    expect(month.bucketMs).toBe(DAY);
+    expect(month.buckets).toHaveLength(30);
+
+    const allTrend = await repository.getTrend('type', all);
+    expect(allTrend.bucketMs).toBe(7 * DAY);
+    expect(allTrend.buckets.length).toBeLessThanOrEqual(12);
   });
 
   it('reports the same call figures the call table lists', async () => {

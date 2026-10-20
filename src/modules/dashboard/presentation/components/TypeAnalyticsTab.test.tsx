@@ -7,15 +7,42 @@ import { AnalyticsRepositoryProvider } from '../analyticsServices';
 import { resetDashboardFilters, useDashboardFilterStore } from '../dashboardFilterStore';
 import { TypeAnalyticsTab } from './TypeAnalyticsTab';
 
-vi.mock('./charts/ColumnChart', () => ({
-  ColumnChart: ({ items }: { items: readonly { label: string; value: number }[] }) => (
-    <div data-testid="detail-status-chart">
-      {items.map((item) => (
-        <span key={item.label}>{`${item.label}=${item.value}`}</span>
-      ))}
-    </div>
-  ),
-}));
+vi.mock('./TicketStatusSunburst', async () => {
+  const {
+    openDetailStatusesForType,
+    closedDetailStatusesForType,
+  } = await import('@/modules/tickets');
+
+  return {
+    TicketStatusSunburst: ({
+      type,
+      data,
+    }: {
+      type: string;
+      data: readonly { value: string; count: number }[];
+    }) => {
+      const counts = new Map(
+        data.map((item) => [item.value, item.count]),
+      );
+
+      const statuses = [
+        ...openDetailStatusesForType(type),
+        ...closedDetailStatusesForType(type),
+      ];
+
+      return (
+        <div data-testid="detail-status-chart">
+          {statuses.map((status) => (
+            <span key={status}>
+              {`${status}=${counts.get(status) ?? 0}`}
+            </span>
+          ))}
+        </div>
+      );
+    },
+  };
+});
+  
 
 const detailStatuses: BreakdownItem[] = [
   { value: 'ثبت شده', count: 4, share: 0.4 },

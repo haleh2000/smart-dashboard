@@ -4,7 +4,7 @@ import { scopeForChart } from '../../domain/filters';
 import { useDashboardFilterStore, useDashboardScope } from '../dashboardFilterStore';
 import { useOperatorStats } from '../hooks/analyticsQueries';
 import { ChartState } from './ChartState';
-import { GroupedColumnChart } from './charts/GroupedColumnChart';
+// import { GroupedColumnChart } from './charts/GroupedColumnChart';  
 import { HorizontalBarChart } from './charts/HorizontalBarChart';
 import { OperatorRadar } from './OperatorRadar';
 import { OperatorTable } from './OperatorTable';
@@ -27,9 +27,9 @@ export function OperatorsTab() {
             .map((s) => ({ label: s.label, value: value(s) }));
         return (
           <div className="dashboard__section">
-            <Panel title="تیکت‌ها و تماس‌های هر اپراتور">
+            {/* <Panel title="تیکت‌ها و تماس‌های هر اپراتور">
               <GroupedColumnChart
-                label="تیکت‌ها و تماس‌های هر اپراتور"
+                label="                                                      "
                 rows={rows}
                 series={[
                   { key: 'tickets', name: 'تیکت‌ها', series: 0 },
@@ -46,7 +46,7 @@ export function OperatorsTab() {
                 selected={selected}
                 onSelect={select}
               />
-            </Panel>
+            </Panel> */}
             <div className="dashboard__grid dashboard__grid--wide">
               <Panel title="پروفایل عملکرد اپراتور در برابر میانگین تیم">
                 <OperatorRadar stats={stats} selected={selected} />

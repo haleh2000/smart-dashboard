@@ -82,20 +82,61 @@
 }
 
 .queue-table__sort {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
+  display: inline-block;
+  max-width: 100%;
   padding: 0;
   border: none;
   background: none;
   color: inherit;
   font: inherit;
   cursor: pointer;
+  /* A long title shortens instead of pushing its filter off the title. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
 }
 
 .queue-table__sort-mark {
+  margin-inline-start: var(--space-1);
   font-size: 0.7em;
   opacity: 0.7;
+}
+
+/* Title and its own filter share one line: the filter sits right next to the title it
+   belongs to, inside the same cell, so it can never be read as the next column's.
+   inline-flex lets the cell size itself to the pair (auto table layout), so nothing has
+   to shrink and the two can never overlap. */
+.queue-table__head {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.queue-table__title {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.queue-table__filter {
+  display: block;
+  flex: 0 0 auto;
+}
+
+/* Compact, surface-coloured control: it reads as a control on the tinted header
+   instead of joining the title text. */
+.queue-table__filter .form-select {
+  width: var(--control-width-compact);
+  min-width: 0;
+  min-height: 0;
+  height: auto;
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-surface);
+  border-color: var(--color-outline);
+  border-radius: var(--radius-control);
+  font-size: var(--font-size-small);
+  font-weight: 400;
 }
 
 .queue-table__tracking {

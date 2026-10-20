@@ -96,7 +96,7 @@ export function Sunburst({ nodes, total, filters, onSelect }: SunburstProps) {
       <div className="sunburst__figure">
         <svg
           viewBox="-100 -100 200 200"
-          className="sunburst__svg"
+          className="sunburst__svg sunburst-chart"
           role="group"
           aria-label="دلایل تماس در سه سطح"
         >

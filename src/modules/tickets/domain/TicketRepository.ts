@@ -10,12 +10,13 @@ import type {
   TicketUpdate,
 } from './ticket';
 
-/** Every column of the list is sortable (README → «فیلتر / Sort … روی همه ستون‌ها»). */
+/** Every column of the list is sortable except وضعیت (README → «فیلتر / Sort … روی همه ستون‌ها»).
+ *  وضعیت is filter-only: when the filter is «همه» the list stays ordered by creation time
+ *  instead of grouping tickets by status. */
 export const TICKET_SORT_FIELDS = [
   'id',
   'createdAt',
   'type',
-  'status',
   'mobile',
   'nationalId',
   'subject1',
@@ -30,36 +31,43 @@ export const TICKET_SORT_FIELDS = [
 ] as const;
 export type TicketSortField = (typeof TICKET_SORT_FIELDS)[number];
 
-/** Filters shared by the list, the export and the prev/next navigation. */
+/**
+ * Filters shared by the list, the export and the prev/next navigation. The list offers exactly
+ * these, the last four as a dropdown on the column they filter.
+ */
 export interface TicketFilter {
-  /** Free text matched against ticket id, mobile, national id and customer name. */
+  /** Free text: each token looks into the field its shape implies (see `ticketSearchFields`). */
   search?: string;
-  /** A single CRM status or one of the KPI groups («باز»، «در حال بررسی»). */
+  /** A single CRM status or one of the KPI groups («باز»، «در حال بررسی»، «بسته‌شده»). */
   status?: TicketStatusFilter;
   priority?: Priority;
   sentiment?: Sentiment;
+  /** CRM ticket type (شکایت، پیگیری، درخواست، …). */
   type?: string;
+  /** «نوع اصلی شکایت» (subject level1)؛ شکایت موضوع ندارد. */
   subject1?: string;
-  branch?: string;
-  /** The channel the customer came in through (تلفن، وب، پیامک، …). */
-  channel?: string;
-  /** Matches either the follow-up owner or the complaint owner. */
-  operator?: string;
+  /** «نوع شکایت» (subject level2); only offered for the selected `subject1`. شکایت موضوع ندارد. */
+  subject2?: string;
+  /** «علت شکایت» (subject level3); only offered for the selected `subject1` + `subject2`. شکایت موضوع ندارد. */
+  subject3?: string;
   createdIn?: DateRange;
-  starredOnly?: boolean;
 }
 
 export interface TicketQuery extends PageRequest, TicketFilter {
   sort: Sort<TicketSortField>;
 }
 
-/** Distinct values the filter selects offer. */
+/** A full subject path, so each level dropdown can offer only the children of the one above. */
+export interface SubjectFilterPath {
+  level1: string;
+  level2: string;
+  level3: string;
+}
+
+/** Distinct values the dropdowns on the column headers offer. */
 export interface TicketFilterOptions {
   types: string[];
-  subjects: string[];
-  branches: string[];
-  channels: string[];
-  operators: string[];
+  subjectPaths: SubjectFilterPath[];
 }
 
 export interface AdjacentTickets {

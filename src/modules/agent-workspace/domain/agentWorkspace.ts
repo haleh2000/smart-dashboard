@@ -99,7 +99,7 @@ export function computeNextAction(workQueue: AgentWorkQueueItem[]): NextAction |
         type: 'negativeSentiment',
         ticketId: ticket.id,
         title: 'احساسات منفی با اولویت بالا',
-        description: `تیکت ${ticket.id} - ${ticket.enrichment?.topic ?? ticket.subject.level2}`,
+        description: `تیکت ${ticket.id} - ${ticket.enrichment?.topic ?? ticket.subject?.level2 ?? 'شکایت'}`,
         severity: 'high',
         createdAt: ticket.createdAt,
       };

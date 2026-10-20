@@ -34,11 +34,12 @@ const fakeTicketRepository = (): TicketRepository => ({
   })),
   getById: vi.fn(async () => ticket),
   getFilterOptions: vi.fn(async () => ({
-    types: ['شکایت'],
-    subjects: ['پس از صدور'],
-    branches: ['تهران'],
-    channels: ['تلفن', 'وب'],
-    operators: ['اپراتور'],
+    types: ['شکایت', 'پیشنهاد'],
+    subjectPaths: [
+      { level1: 'پس از صدور', level2: 'خسارت', level3: 'ثبت پرونده خسارت' },
+      { level1: 'پس از صدور', level2: 'خسارت', level3: 'عدم پرداخت خسارت' },
+      { level1: 'پیش از صدور', level2: 'صدور', level3: 'ابطال بیمه‌نامه' },
+    ],
   })),
   getAdjacent: vi.fn(async () => ({ previousId: null, nextId: null })),
   getTimeline: vi.fn(async () => []),
@@ -66,7 +67,8 @@ describe('TicketListPage', () => {
     renderPage(fakeTicketRepository());
 
     expect(await screen.findByRole('link', { name: 'T-۹۰۰۱' })).toBeInTheDocument();
-    expect(within(screen.getByRole('table')).getByText('در انتظار')).toBeInTheDocument();
+    const rows = screen.getAllByRole('row');
+    expect(within(rows[1]!).getByText('در انتظار')).toBeInTheDocument();
   });
 
   it('passes the status filter to the repository and keeps it in the URL', async () => {
@@ -82,18 +84,145 @@ describe('TicketListPage', () => {
     expect(router.state.location.search).toBe('?status=closed');
   });
 
-  it('filters by priority and operator', async () => {
+  it('filters from the dropdown on the وضعیت column header', async () => {
+    const repository = fakeTicketRepository();
+    const { router } = renderPage(repository);
+    const header = await screen.findByRole('columnheader', { name: /وضعیت/ });
+    const status = within(header).getByLabelText('وضعیت');
+    const values = within(status)
+      .getAllByRole('option')
+      .map((option) => (option as HTMLOptionElement).value);
+    expect(values).toEqual(expect.arrayContaining(['open', 'inReview', 'closed']));
+
+    await userEvent.selectOptions(status, 'closed');
+
+    expect(repository.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({ status: 'closed', page: 1 }),
+    );
+    expect(router.state.location.search).toBe('?status=closed');
+  });
+
+  it('filters by sentiment and priority from their column headers', async () => {
     const repository = fakeTicketRepository();
     const { router } = renderPage(repository);
     await screen.findByRole('link', { name: 'T-۹۰۰۱' });
 
-    await userEvent.selectOptions(screen.getByLabelText('اولویت'), 'high');
-    await userEvent.selectOptions(await screen.findByLabelText('اپراتور'), 'اپراتور');
+    const sentiment = within(
+      await screen.findByRole('columnheader', { name: /احساس/ }),
+    ).getByLabelText('احساس');
+    const priority = within(
+      screen.getByRole('columnheader', { name: /اولویت/ }),
+    ).getByLabelText('اولویت');
+
+    await userEvent.selectOptions(sentiment, 'negative');
+    await userEvent.selectOptions(priority, 'high');
 
     expect(repository.list).toHaveBeenLastCalledWith(
-      expect.objectContaining({ priority: 'high', operator: 'اپراتور' }),
+      expect.objectContaining({ sentiment: 'negative', priority: 'high' }),
     );
     expect(router.state.location.search).toContain('priority=high');
+  });
+
+  it('cascades the three subject levels, each offering only its own children', async () => {
+    const repository = fakeTicketRepository();
+    const { router } = renderPage(repository);
+    await screen.findByRole('link', { name: 'T-۹۰۰۱' });
+
+    const level1 = within(
+      await screen.findByRole('columnheader', { name: /نوع اصلی شکایت/ }),
+    ).getByLabelText('نوع اصلی شکایت');
+    const values = (select: HTMLElement) =>
+      within(select)
+        .getAllByRole('option')
+        .map((option) => (option as HTMLOptionElement).value);
+    expect(values(level1)).toEqual(['', 'پس از صدور', 'پیش از صدور']);
+
+    const level2 = within(
+      screen.getByRole('columnheader', { name: /نوع شکایت/ }),
+    ).getByLabelText('نوع شکایت');
+    const level3 = within(
+      screen.getByRole('columnheader', { name: /علت شکایت/ }),
+    ).getByLabelText('علت شکایت');
+    // Before a level is picked the dropdown offers that whole level, never an empty list.
+    expect(values(level2)).toEqual(['', 'خسارت', 'صدور']);
+    expect(values(level3)).toEqual([
+      '',
+      'ابطال بیمه‌نامه',
+      'ثبت پرونده خسارت',
+      'عدم پرداخت خسارت',
+    ]);
+
+    await userEvent.selectOptions(level1, 'پس از صدور');
+
+    expect(values(level2)).toEqual(['', 'خسارت']);
+    // With a level1 but no level2 yet, the third level narrows to that level1's own leaves.
+    expect(values(level3)).toEqual(['', 'ثبت پرونده خسارت', 'عدم پرداخت خسارت']);
+
+    await userEvent.selectOptions(level2, 'خسارت');
+
+    expect(values(level3)).toEqual(['', 'ثبت پرونده خسارت', 'عدم پرداخت خسارت']);
+    await userEvent.selectOptions(level3, 'عدم پرداخت خسارت');
+
+    expect(repository.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        subject1: 'پس از صدور',
+        subject2: 'خسارت',
+        subject3: 'عدم پرداخت خسارت',
+        page: 1,
+      }),
+    );
+    expect(router.state.location.search).toContain('subject3=');
+
+    // Moving a parent drops the levels below it, which no longer exist under it.
+    await userEvent.selectOptions(level1, 'پیش از صدور');
+
+    expect(repository.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        subject1: 'پیش از صدور',
+        subject2: undefined,
+        subject3: undefined,
+      }),
+    );
+  });
+
+  it('filters by the ticket type from its column header', async () => {
+    const repository = fakeTicketRepository();
+    const { router } = renderPage(repository);
+    await screen.findByRole('link', { name: 'T-۹۰۰۱' });
+
+    const type = within(
+      await screen.findByRole('columnheader', { name: /نوع تیکت/ }),
+    ).getByLabelText('نوع تیکت');
+
+    await userEvent.selectOptions(type, 'شکایت');
+
+    expect(repository.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({ type: 'شکایت', page: 1 }),
+    );
+    expect(router.state.location.search).toBe('?type=' + encodeURIComponent('شکایت'));
+  });
+
+  it('keeps the title of a filtered column inert, so a click never filters', async () => {
+  const repository = fakeTicketRepository();
+  renderPage(repository);
+  await screen.findByRole('link', { name: 'T-۹۰۰۱' });
+
+  const status = await screen.findByRole('columnheader', { name: /وضعیت/ });
+  expect(within(status).queryByRole('button')).toBeNull();
+
+  await userEvent.click(within(status).getByText('وضعیت'));
+
+  expect(repository.list).toHaveBeenLastCalledWith(expect.objectContaining({ status: undefined }));
+}); 
+
+  it('leaves every other column without a filter', async () => {
+    renderPage(fakeTicketRepository());
+    await screen.findByRole('link', { name: 'T-۹۰۰۱' });
+
+    for (const header of ['شماره تیکت', 'نام مشتری', 'کدملی', 'موبایل', 'نام شعبه']) {
+      const cell = screen.queryByRole('columnheader', { name: new RegExp(header) });
+      expect(cell?.querySelector('select, input') ?? null).toBeNull();
+    }
   });
 
   it('searches as you type, without pressing the جستجو button', async () => {
@@ -150,29 +279,14 @@ describe('TicketListPage', () => {
     expect(router.state.location.search).toBe('?q=9001');
   });
 
-  it('sorts by a CRM column from its header', async () => {
-    const repository = fakeTicketRepository();
-    renderPage(repository);
-    await screen.findByRole('link', { name: 'T-۹۰۰۱' });
-
-    await userEvent.click(screen.getByRole('button', { name: /نام شعبه/ }));
-
-    expect(repository.list).toHaveBeenLastCalledWith(
-      expect.objectContaining({ sort: { field: 'branch', direction: 'desc' } }),
-    );
-  });
-
-  it('sorts by the channel column and shows each ticket own channel', async () => {
+  it('shows the channel of each ticket and never turns a header into a sort button', async () => {
     const repository = fakeTicketRepository();
     renderPage(repository);
 
     expect(await screen.findByRole('cell', { name: 'تلفن' })).toBeInTheDocument();
-
-    await userEvent.click(screen.getByRole('button', { name: /کانال ورودی/ }));
-
-    expect(repository.list).toHaveBeenLastCalledWith(
-      expect.objectContaining({ sort: { field: 'channel', direction: 'desc' } }),
-    );
+    expect(
+      within(screen.getAllByRole('rowgroup')[0]!).queryAllByRole('button'),
+    ).toHaveLength(0); // no header is a button; only the filter dropdowns are interactive
   });
 
   it('stars a ticket from the row actions', async () => {

@@ -38,10 +38,16 @@ export const ticketColumns = (listSearch = ''): TicketColumn[] => [
     cell: (t) => formatDateTime(t.createdAt),
     exportValue: (t) => formatDateTime(t.createdAt),
   },
-  { header: 'نوع تیکت', sortField: 'type', cell: (t) => t.type, exportValue: (t) => t.type },
   {
+    id: 'type',
+    header: 'نوع تیکت',
+    sortField: 'type',
+    cell: (t) => t.type,
+    exportValue: (t) => t.type,
+  },
+  {
+    id: 'status',
     header: 'وضعیت',
-    sortField: 'status',
     cell: (t) => <TicketStatusBadge status={t.status} />,
     exportValue: (t) => statusMeta[t.status].label,
   },
@@ -58,16 +64,18 @@ export const ticketColumns = (listSearch = ''): TicketColumn[] => [
     exportValue: (t) => t.customer.nationalId,
   },
   {
+    id: 'subject1',
     header: 'نوع اصلی شکایت',
     sortField: 'subject1',
-    cell: (t) => t.subject.level1,
-    exportValue: (t) => t.subject.level1,
+    cell: (t) => t.subject?.level1 ?? '—',
+    exportValue: (t) => t.subject?.level1 ?? '',
   },
   {
+    id: 'subject2',
     header: 'نوع شکایت',
     sortField: 'subject2',
-    cell: (t) => t.subject.level2,
-    exportValue: (t) => t.subject.level2,
+    cell: (t) => t.subject?.level2 ?? '—',
+    exportValue: (t) => t.subject?.level2 ?? '',
   },
   {
     header: 'مالک پیگیری',
@@ -76,10 +84,11 @@ export const ticketColumns = (listSearch = ''): TicketColumn[] => [
     exportValue: (t) => t.followUpOwner,
   },
   {
+    id: 'subject3',
     header: 'علت شکایت',
     sortField: 'subject3',
-    cell: (t) => t.subject.level3,
-    exportValue: (t) => t.subject.level3,
+    cell: (t) => t.subject?.level3 ?? '—',
+    exportValue: (t) => t.subject?.level3 ?? '',
   },
   { header: 'نام شعبه', sortField: 'branch', cell: (t) => t.branch, exportValue: (t) => t.branch },
   {
@@ -95,20 +104,22 @@ export const ticketColumns = (listSearch = ''): TicketColumn[] => [
     exportValue: (t) => t.channel,
   },
   {
+    id: 'sentiment',
     header: 'احساس',
     sortField: 'sentiment',
     cell: (t) => t.enrichment && <SentimentBadge sentiment={t.enrichment.sentiment} />,
     exportValue: (t) => t.enrichment && sentimentMeta[t.enrichment.sentiment].label,
   },
   {
+    id: 'priority',
     header: 'اولویت',
     sortField: 'priority',
     cell: (t) => t.enrichment && <PriorityBadge priority={t.enrichment.priority} />,
     exportValue: (t) => t.enrichment && priorityMeta[t.enrichment.priority].label,
   },
-  {
-    header: 'تگ‌های AI',
-    cell: (t) => t.enrichment && <TagList tags={t.enrichment.aiTags} />,
-    exportValue: (t) => t.enrichment?.aiTags.join('، '),
-  },
+  // {
+  //   header: 'تگ‌های AI',
+  //   cell: (t) => t.enrichment && <TagList tags={t.enrichment.aiTags} />,
+  //   exportValue: (t) => t.enrichment?.aiTags.join('، '),
+  // },
 ];

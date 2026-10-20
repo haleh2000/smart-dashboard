@@ -17,6 +17,12 @@
   overflow: visible;
 }
 
+.sunburst-chart path {
+  outline: none !important;
+}
+
+
+
 .sunburst__segment {
   stroke: var(--color-surface);
   stroke-width: 0.8;
@@ -42,7 +48,7 @@
 }
 
 .sunburst__segment--selected {
-  stroke: var(--color-ink);
+ stroke: color-mix(in srgb, var(--color-ink) 45%, white);
   stroke-width: 1.2;
 }
 

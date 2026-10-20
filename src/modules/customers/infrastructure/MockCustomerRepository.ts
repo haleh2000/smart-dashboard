@@ -25,7 +25,7 @@ const ticketInteraction = (ticket: Ticket): Interaction => ({
   kind: ticket.type === 'شکایت' ? 'complaint' : 'ticket',
   refId: ticket.id,
   at: ticket.createdAt,
-  title: ticket.subject.level3,
+  title: ticket.subject?.level3 ?? 'شکایت',
   channel: ticket.channel,
   open: ticket.status !== 'closed',
   sentiment: ticket.enrichment?.sentiment,

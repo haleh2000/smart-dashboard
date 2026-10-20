@@ -29,13 +29,24 @@ interface DashboardFilterState {
 const initialState = {
   filters: {} as DashboardFilters,
   period: 'all' as Period,
-  customRange: null as DateRange | null,
+  customRange: null as DateRange | null,    
 };
 
 export const useDashboardFilterStore = create<DashboardFilterState>((set) => ({
   ...initialState,
   toggle: (dimension, value) =>
-    set((state) => ({ filters: toggleFilter(state.filters, dimension, value) })),
+    set((state) => {
+      const next = toggleFilter(state.filters, dimension, value);
+      // شکایت موضوع ندارد؛ انتخاب نوع شکایت فیلترهای موضوع را پاک می‌کند.
+      if (dimension === 'type' && value === 'شکایت' && next.type === 'شکایت') {
+        const rest = { ...next };
+        delete rest.subject1;
+        delete rest.subject2;
+        delete rest.subject3;
+        return { filters: rest };
+      }
+      return { filters: next };
+    }),
   togglePair: ([da, va], [db, vb]) =>
     set((state) => {
       const both = state.filters[da] === va && state.filters[db] === vb;
@@ -46,12 +57,21 @@ export const useDashboardFilterStore = create<DashboardFilterState>((set) => ({
   remove: (dimension) => set((state) => ({ filters: removeFilter(state.filters, dimension) })),
   clear: () => set({ filters: {} }),
   setDimension: (dimension, value) =>
-    set((state) => ({
-      filters:
+    set((state) => {
+      const next =
         value === undefined
           ? removeFilter(state.filters, dimension)
-          : { ...removeFilter(state.filters, dimension), [dimension]: value },
-    })),
+          : { ...removeFilter(state.filters, dimension), [dimension]: value };
+      // شکایت موضوع ندارد؛ انتخاب نوع شکایت فیلترهای موضوع را پاک می‌کند.
+      if (dimension === 'type' && value === 'شکایت') {
+        const rest = { ...next };
+        delete rest.subject1;
+        delete rest.subject2;
+        delete rest.subject3;
+        return { filters: rest };
+      }
+      return { filters: next };
+    }),
   setPeriod: (period) => set({ period, customRange: null }),
   setCustomRange: (customRange) => set({ customRange }),
   clearCustomRange: () => set({ customRange: null }),

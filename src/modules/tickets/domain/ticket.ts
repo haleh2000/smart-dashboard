@@ -43,6 +43,9 @@ export const CALL_TYPES: readonly string[] = ['گفت‌وگو', 'ارتباط�
 export const COMPLAINT_TYPES: readonly string[] = ['شکایت', 'پیگیری'];
 export const isCallType = (type: string) => (CALL_TYPES as readonly string[]).includes(type);
 
+/** شکایت موضوع تماس ندارد؛ بقیه تیکت‌ها موضوع ۳ لایه دارند. */
+export const hasTicketSubject = (type: string) => type !== 'شکایت';
+
 /**
  * وضعیت‌های تفصیلی شکایت — ترتیب متعارف نمایش در تب شکایات:
  * در جریان، ثبت یادداشت توسط امور مشتریان، ثبت شده، بعد بسته‌شده‌ها.
@@ -80,6 +83,8 @@ export const detailStatusesForType = (type: string): readonly string[] => {
   if (type === 'پیشنهاد') return [...SUGGESTION_OPEN_STATUSES, ...SUGGESTION_CLOSED_STATUSES];
   return [];
 };
+
+
 
 /** زیرمجموعه «باز» از وضعیت‌های تفصیلی هر ماژول (مبنای KPI «باز» در تب نوع). */
 export const openDetailStatusesForType = (type: string): readonly string[] => {
@@ -196,12 +201,39 @@ export const ticketSearchTokens = (term: string): string[] => {
     .filter(Boolean);
 };
 
-/** The searchable text of a ticket, for every token of the search box. */
-export const ticketSearchText = (ticket: Ticket): string[] => [
-  ticket.id,
-  ticket.customer.mobile,
-  ticket.customer.nationalId,
-];
+/** Length of a national code / mobile number, the only lengths a numeric token may have. */
+const NATIONAL_ID_LENGTH = 10;
+const MOBILE_LENGTH = 11;
+const IDENTITY_TOKEN = new RegExp(`^\\d{${NATIONAL_ID_LENGTH}}$|^\\d{${MOBILE_LENGTH}}$`);
+
+/** The field a single search token looks into, decided by the shape of what was typed. */
+export type TicketSearchField = 'ticketId' | 'nationalId' | 'mobile' | 'customerName';
+
+/**
+ * The one search box of the ticket list covers three kinds of term: a ۱۰ or ۱۱ digit number
+ * is a national code or a mobile, any other number is the ticket id, and letters are part of
+ * a customer name.
+ */
+export const ticketSearchFields = (token: string): TicketSearchField[] => {
+  if (IDENTITY_TOKEN.test(token)) return ['nationalId', 'mobile'];
+  if (/^\d+$/.test(token)) return ['ticketId'];
+  return ['customerName'];
+};
+
+const searchFieldValue = (ticket: Ticket, field: TicketSearchField): string =>
+  field === 'ticketId'
+    ? ticket.id
+    : field === 'customerName'
+      ? ticket.customer.fullName
+      : field === 'nationalId'
+        ? ticket.customer.nationalId
+        : ticket.customer.mobile;
+
+/** Whether a ticket answers every token of the search box, each in the field its shape implies. */
+export const ticketMatchesSearch = (ticket: Ticket, term: string): boolean =>
+  ticketSearchTokens(term).every((token) =>
+    ticketSearchFields(token).some((field) => searchFieldValue(ticket, field).includes(token)),
+  );
 
 export type Gender = 'male' | 'female';
 
@@ -243,7 +275,8 @@ export interface Ticket {
   convertedTo?: string;
   channel: string;
   customer: Customer;
-  subject: SubjectPath;
+  /** موضوع ۳ لایه؛ برای نوع «شکایت» وجود ندارد (undefined). */
+  subject?: SubjectPath;
   /** «نوع بیمه‌نامه». */
   insuranceLine: string;
   branch: string;

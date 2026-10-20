@@ -1,11 +1,12 @@
 import { Link, useLocation, useNavigate } from 'react-router';
 import { customerPaths } from '@/modules/customers';
-import type { Sort } from '@/shared/domain/pagination';
 import { ActionMenu, DataTable } from '@/shared/ui';
 import type { Ticket } from '../../domain/ticket';
-import type { TicketSortField } from '../../domain/TicketRepository';
 import { useToggleStar } from '../hooks/ticketQueries';
+import type { TicketListState } from '../hooks/ticketListParams';
+import type { TicketListChanges } from '../hooks/useTicketListParams';
 import { ticketPaths } from '../ticketPaths';
+import { useTicketColumnFilters } from './TicketColumnFilters';
 import { ticketColumns, type TicketColumn } from './ticketColumns';
 
 function StarButton({ ticket }: { ticket: Ticket }) {
@@ -76,24 +77,39 @@ function RowActions({ ticket, listSearch }: { ticket: Ticket; listSearch: string
 
 interface TicketTableProps {
   tickets: Ticket[];
-  sort: Sort<TicketSortField>;
-  onSortChange: (sort: Sort<TicketSortField>) => void;
   selected: ReadonlySet<string>;
   onSelectionChange: (selected: Set<string>) => void;
+  state: TicketListState;
+  onFilterChange: (changes: TicketListChanges) => void;
 }
 
+/** No column header is clickable: sorting lives in the URL state, the headers only filter. */
 export function TicketTable({
   tickets,
-  sort,
-  onSortChange,
   selected,
   onSelectionChange,
+  state,
+  onFilterChange,
 }: TicketTableProps) {
   const navigate = useNavigate();
   const { search } = useLocation();
+  const columnFilters = useTicketColumnFilters({ state, onChange: onFilterChange });
+
+  // شکایت موضوع تماس ندارد؛ در نمای فیلترشده شکایت ستون‌ها و فیلترهای موضوع حذف می‌شوند.
+  const isComplaintView = state.type === 'شکایت';
+  const baseColumns = ticketColumns(search).filter(
+    (column) => !isComplaintView || !['subject1', 'subject2', 'subject3'].includes(column.id ?? ''),
+  );
+  const filteredColumnFilters = isComplaintView
+    ? Object.fromEntries(
+        Object.entries(columnFilters).filter(
+          ([key]) => !['subject1', 'subject2', 'subject3'].includes(key),
+        ),
+      )
+    : columnFilters;
 
   const columns: TicketColumn[] = [
-    ...ticketColumns(search),
+    ...baseColumns,
     {
       header: 'عملیات',
       interactive: true,
@@ -106,9 +122,8 @@ export function TicketTable({
       rows={tickets}
       columns={columns}
       rowKey={(ticket) => ticket.id}
-      sort={sort}
-      onSortChange={onSortChange}
       selection={{ selected, onChange: onSelectionChange }}
+      columnFilters={filteredColumnFilters}
       onRowClick={(ticket) =>
         navigate(ticketPaths.detail(ticket.id), { state: { listSearch: search } })
       }

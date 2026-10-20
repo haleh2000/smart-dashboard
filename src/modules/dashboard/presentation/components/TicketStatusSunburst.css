@@ -1,0 +1,164 @@
+.ticket-status-sunburst {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-5, 1.5rem);
+}
+
+.ticket-status-sunburst__groups {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.ticket-status-sunburst__group {
+  padding: 1rem;
+  border: 1px solid
+    color-mix(in srgb, var(--color-muted) 20%, transparent);
+  border-radius: 0.75rem;
+}
+
+.ticket-status-sunburst__heading,
+.ticket-status-sunburst__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.ticket-status-sunburst__heading {
+  padding: 0.25rem;
+  font-weight: 700;
+}
+
+.ticket-status-sunburst__heading > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ticket-status-sunburst__dot {
+  display: inline-block;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ticket-status-sunburst__description {
+  margin: 0.75rem 0 0.35rem;
+  color: var(--color-muted);
+  font-size: var(--font-size-small);
+}
+
+.ticket-status-sunburst__list {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ticket-status-sunburst__item {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  line-height: 1.7;
+  font-size: var(--font-size-small);
+}
+
+.ticket-status-sunburst__item:hover,
+.ticket-status-sunburst__item[aria-pressed='true'],
+.ticket-status-sunburst__heading[aria-pressed='true'] {
+  background: color-mix(
+    in srgb,
+    var(--color-muted) 12%,
+    transparent
+  );
+}
+
+.ticket-status-sunburst__heading strong,
+.ticket-status-sunburst__item strong {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.ticket-status-sunburst button:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
+
+.ticket-status-sunburst {
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 0.75rem;
+}
+
+.ticket-status-sunburst .sunburst {
+  gap: 0.35rem;
+}
+
+.ticket-status-sunburst .sunburst__figure {
+  width: min(100%, 17rem);
+}
+
+.ticket-status-sunburst .sunburst__hint {
+  max-width: 19rem;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.ticket-status-sunburst .sunburst__center-total {
+  font-size: 1.6rem;
+}
+
+.ticket-status-sunburst .sunburst__center-label,
+.ticket-status-sunburst .sunburst__center-value {
+  font-size: 0.65rem;
+}
+
+.ticket-status-sunburst__groups {
+  gap: 0.5rem;
+}
+
+.ticket-status-sunburst__group {
+  padding: 0.8rem;
+}
+
+.ticket-status-sunburst__groups {
+  gap: 0.7rem;
+}
+
+.ticket-status-sunburst__heading {
+  font-size: 0.9rem;
+}
+
+.ticket-status-sunburst__description {
+  font-size: 0.78rem;
+  margin: 0.5rem 0 0.25rem;
+}
+
+.ticket-status-sunburst__item {
+  padding: 0.35rem 0.45rem;
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+
+
+@media (max-width: 760px) {
+  .ticket-status-sunburst {
+    grid-template-columns: minmax(0, 1fr);
+  }
+    .ticket-status-sunburst {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ticket-status-sunburst .sunburst__figure {
+    width: min(100%, 14rem);
+  }
+}

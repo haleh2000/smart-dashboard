@@ -31,7 +31,9 @@ const COLUMNS = [
     header: 'موضوع',
     cell: (item: AgentWorkQueueItem) => (
       <span className="work-queue__subject">
-        {item.ticket.subject.level1} / {item.ticket.subject.level2}
+        {item.ticket.subject
+          ? `${item.ticket.subject.level1} / ${item.ticket.subject.level2}`
+          : '—'}
       </span>
     ),
   },

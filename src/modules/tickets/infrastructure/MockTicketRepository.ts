@@ -1,6 +1,6 @@
 import { delay } from '@/mocks/delay';
 import { createRandom } from '@/mocks/random';
-import { agents } from '@/mocks/reference';
+import { agents, allSubjectPaths } from '@/mocks/reference';
 import { mockTickets } from '@/mocks/tickets';
 import type { Page, Sort } from '@/shared/domain/pagination';
 import { isWithinRange } from '@/shared/domain/period';
@@ -12,7 +12,7 @@ import type {
   TicketNote,
   TicketUpdate,
 } from '../domain/ticket';
-import { ticketMatchesStatusFilter, ticketSearchText, ticketSearchTokens } from '../domain/ticket';
+import { ticketMatchesSearch, ticketMatchesStatusFilter } from '../domain/ticket';
 import type {
   AdjacentTickets,
   TicketFilter,
@@ -28,12 +28,11 @@ const sortValue: Record<TicketSortField, (t: Ticket) => string | number> = {
   id: (t) => t.id,
   createdAt: (t) => t.createdAt.getTime(),
   type: (t) => t.type,
-  status: (t) => t.status,
   mobile: (t) => t.customer.mobile,
   nationalId: (t) => t.customer.nationalId,
-  subject1: (t) => t.subject.level1,
-  subject2: (t) => t.subject.level2,
-  subject3: (t) => t.subject.level3,
+  subject1: (t) => t.subject?.level1 ?? '',
+  subject2: (t) => t.subject?.level2 ?? '',
+  subject3: (t) => t.subject?.level3 ?? '',
   followUpOwner: (t) => t.followUpOwner,
   branch: (t) => t.branch,
   complaintOwner: (t) => t.complaintOwner,
@@ -53,25 +52,16 @@ const compare = (a: Ticket, b: Ticket, { field, direction }: Sort<TicketSortFiel
   return (direction === 'asc' ? 1 : -1) * (result || a.id.localeCompare(b.id));
 };
 
-const matches = (ticket: Ticket, filter: TicketFilter) => {
-  const tokens = filter.search ? ticketSearchTokens(filter.search) : [];
-  const haystack = tokens.length > 0 ? ticketSearchText(ticket) : [];
-  return (
-    tokens.every((token) => haystack.some((value) => value.includes(token))) &&
-    (!filter.status || ticketMatchesStatusFilter(ticket, filter.status)) &&
-    (!filter.priority || ticket.enrichment?.priority === filter.priority) &&
-    (!filter.sentiment || ticket.enrichment?.sentiment === filter.sentiment) &&
-    (!filter.type || ticket.type === filter.type) &&
-    (!filter.subject1 || ticket.subject.level1 === filter.subject1) &&
-    (!filter.branch || ticket.branch === filter.branch) &&
-    (!filter.channel || ticket.channel === filter.channel) &&
-    (!filter.operator ||
-      ticket.followUpOwner === filter.operator ||
-      ticket.complaintOwner.endsWith(filter.operator)) &&
-    isWithinRange(ticket.createdAt, filter.createdIn) &&
-    (!filter.starredOnly || ticket.starred)
-  );
-};
+const matches = (ticket: Ticket, filter: TicketFilter) =>
+  (!filter.search || ticketMatchesSearch(ticket, filter.search)) &&
+  (!filter.status || ticketMatchesStatusFilter(ticket, filter.status)) &&
+  (!filter.priority || ticket.enrichment?.priority === filter.priority) &&
+  (!filter.sentiment || ticket.enrichment?.sentiment === filter.sentiment) &&
+  (!filter.type || ticket.type === filter.type) &&
+  (!filter.subject1 || ticket.subject?.level1 === filter.subject1) &&
+  (!filter.subject2 || ticket.subject?.level2 === filter.subject2) &&
+  (!filter.subject3 || ticket.subject?.level3 === filter.subject3) &&
+  isWithinRange(ticket.createdAt, filter.createdIn);
 
 const distinct = (values: string[]) =>
   [...new Set(values)].sort((a, b) => a.localeCompare(b, 'fa'));
@@ -171,7 +161,7 @@ const historyOf = (ticket: Ticket) => {
   const byTime = <T extends { at: Date }>(items: T[]) =>
     items.sort((a, b) => a.at.getTime() - b.at.getTime());
   const documents: TicketDocument[] =
-    ticket.subject.level1 === 'پس از صدور'
+    ticket.subject?.level1 === 'پس از صدور'
       ? [
           {
             id: 'd1',
@@ -235,15 +225,9 @@ export class MockTicketRepository implements TicketRepository {
     return this.find(id) ?? null;
   }
 
-  async getFilterOptions(): Promise<TicketFilterOptions> {
+async getFilterOptions(): Promise<TicketFilterOptions> {
     await delay(100);
-    return {
-      types: distinct(this.tickets.map((t) => t.type)),
-      subjects: distinct(this.tickets.map((t) => t.subject.level1)),
-      branches: distinct(this.tickets.map((t) => t.branch)),
-      channels: distinct(this.tickets.map((t) => t.channel)),
-      operators: distinct(this.tickets.map((t) => t.followUpOwner)),
-    };
+    return { types: distinct(this.tickets.map((t) => t.type)), subjectPaths: allSubjectPaths() };
   }
 
   async getAdjacent(
