@@ -377,11 +377,11 @@ export function BranchStatusRingsPanel({ type }: Props) {
                 </div>
               </section>
 
-              <p className="branch-bars__note">
+              {/* <p className="branch-bars__note">
                 طول هر میله بر اساس مجموع تیکت‌های شعبه و با مقیاس
                 مشترک است. درصد tooltip نسبت به مجموع تیکت‌های همان
                 شعبه محاسبه می‌شود.
-              </p>
+              </p> */}
 
               {totals.other > 0 && (
                 <p className="branch-bars__notice">

@@ -49,7 +49,7 @@ export function OperatorsTab() {
             </Panel> */}
             <div className="dashboard__grid dashboard__grid--wide">
               <Panel title="پروفایل عملکرد اپراتور در برابر میانگین تیم">
-                <OperatorRadar stats={stats} selected={selected} />
+                <OperatorRadar stats={stats} selected={selected} onSelect={select} />
               </Panel>
               <Panel title="نرخ حل در اولین تماس (FCR)">
                 <HorizontalBarChart

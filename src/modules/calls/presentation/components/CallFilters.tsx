@@ -10,8 +10,8 @@ import {
   periodLabels,
   sentimentMeta,
 } from '@/shared/ui';
-import { CALL_DIRECTIONS, CALL_STATUSES } from '../../domain/call';
-import { callDirectionLabels, callStatusMeta } from '../callLabels';
+import { CALL_STATUSES } from '../../domain/call';
+import { callStatusMeta } from '../callLabels';
 import { useCallFilterOptions } from '../hooks/callQueries';
 import type { CallListState } from '../hooks/useCallListParams';
 
@@ -52,13 +52,13 @@ export function CallFilters({ state, meta, onChange }: CallFiltersProps) {
         options={CALL_STATUSES.map((value) => ({ value, label: callStatusMeta[value].label }))}
         onChange={(status) => onChange({ status })}
       />
-      <FilterSelect
+      {/* <FilterSelect
         label="جهت"
         value={state.direction}
         allLabel="ورودی و خروجی"
         options={CALL_DIRECTIONS.map((value) => ({ value, label: callDirectionLabels[value] }))}
         onChange={(direction) => onChange({ direction })}
-      />
+      /> */}
       <FilterSelect
         label="اپراتور"
         value={state.agent}
@@ -66,13 +66,13 @@ export function CallFilters({ state, meta, onChange }: CallFiltersProps) {
         options={asOptions(options?.agents ?? [])}
         onChange={(agent) => onChange({ agent })}
       />
-      <FilterSelect
+      {/* <FilterSelect
         label="صف"
         value={state.queue}
         allLabel="همه صف‌ها"
         options={asOptions(options?.queues ?? [])}
         onChange={(queue) => onChange({ queue })}
-      />
+      /> */}
       <FilterSelect
         label="احساس"
         value={state.sentiment}
@@ -85,11 +85,11 @@ export function CallFilters({ state, meta, onChange }: CallFiltersProps) {
           className="form-select"
           value={state.period}
           onChange={(event) => onChange({ period: event.target.value as CallListState['period'] })}
-        >
+        >  
           {PERIODS.map((period) => (
             <option key={period} value={period}>
               {periodLabels[period]}
-            </option>
+            </option> 
           ))}
         </select>
       </FilterField>

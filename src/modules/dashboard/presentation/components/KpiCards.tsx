@@ -1,4 +1,4 @@
-import { hasSla, TICKET_TYPES } from '@/modules/tickets';
+import { TICKET_TYPES } from '@/modules/tickets';
 import {
   formatElapsed,
   formatPercent,

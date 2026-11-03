@@ -12,7 +12,6 @@ import {
   SentimentBadge,
   SkeletonTable,
   StatusBadge,
-  TagList,
   Transcript,
   VoicePlayer,
 } from '@/shared/ui';

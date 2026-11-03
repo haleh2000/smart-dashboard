@@ -1,7 +1,7 @@
 // import { useState } from 'react';
 import { formatPercent, formatPersianNumber } from '@/shared/lib/format';
-import { Panel, StatusBadge } from '@/shared/ui';
-import type { CallReasons, ReasonNode, SubjectDetectionStats } from '../../domain/analytics';
+import { Panel } from '@/shared/ui';
+import type { ReasonNode, SubjectDetectionStats } from '../../domain/analytics';
 import { scopeForChart, SUBJECT_DIMENSIONS } from '../../domain/filters';
 import { useDashboardFilterStore, useDashboardScope } from '../dashboardFilterStore';
 import { useCallReasons, useSubjectDetection } from '../hooks/analyticsQueries';
@@ -135,13 +135,6 @@ const agreementParts = [
   { key: 'pending', label: 'در انتظار دسته‌بندی اپراتور', color: 'var(--chart-series-5)' },
 ] as const;
 
-const bandLabels = {
-  low: 'زیر ۶۰٪',
-  medium: '۶۰ تا ۷۵٪',
-  high: '۷۵ تا ۹۰٪',
-  veryHigh: '۹۰٪ به بالا',
-} as const;
-
 function AgreementRing({ value }: { value: number }) {
   const radius = 42;
   return (
@@ -171,7 +164,6 @@ function AgreementRing({ value }: { value: number }) {
 
 function DetectionPanels({ stats }: { stats: SubjectDetectionStats }) {
   const reviewed = stats.match + stats.partial + stats.mismatch;
-  const bandTotal = stats.confidenceBands.reduce((sum, b) => sum + b.count, 0);
   return (
     <div className="dashboard__section">
       <Panel title="تشخیص موضوع تماس: اپراتور در برابر هوش مصنوعی">

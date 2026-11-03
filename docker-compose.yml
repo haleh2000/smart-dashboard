@@ -1,0 +1,36 @@
+# Dashboard on http://localhost:3000 and PostgreSQL on localhost:5432.
+# The React app still serves its in-memory mocks. The database is available
+# to a future API at postgresql://smart:smart@db:5432/smart on this network.
+services:
+  app:
+    build:
+      context: .
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
+    ports:
+      - "${APP_PORT:-3000}:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-smart}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-smart}
+      POSTGRES_DB: ${POSTGRES_DB:-smart}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - smart_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  smart_postgres:

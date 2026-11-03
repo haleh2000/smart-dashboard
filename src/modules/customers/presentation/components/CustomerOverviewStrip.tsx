@@ -6,7 +6,6 @@ import './CustomerOverviewStrip.css';
 
 const PLACEHOLDER = '…';
 
-/** Headline figures of the customer base, with the latest-sentiment split. */
 export function CustomerOverviewStrip() {
   const { data } = useCustomerOverview();
   const count = (n?: number) => (n === undefined ? PLACEHOLDER : formatPersianNumber(n));
@@ -18,17 +17,16 @@ export function CustomerOverviewStrip() {
     <div className="customer-overview">
       <div className="customer-overview__cards">
         <StatCard label="کل مشتریان" value={count(data?.total)} tone="primary" />
-        <StatCard label="فعال" value={count(data?.active)} tone="success" />
+        {/* <StatCard label="فعال" value={count(data?.active)} tone="success" /> */}
         {/* TODO(vip): <StatCard label="VIP" value={count(data?.vip)} tone="warning" /> */}
         <StatCard label="سازمانی" value={count(data?.corporate)} />
         <StatCard label="دارای تیکت باز" value={count(data?.withOpenTickets)} tone="warning" />
         <StatCard
-          label="در معرض ریزش"
+          label="آخرین تماس منفی"
           value={count(data?.atRisk)}
-          hint="آخرین مکالمه منفی"
           tone="error"
         />
-      </div>
+      </div> 
       {data && analyzed > 0 && (
         <div className="customer-overview__sentiment">
           <span className="customer-overview__title">آخرین احساس مشتریان</span>

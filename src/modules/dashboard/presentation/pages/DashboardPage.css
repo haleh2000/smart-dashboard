@@ -4,7 +4,6 @@
   gap: var(--space-5);
 }
 
-/* The page header already carries its own bottom margin; the flex gap replaces it here. */
 .dashboard > .page-header {
   margin-bottom: 0;
 }

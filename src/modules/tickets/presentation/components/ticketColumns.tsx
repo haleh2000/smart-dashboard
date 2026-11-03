@@ -5,7 +5,6 @@ import {
   priorityMeta,
   SentimentBadge,
   sentimentMeta,
-  TagList,
   type DataColumn,
 } from '@/shared/ui';
 import type { Ticket } from '../../domain/ticket';

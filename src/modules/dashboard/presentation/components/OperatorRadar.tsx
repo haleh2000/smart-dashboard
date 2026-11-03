@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useId } from 'react';
 import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, Tooltip } from 'recharts';
 import { formatPersianNumber } from '@/shared/lib/format';
 import type { OperatorStats } from '../../domain/analytics';
@@ -12,6 +12,7 @@ interface OperatorRadarProps {
   stats: readonly OperatorStats[];
   /** The dashboard's operator filter; shown by default. */
   selected?: string;
+  onSelect?: (operator: string) => void;
 }
 
 const AXES = [
@@ -51,12 +52,10 @@ const normalize = (stats: readonly OperatorStats[]): Map<string, Record<Axis, nu
 };
 
 /** Operator profile vs. team average on five normalized axes. */
-export function OperatorRadar({ stats, selected }: OperatorRadarProps) {
+export function OperatorRadar({ stats, selected, onSelect }: OperatorRadarProps) {
   const selectId = useId();
-  const [picked, setPicked] = useState<string>();
   const scores = normalize(stats);
   const operator =
-    (picked && scores.has(picked) ? picked : undefined) ??
     (selected && scores.has(selected) ? selected : undefined) ??
     stats[0]?.operator ??
     '';
@@ -78,7 +77,10 @@ export function OperatorRadar({ stats, selected }: OperatorRadarProps) {
             id={selectId}
             className="form-select"
             value={operator}
-            onChange={(event) => setPicked(event.target.value)}
+            onChange={(event) => {
+              const value = event.target.value;
+              onSelect?.(value);
+            }}
           >
             {stats.map((s) => (
               <option key={s.operator} value={s.operator}>
@@ -88,7 +90,7 @@ export function OperatorRadar({ stats, selected }: OperatorRadarProps) {
           </select>
         </label>
       </div>
-      <ChartFrame height={320} label={`پروفایل عملکرد ${operator} در برابر میانگین تیم`}>
+      <ChartFrame height={320} label={`پروفایل عملکرد ${operator} در برابر میانگین_team`}>
         <RadarChart data={rows} outerRadius="72%">
           <PolarGrid stroke={gridStroke} />
           <PolarAngleAxis dataKey="axis" tick={axisTick} />
@@ -110,7 +112,7 @@ export function OperatorRadar({ stats, selected }: OperatorRadarProps) {
             }}
           />
           <Radar
-            name="میانگین تیم"
+            name="میانگین_team"
             dataKey="team"
             stroke="var(--chart-series-3)"
             fill="var(--chart-series-3)"
@@ -132,9 +134,9 @@ export function OperatorRadar({ stats, selected }: OperatorRadarProps) {
       <SeriesLegend
         items={[
           { label: operator, color: 'var(--chart-series-1)' },
-          { label: 'میانگین تیم', color: 'var(--chart-series-3)' },
+          { label: 'میانگین_team', color: 'var(--chart-series-3)' },
         ]}
-        onSelect={(label) => label !== 'میانگین تیم' && setPicked(label)}
+        onSelect={(label) => label !== 'میانگین_team' && onSelect?.(label)}
       />
     </>
   );

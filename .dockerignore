@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+.cursor
+coverage
+images
+*.md
+.env
+.env.*
+!.env.example

@@ -8,7 +8,6 @@ import { useSentimentOverview } from '../hooks/analyticsQueries';
 import { ChartState } from './ChartState';
 import { CustomerSentimentFaces } from './SentimentFaces';
 import { SentimentGauge } from './SentimentGauge';
-import { SentimentMatrix } from './SentimentMatrix';
 import { formatScore, sideColor } from './sentimentKit';
 import './SentimentTab.css';
 
