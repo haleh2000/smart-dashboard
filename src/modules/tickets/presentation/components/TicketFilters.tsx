@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from 'react';
 import { PERIODS } from '@/shared/domain/period';
 import {
   Button,
@@ -34,9 +34,11 @@ export function TicketFilters({ state, onChange, onReset, meta }: TicketFiltersP
   const [draft, setDraft] = useState(state.search ?? '');
   /** The term the URL already carries, so we can tell our own commits from outside changes. */
   const committed = useRef(state.search ?? '');
-  /** `onChange` is a fresh closure every render; a ref keeps it out of the debounce effect. */
-  const change = useRef(onChange);
-  change.current = onChange;
+  /** Stable callback for the debounce effect — avoids writing a ref during render. */
+  const commitSearch = useEffectEvent((term: string) => {
+    committed.current = term;
+    onChange({ search: term || undefined });
+  });
   /** The custom «از/تا» range of the URL; while it is set the presets stand down. */
   const customRange = ticketCustomRange(state.from, state.to);
 
@@ -52,10 +54,7 @@ export function TicketFilters({ state, onChange, onReset, meta }: TicketFiltersP
   useEffect(() => {
     const term = ticketSearchTokens(draft).join(' ');
     if (term === (state.search ?? '')) return;
-    const timer = setTimeout(() => {
-      committed.current = term;
-      change.current({ search: term || undefined });
-    }, SEARCH_DEBOUNCE_MS);
+    const timer = setTimeout(() => commitSearch(term), SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [draft, state.search]);
 

@@ -1,4 +1,4 @@
-import { useId, useEffect, useMemo, useState } from 'react';
+import { useId, useState } from 'react';
 import { Bar, BarChart, Cell, LabelList, Tooltip, XAxis, YAxis } from 'recharts';
 import { formatPercent, formatPersianNumber } from '@/shared/lib/format';
 import { seriesColor } from '../chartColors';
@@ -18,8 +18,6 @@ interface HorizontalBarChartProps {
   maxVisible?: number;
   scale?: BarScale;
 }
-
-
 
 const ROW_HEIGHT = 38;
 const DEFAULT_MAX_VISIBLE = 5;
@@ -43,17 +41,17 @@ export function HorizontalBarChart({
   const { dataKey, domain } = resolveBarScale(scale);
   const [expanded, setExpanded] = useState(false);
   const hasOverflow = items.length > maxVisible;
-  const isSelectedVisible = useMemo(
-    () => !selected || items.slice(0, maxVisible).some((i) => i.label === selected),
-    [items, maxVisible, selected],
-  );
+  const isSelectedVisible =
+    !selected || items.slice(0, maxVisible).some((i) => i.label === selected);
+  // Keep a selected overflow bar in view (React “adjust state when props change”).
+  const [wasSelectedVisible, setWasSelectedVisible] = useState(isSelectedVisible);
+  if (wasSelectedVisible !== isSelectedVisible) {
+    setWasSelectedVisible(isSelectedVisible);
+    if (hasOverflow && !isSelectedVisible) setExpanded(true);
+  }
   const visibleItems = hasOverflow && !expanded ? items.slice(0, maxVisible) : items;
   const data =
     dataKey === 'share' ? visibleItems.map((item) => ({ ...item, share: item.share ?? 0 })) : visibleItems;
-
-  useEffect(() => {
-    if (hasOverflow && !isSelectedVisible) setExpanded(true);
-  }, [hasOverflow, isSelectedVisible]);
 
   const chartHeight = visibleItems.length * ROW_HEIGHT + 16;
 

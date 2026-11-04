@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { formatDate, formatPersianNumber, formatTime } from '@/shared/lib/format';
 import './JalaliDatePicker.css';
@@ -134,10 +134,9 @@ export function JalaliDatePicker({ label, value, onChange }: JalaliDatePickerPro
   const [minutes, setMinutes] = useState(() => value?.getMinutes() ?? 0);
 
   const view = toJalali(cursor);
-  const today = useMemo(() => toJalali(new Date()), []);
-  // Only the day matters for highlighting, and the grid compares against it 31
-  // times per render.
-  const selected = useMemo(() => (draft ? toJalali(draft) : null), [draft]);
+  // Freeze "today" for the open session so the grid highlight does not drift.
+  const [today] = useState(() => toJalali(new Date()));
+  const selected = draft ? toJalali(draft) : null;
 
   const close = () => {
     setOpen(false);
@@ -200,21 +199,12 @@ export function JalaliDatePicker({ label, value, onChange }: JalaliDatePickerPro
     commit(date);
   };
 
-  // The month on screen drives a 31-cell grid, so its shape is measured once
-  // per month rather than on every render.
-  const grid = useMemo(() => {
-    const first = firstOfJalaliMonth(view.year, view.month);
-    const total = jalaliMonthLength(first);
-    return {
-      leading: weekDayIndex(first),
-      days: Array.from({ length: total }, (_, index) => index + 1),
-    };
-  }, [view.year, view.month]);
-
-  const years = useMemo(
-    () => Array.from({ length: 24 }, (_, index) => today.year - 20 + index),
-    [today.year],
-  );
+  const firstOfViewMonth = firstOfJalaliMonth(view.year, view.month);
+  const grid = {
+    leading: weekDayIndex(firstOfViewMonth),
+    days: Array.from({ length: jalaliMonthLength(firstOfViewMonth) }, (_, index) => index + 1),
+  };
+  const years = Array.from({ length: 24 }, (_, index) => today.year - 20 + index);
 
   const modal = (body: ReactNode) =>
     createPortal(

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useCurrentUser } from '@/modules/auth';
 import { Button, Panel } from '@/shared/ui';
 import { formatPersianNumber } from '@/shared/lib/format';
@@ -12,10 +13,18 @@ const STATUS_OPTIONS: readonly { value: AgentStatus; label: string; icon: string
   { value: 'break', label: 'استراحت', icon: '○' },
 ];
 
+const MINUTE_MS = 60_000;
+
 export function AgentStatusBar() {
   const { data, isLoading, isError } = useAgentWorkspaceData();
   const updateStatus = useUpdateAgentStatus();
   const { fullName } = useCurrentUser();
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), MINUTE_MS);
+    return () => window.clearInterval(id);
+  }, []);
 
   if (isLoading) {
     return (
@@ -67,7 +76,7 @@ export function AgentStatusBar() {
           className="agent-status-bar__duration"
           dateTime={shiftState.statusSince.toISOString()}
         >
-          مدت: {formatPersianNumber(Math.floor((Date.now() - shiftState.statusSince.getTime()) / 1000 / 60))} دقیقه
+          مدت: {formatPersianNumber(Math.floor((now - shiftState.statusSince.getTime()) / 1000 / 60))} دقیقه
         </time>
       </div>
 

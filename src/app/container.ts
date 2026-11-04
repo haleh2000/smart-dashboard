@@ -9,9 +9,9 @@ import {
 import {
   HttpAuthRepository,
   MockAuthRepository,
+  tokenStore,
   type AuthRepository,
 } from '@/modules/auth';
-import { tokenStore } from '@/modules/auth/infrastructure/tokenStore';
 import { MockCallRepository, type CallRepository } from '@/modules/calls';
 import { MockCustomerRepository, type CustomerRepository } from '@/modules/customers';
 import { MockAnalyticsRepository, type AnalyticsRepository } from '@/modules/dashboard';
