@@ -81,7 +81,7 @@ export function AppShell() {
 
           <div className="app-header__actions">
             {env.isDev && <DevCallButton />}
-            {env.isDev && <DevRoleSwitcher />}
+            {env.isDev && !env.useApiAuth && <DevRoleSwitcher />}
             <ThemeToggle />
             <button
               className="app-header__logout"

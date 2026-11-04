@@ -5,7 +5,9 @@ export { hasPermission, PERMISSIONS, permissionsOf, type Permission } from './do
 export { ROLES, type Role } from './domain/role';
 export type { User } from './domain/user';
 export { setDevRole } from './infrastructure/devSession';
+export { HttpAuthRepository } from './infrastructure/HttpAuthRepository';
 export { MockAuthRepository } from './infrastructure/MockAuthRepository';
+export { tokenStore } from './infrastructure/tokenStore';
 export { authPaths } from './presentation/authPaths';
 export { AuthRepositoryProvider } from './presentation/authServices';
 export { CurrentUserContext, useCan, useCurrentUser } from './presentation/currentUser';
