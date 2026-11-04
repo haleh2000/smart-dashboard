@@ -26,10 +26,14 @@ export const ticketColumns = (listSearch = ''): TicketColumn[] => [
     interactive: true,
     cell: (t) => (
       <Link to={ticketPaths.detail(t.id)} state={{ listSearch }} className="queue-table__tracking">
-        T-{formatPersianNumber(t.id)}
+        {t.ticketNo ? (
+          <bdi>{t.ticketNo}</bdi>
+        ) : (
+          <>T-{formatPersianNumber(t.id)}</>
+        )}
       </Link>
     ),
-    exportValue: (t) => t.id,
+    exportValue: (t) => t.ticketNo ?? t.id,
   },
   {
     header: 'زمان ایجاد',

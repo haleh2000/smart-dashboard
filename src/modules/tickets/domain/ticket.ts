@@ -10,8 +10,8 @@ import { toLatinDigits } from '@/shared/lib/format';
 export type { Priority, Sentiment, SubjectPath };
 
 /**
- * Ticket as received from CRM (the source of truth) plus SMART enrichment.
- * Field names follow README → "صفحه‌های تیکت بر اساس CRM فعلی"; re-check them against api.yml.
+ * SMART UI ticket model (camelCase) plus enrichment.
+ * CRM/Nest snake_case rows (`ticketid`, `ticket_no`, …) map in via `mapCrmTicketToTicket`.
  */
 export const TICKET_STATUSES = [
   'pending',
@@ -222,7 +222,7 @@ export const ticketSearchFields = (token: string): TicketSearchField[] => {
 
 const searchFieldValue = (ticket: Ticket, field: TicketSearchField): string =>
   field === 'ticketId'
-    ? ticket.id
+    ? [ticket.id, ticket.ticketNo].filter(Boolean).join(' ')
     : field === 'customerName'
       ? ticket.customer.fullName
       : field === 'nationalId'
@@ -241,8 +241,12 @@ export interface Customer {
   nationalId: string;
   mobile: string;
   fullName: string;
+  /** CRM `fname`. */
+  firstName?: string;
+  /** CRM `lname`. */
+  lastName?: string;
   gender?: Gender;
-  /** «مشتری سازمانی» — the organization the customer is insured through. */
+  /** CRM `accountname` — organization / corporate customer name. */
   corporateName?: string;
 }
 
@@ -262,41 +266,62 @@ export interface TicketEnrichment {
 }
 
 export interface Ticket {
+  /** CRM `ticketid` (unique id used in routes). */
   id: string;
+  /** CRM `ticket_no` (e.g. TT1065189). */
+  ticketNo?: string;
+  /** CRM `createdtime`. */
   createdAt: Date;
-  /** CRM ticket type: گفت‌وگو، ارتباط‌دهی، شکایت، پیگیری، درخواست، پیشنهاد. */
+  /** CRM `modifiedtime`. */
+  modifiedAt?: Date;
+  /** CRM `tickettype` (normalized; «شکایات» → «شکایت»). */
   type: string;
   status: TicketStatus;
-  /** وضعیت تفصیلی مخصوص هر ماژول مبنای باز/بسته در تب‌های نوع. */
+  /** CRM `complaintstatus` when it is a Persian module detail status. */
   detailStatus?: string;
   /** منشأ تبدیل: گفت‌وگو/پیگیریِ منجر به تیکت یا شکایت. */
   convertedFrom?: string;
   /** مقصد تبدیل: مثلاً پیگیریِ تبدیل‌شده به شکایت. */
   convertedTo?: string;
+  /** CRM `inputchannel`. */
   channel: string;
   customer: Customer;
-  /** موضوع ۳ لایه؛ برای نوع «شکایت» وجود ندارد (undefined). */
+  /**
+   * Subject path from CRM `mainticket` / `subticket` / `reqtypeticket`
+   * (or `maincomplaint` as level1). Not set for type «شکایت».
+   */
   subject?: SubjectPath;
-  /** «نوع بیمه‌نامه». */
+  /** CRM `maincomplaint` (نوع اصلی شکایت) — kept even when subject is omitted. */
+  mainComplaint?: string;
+  /** CRM `productname` («نوع بیمه‌نامه»). */
   insuranceLine: string;
+  /** CRM `branchname`. */
   branch: string;
+  /** CRM `ownername` (complaint side). */
   complaintOwner: string;
+  /** CRM `ownername` (follow-up side; CRM has a single owner field). */
   followUpOwner: string;
+  /** CRM `complainttext`. */
   complaintText: string;
+  /** CRM `finalanswer`. */
   finalResponse?: string;
-  /** «شماره پرونده» (claim / plate number). */
+  /** «شماره پرونده» (claim / plate number) — SMART/CRM extension, not in base export. */
   fileNumber?: string;
+  /** CRM `description`. */
   description?: string;
   /** «ریشه‌یابی». */
   rootCause?: string;
-  /** «درخواست مالک پیگیری تیکت». */
+  /** CRM `mainrequest` («درخواست مالک پیگیری تیکت»). */
   followUpRequest?: string;
+  /** CRM `mainoffer`. */
+  mainOffer?: string;
   /** «نظر امور مشتریان در خصوص SLA». */
   slaOpinion?: string;
   /** Working days left on the SLA; negative when overdue. */
   slaRemainingDays: number;
   referralCount: number;
   firstResponseAt?: Date;
+  /** CRM `closeddate`. */
   closedAt?: Date;
   /** Per-user bookmark kept by SMART («ستاره‌دار کردن»). */
   starred: boolean;

@@ -46,20 +46,25 @@ function KeyFields({ ticket }: { ticket: Ticket }) {
         <InfoRow label="جنسیت">
           {ticket.customer.gender && genderLabels[ticket.customer.gender]}
         </InfoRow>
+        <InfoRow label="شماره تیکت (CRM)">
+          {ticket.ticketNo ? <bdi>{ticket.ticketNo}</bdi> : formatPersianNumber(ticket.id)}
+        </InfoRow>
         <InfoRow label="نوع بیمه‌نامه">{ticket.insuranceLine}</InfoRow>
         <InfoRow label="موبایل">{formatPersianNumber(ticket.customer.mobile)}</InfoRow>
         <InfoRow label="نام شعبه">{ticket.branch}</InfoRow>
         <InfoRow label="کانال ورودی">{ticket.channel}</InfoRow>
         <InfoRow label="وضعیت">
-          <TicketStatusBadge status={ticket.status} />
+          {ticket.detailStatus ? (
+            ticket.detailStatus
+          ) : (
+            <TicketStatusBadge status={ticket.status} />
+          )}
         </InfoRow>
-        {ticket.subject && (
-          <>
-            <InfoRow label="نوع اصلی شکایت">{ticket.subject.level1}</InfoRow>
-            <InfoRow label="نوع شکایت">{ticket.subject.level2}</InfoRow>
-            <InfoRow label="علت شکایت">{ticket.subject.level3}</InfoRow>
-          </>
-        )}
+        <InfoRow label="نوع اصلی شکایت">
+          {ticket.subject?.level1 ?? ticket.mainComplaint}
+        </InfoRow>
+        <InfoRow label="نوع شکایت">{ticket.subject?.level2}</InfoRow>
+        <InfoRow label="علت شکایت">{ticket.subject?.level3}</InfoRow>
         <InfoRow label="شماره پرونده">
           {ticket.fileNumber && <bdi>{formatPersianNumber(ticket.fileNumber)}</bdi>}
         </InfoRow>
@@ -80,6 +85,9 @@ function KeyFields({ ticket }: { ticket: Ticket }) {
         <InfoRow label="درخواست مالک پیگیری تیکت" wide>
           {ticket.followUpRequest}
         </InfoRow>
+        <InfoRow label="پیشنهاد اصلی" wide>
+          {ticket.mainOffer}
+        </InfoRow>
         <InfoRow label="نظر امور مشتریان در خصوص SLA" wide>
           {ticket.slaOpinion}
         </InfoRow>
@@ -95,6 +103,9 @@ function Timing({ ticket }: { ticket: Ticket }) {
     <InfoCard title="مشخصات و زمانبندی">
       <InfoGrid>
         <InfoRow label="زمان ایجاد">{formatDateTime(ticket.createdAt)}</InfoRow>
+        <InfoRow label="زمان ویرایش">
+          {ticket.modifiedAt && formatDateTime(ticket.modifiedAt)}
+        </InfoRow>
         <InfoRow label="اولین پاسخ">
           {ticket.firstResponseAt && formatDateTime(ticket.firstResponseAt)}
         </InfoRow>

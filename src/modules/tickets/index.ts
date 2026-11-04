@@ -16,6 +16,8 @@ export type {
   TicketType,
   TicketUpdate,
 } from './domain/ticket';
+export type { CrmTicket } from './domain/crmTicket';
+export { mapCrmTicketToTicket, normalizeCrmTicketType } from './domain/crmTicket';
 export {
   closedDetailStatusesForType,
   COMPLAINT_CLOSED_STATUSES,
