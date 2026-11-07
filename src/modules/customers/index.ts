@@ -29,6 +29,9 @@ export type {
 } from './domain/CustomerRepository';
 export { CUSTOMER_SORT_FIELDS } from './domain/CustomerRepository';
 export { MockCustomerRepository } from './infrastructure/MockCustomerRepository';
+export { HttpCustomerRepository } from './infrastructure/HttpCustomerRepository';
+export { mapCrmCustomerToProfile, mapCrmCustomerToSummary } from './domain/crmCustomer';
+export type { CrmCustomer } from './domain/crmCustomer';
 export { CustomerInsuranceCard } from './presentation/components/CustomerInsuranceCard';
 export { customerPaths } from './presentation/customerPaths';
 export { CustomerRepositoryProvider } from './presentation/customerServices';

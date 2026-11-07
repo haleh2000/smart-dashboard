@@ -29,6 +29,9 @@ export {
   stopCallSimulator,
 } from './infrastructure/devCallSimulator';
 export { MockCallRepository } from './infrastructure/MockCallRepository';
+export { HttpCallRepository } from './infrastructure/HttpCallRepository';
+export { mapCrmCallToCall } from './domain/crmCall';
+export type { CrmCall } from './domain/crmCall';
 export { callStatusMeta } from './presentation/callLabels';
 export { callPaths } from './presentation/callPaths';
 export { CallRepositoryProvider } from './presentation/callServices';

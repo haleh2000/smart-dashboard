@@ -1,7 +1,12 @@
 import {
+  HttpCrmSyncRepository,
+  HttpSettingsRepository,
+  HttpUserRepository,
+  MockCrmSyncRepository,
   MockRoleRepository,
   MockSettingsRepository,
   MockUserRepository,
+  type CrmSyncRepository,
   type RoleRepository,
   type SettingsRepository,
   type UserRepository,
@@ -12,16 +17,28 @@ import {
   tokenStore,
   type AuthRepository,
 } from '@/modules/auth';
-import { MockCallRepository, type CallRepository } from '@/modules/calls';
-import { MockCustomerRepository, type CustomerRepository } from '@/modules/customers';
+import {
+  HttpCallRepository,
+  MockCallRepository,
+  type CallRepository,
+} from '@/modules/calls';
+import {
+  HttpCustomerRepository,
+  MockCustomerRepository,
+  type CustomerRepository,
+} from '@/modules/customers';
 import { MockAnalyticsRepository, type AnalyticsRepository } from '@/modules/dashboard';
-import { MockTicketRepository, type TicketRepository } from '@/modules/tickets';
+import {
+  HttpTicketRepository,
+  MockTicketRepository,
+  type TicketRepository,
+} from '@/modules/tickets';
 import {
   MockAgentWorkspaceRepository,
   type AgentWorkspaceRepository,
 } from '@/modules/agent-workspace';
 import { env } from '@/shared/config/env';
-import { createHttpClient } from '@/shared/http';
+import { createHttpClient, type HttpClient } from '@/shared/http';
 
 /** Every port the app needs. Add a field here when a module introduces a new repository. */
 export interface Dependencies {
@@ -34,33 +51,41 @@ export interface Dependencies {
   settingsRepository: SettingsRepository;
   roleRepository: RoleRepository;
   agentWorkspaceRepository: AgentWorkspaceRepository;
+  crmSyncRepository: CrmSyncRepository;
 }
 
-const createAuthRepository = (): AuthRepository => {
-  if (!env.apiBaseUrl) {
-    return new MockAuthRepository();
-  }
-
-  const http = createHttpClient({
+const createApiClient = (): HttpClient | null => {
+  if (!env.apiBaseUrl) return null;
+  return createHttpClient({
     baseUrl: env.apiBaseUrl,
     getToken: () => tokenStore.getAccessToken(),
   });
-
-  return new HttpAuthRepository(http);
 };
 
 /**
  * Composition root — the ONLY place that chooses concrete adapters.
- * Auth uses the Nest API when VITE_API_BASE_URL is set; other modules stay on mocks until Http adapters land.
+ * Auth, tickets, calls, customers, users, settings, and CRM sync use the Nest API when
+ * VITE_API_BASE_URL is set.
  */
-export const createDependencies = (): Dependencies => ({
-  authRepository: createAuthRepository(),
-  ticketRepository: new MockTicketRepository(),
-  analyticsRepository: new MockAnalyticsRepository(),
-  callRepository: new MockCallRepository(),
-  customerRepository: new MockCustomerRepository(),
-  userRepository: new MockUserRepository(),
-  settingsRepository: new MockSettingsRepository(),
-  roleRepository: new MockRoleRepository(),
-  agentWorkspaceRepository: new MockAgentWorkspaceRepository(),
-});
+export const createDependencies = (): Dependencies => {
+  const http = createApiClient();
+
+  return {
+    authRepository: http ? new HttpAuthRepository(http) : new MockAuthRepository(),
+    ticketRepository: http ? new HttpTicketRepository(http) : new MockTicketRepository(),
+    analyticsRepository: new MockAnalyticsRepository(),
+    callRepository: http ? new HttpCallRepository(http) : new MockCallRepository(),
+    customerRepository: http
+      ? new HttpCustomerRepository(http)
+      : new MockCustomerRepository(),
+    userRepository: http ? new HttpUserRepository(http) : new MockUserRepository(),
+    settingsRepository: http
+      ? new HttpSettingsRepository(http)
+      : new MockSettingsRepository(),
+    roleRepository: new MockRoleRepository(),
+    agentWorkspaceRepository: new MockAgentWorkspaceRepository(),
+    crmSyncRepository: http
+      ? new HttpCrmSyncRepository(http)
+      : new MockCrmSyncRepository(),
+  };
+};

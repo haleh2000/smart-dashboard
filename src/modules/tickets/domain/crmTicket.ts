@@ -62,6 +62,20 @@ export const normalizeCrmTicketType = (tickettype: string | null | undefined): s
   return raw === 'شکایات' ? 'شکایت' : raw;
 };
 
+/** CRM exports vary spacing around «-» (e.g. وارده-رسیدگی شده vs وارده - رسیدگی شده). */
+const normalizeDetailStatus = (value: string) =>
+  value.replace(/\s*-\s*/g, ' - ').replace(/\s+/g, ' ').trim();
+
+const CLOSED_STATUS_ALIASES = new Set([
+  'رد شده',
+  'وارده-رسیدگی شده',
+  'وارده - رسیدگی شده',
+  'وارده-خارج از اختیارات اجرایی',
+  'وارده - خارج از اختیارات اجرایی',
+  'بسته‌شده',
+  'بسته شده',
+]);
+
 const mapComplaintStatus = (
   complaintstatus: string | null | undefined,
 ): { status: TicketStatus; detailStatus?: string } => {
@@ -72,10 +86,16 @@ const mapComplaintStatus = (
     return { status: raw as TicketStatus };
   }
 
-  if (isClosedDetailStatus(raw, 'pending')) {
+  const normalized = normalizeDetailStatus(raw);
+  if (
+    CLOSED_STATUS_ALIASES.has(raw) ||
+    CLOSED_STATUS_ALIASES.has(normalized) ||
+    isClosedDetailStatus(normalized, 'pending') ||
+    isClosedDetailStatus(raw, 'pending')
+  ) {
     return { status: 'closed', detailStatus: raw };
   }
-  if (isReviewDetailStatus(raw, 'pending')) {
+  if (isReviewDetailStatus(normalized, 'pending') || isReviewDetailStatus(raw, 'pending')) {
     return { status: 'inProgress', detailStatus: raw };
   }
   return { status: 'registered', detailStatus: raw };

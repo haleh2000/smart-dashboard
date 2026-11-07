@@ -59,6 +59,7 @@ export type {
 } from './domain/TicketRepository';
 export { TICKET_SORT_FIELDS } from './domain/TicketRepository';
 export { MockTicketRepository } from './infrastructure/MockTicketRepository';
+export { HttpTicketRepository } from './infrastructure/HttpTicketRepository';
 export { TicketDetailPage } from './presentation/pages/TicketDetailPage';
 export { TicketListPage } from './presentation/pages/TicketListPage';
 export { statusMeta as ticketStatusMeta } from './presentation/ticketLabels';

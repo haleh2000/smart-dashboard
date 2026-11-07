@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import {
+  CrmSyncRepositoryProvider,
   RoleRepositoryProvider,
   SettingsRepositoryProvider,
   UserRepositoryProvider,
@@ -34,9 +35,13 @@ export function AppProviders({
                 <UserRepositoryProvider value={dependencies.userRepository}>
                   <SettingsRepositoryProvider value={dependencies.settingsRepository}>
                     <RoleRepositoryProvider value={dependencies.roleRepository}>
-                      <AgentWorkspaceRepositoryProvider value={dependencies.agentWorkspaceRepository}>
-                        {children}
-                      </AgentWorkspaceRepositoryProvider>
+                      <CrmSyncRepositoryProvider value={dependencies.crmSyncRepository}>
+                        <AgentWorkspaceRepositoryProvider
+                          value={dependencies.agentWorkspaceRepository}
+                        >
+                          {children}
+                        </AgentWorkspaceRepositoryProvider>
+                      </CrmSyncRepositoryProvider>
                     </RoleRepositoryProvider>
                   </SettingsRepositoryProvider>
                 </UserRepositoryProvider>

@@ -14,11 +14,21 @@ export type {
   UserQuery,
   UserRepository,
 } from './domain/AdminRepositories';
+export type {
+  CrmSyncRepository,
+  CrmSyncResult,
+  CrmSyncStatus,
+} from './domain/CrmSyncRepository';
 export { MockRoleRepository } from './infrastructure/MockRoleRepository';
 export { MockSettingsRepository } from './infrastructure/MockSettingsRepository';
 export { MockUserRepository } from './infrastructure/MockUserRepository';
+export { HttpUserRepository } from './infrastructure/HttpUserRepository';
+export { HttpSettingsRepository } from './infrastructure/HttpSettingsRepository';
+export { HttpCrmSyncRepository } from './infrastructure/HttpCrmSyncRepository';
+export { MockCrmSyncRepository } from './infrastructure/MockCrmSyncRepository';
 export { adminPaths } from './presentation/adminPaths';
 export {
+  CrmSyncRepositoryProvider,
   RoleRepositoryProvider,
   SettingsRepositoryProvider,
   UserRepositoryProvider,

@@ -4,7 +4,12 @@ import type { UserQuery } from '../../domain/AdminRepositories';
 import { togglePermission, type RoleDefinition, type RoleInput } from '../../domain/roleDefinition';
 import type { IntegrationId, ScenarioInput, SystemSettings } from '../../domain/settings';
 import type { StaffUserInput } from '../../domain/staffUser';
-import { useRoleRepository, useSettingsRepository, useUserRepository } from '../adminServices';
+import {
+  useCrmSyncRepository,
+  useRoleRepository,
+  useSettingsRepository,
+  useUserRepository,
+} from '../adminServices';
 
 export const userKeys = {
   all: ['admin', 'users'] as const,
@@ -17,6 +22,7 @@ export const settingsKeys = {
   settings: () => [...settingsKeys.all, 'system'] as const,
   integrations: () => [...settingsKeys.all, 'integrations'] as const,
   scenarios: () => [...settingsKeys.all, 'scenarios'] as const,
+  crmSync: () => [...settingsKeys.all, 'crmSync'] as const,
 };
 
 export function useUsers(query: UserQuery) {
@@ -174,5 +180,23 @@ export function useSetScenarioActive() {
     mutationFn: ({ id, active }: { id: string; active: boolean }) =>
       repository.setScenarioActive(id, active),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: settingsKeys.scenarios() }),
+  });
+}
+
+export function useCrmSyncStatus() {
+  const repository = useCrmSyncRepository();
+  return useQuery({
+    queryKey: settingsKeys.crmSync(),
+    queryFn: () => repository.getStatus(),
+    refetchInterval: (query) => (query.state.data?.running ? 3000 : 30_000),
+  });
+}
+
+export function useStartCrmSync() {
+  const repository = useCrmSyncRepository();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (options?: { reset?: boolean }) => repository.startSync(options),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: settingsKeys.crmSync() }),
   });
 }

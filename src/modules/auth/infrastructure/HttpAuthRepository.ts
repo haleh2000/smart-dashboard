@@ -42,13 +42,17 @@ const parseUser = (value: unknown): User => {
 
 /** Talks to VOC Panel Nest auth endpoints (`/auth/login`, `/auth/me`, `/auth/logout`). */
 export class HttpAuthRepository implements AuthRepository {
-  constructor(private readonly http: HttpClient) {}
+  readonly #http: HttpClient;
+
+  constructor(http: HttpClient) {
+    this.#http = http;
+  }
 
   async getCurrentUser(): Promise<User | null> {
     if (!tokenStore.getAccessToken()) return null;
 
     try {
-      return parseUser(await this.http.get<unknown>('/auth/me'));
+      return parseUser(await this.#http.get<unknown>('/auth/me'));
     } catch (error) {
       if (error instanceof ApiError && error.isUnauthorized) {
         tokenStore.clear();
@@ -60,7 +64,7 @@ export class HttpAuthRepository implements AuthRepository {
 
   async signIn(credentials: Credentials): Promise<User> {
     try {
-      const response = await this.http.post<LoginResponse>('/auth/login', {
+      const response = await this.#http.post<LoginResponse>('/auth/login', {
         body: credentials,
       });
       const user = parseUser(response.user);
@@ -77,7 +81,7 @@ export class HttpAuthRepository implements AuthRepository {
   async signOut(): Promise<void> {
     try {
       if (tokenStore.getAccessToken()) {
-        await this.http.post('/auth/logout');
+        await this.#http.post('/auth/logout');
       }
     } catch {
       // Always clear local session even if the server call fails (e.g. expired access token).

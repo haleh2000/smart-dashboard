@@ -6,9 +6,10 @@ import {
   useIntegrations,
   useSetIntegrationEnabled,
 } from '../hooks/adminQueries';
+import { CrmSyncCard } from './CrmSyncCard';
 import './SettingsPanels.css';
 
-/** «یکپارچه‌سازی‌ها»: health and on/off switch per external system. */
+/** «یکپارچه‌سازی‌ها»: CRM sync + health/on-off switch per external system. */
 export function IntegrationsPanel() {
   const { data, isPending, isError, refetch } = useIntegrations();
   const check = useCheckIntegration();
@@ -25,6 +26,7 @@ export function IntegrationsPanel() {
 
   return (
     <div className="integrations">
+      <CrmSyncCard />
       {data.map((integration) => {
         const meta = integrationMeta[integration.id];
         const status = integrationStatusMeta[integration.status];
