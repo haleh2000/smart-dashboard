@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Navigate, useLocation } from 'react-router';
 import { formatPersianNumber } from '@/shared/lib/format';
-import { Button, ThemeToggle } from '@/shared/ui';
+import { Button, Didi, ThemeToggle } from '@/shared/ui';
 import { useCurrentUserQuery } from '../sessionQueries';
 import { useLoginFlow } from '../useLoginFlow';
 import './LoginPage.css';
@@ -32,7 +32,7 @@ export function LoginPage() {
       <section className="login__card">
         <header className="login__brand">
           <span className="login__lockup">
-            <img className="login__didi" src="/brand/didi.png" alt="" aria-hidden="true" />
+            <Didi className="login__didi" />
             <img className="login__logo" src="/brand/daydar-logo.png" alt="دی‌دار" />
           </span>
           <h1 className="login__title">SMART</h1>

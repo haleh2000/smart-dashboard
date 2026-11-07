@@ -64,12 +64,8 @@
 }
 
 .app-brand__didi {
-  display: block;
   height: 22px;
-  width: auto;
   filter: drop-shadow(0 3px 3px rgb(12 32 31 / 25%));
-  animation: didi-float 3.2s ease-in-out infinite;
-  transform-origin: 50% 100%;
 }
 
 .app-brand__logo {
@@ -377,10 +373,7 @@
 
   .side-nav__didi {
     height: 96px;
-    width: auto;
     filter: drop-shadow(0 12px 14px rgb(1 70 76 / 45%));
-    animation: didi-float 3.4s ease-in-out infinite;
-    transform-origin: 50% 100%;
   }
 
   /* The floating light panel: owns the header and an inner scroll area, so

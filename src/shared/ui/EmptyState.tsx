@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Didi } from './Didi';
 import './EmptyState.css';
 
 interface EmptyStateProps {
@@ -13,7 +14,7 @@ export function EmptyState({ message, mascot = false, children }: EmptyStateProp
   return (
     <div className="empty-state">
       {mascot ? (
-        <img className="empty-state__mascot" src="/brand/didi.png" alt="" aria-hidden="true" />
+        <Didi className="empty-state__mascot" />
       ) : (
         <span className="empty-state__glyph" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none">

@@ -5,7 +5,7 @@ import { IncomingCallPopup } from '@/modules/calls';
 import { env } from '@/shared/config/env';
 import { cn } from '@/shared/lib/cn';
 import { formatPersianNumber } from '@/shared/lib/format';
-import { NavIcon, ThemeToggle } from '@/shared/ui';
+import { Didi, NavIcon, ThemeToggle } from '@/shared/ui';
 import { activeNavPath, bottomNavItems, navigation } from '../navigation';
 import { DevCallButton } from './DevCallButton';
 import { DevRoleSwitcher } from './DevRoleSwitcher';
@@ -57,7 +57,7 @@ export function AppShell() {
         </nav>
 
         <div className="side-nav__mascot">
-          <img className="side-nav__didi" src="/brand/didi.png" alt="دی‌دی" />
+          <Didi className="side-nav__didi" alt="دی‌دی" />
         </div>
       </aside>
 
@@ -65,7 +65,7 @@ export function AppShell() {
         <header className="app-header">
           <Link className="app-brand" to="/">
             <span className="app-brand__lockup">
-              <img className="app-brand__didi" src="/brand/didi.png" alt="" aria-hidden="true" />
+              <Didi className="app-brand__didi" />
               <img
                 className="app-brand__logo"
                 src="/brand/daydar-logo.png"

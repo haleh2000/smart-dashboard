@@ -1,0 +1,78 @@
+/* «دی‌دی» — float + blink. Height comes from the host class (e.g. side-nav). */
+
+.didi {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+  animation: didi-float 3.4s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+
+.didi__img {
+  display: block;
+  height: 100%;
+  width: auto;
+  user-select: none;
+  pointer-events: none;
+}
+
+.didi__lids {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Soft lids matching the face panel, covering the teal squares. */
+.didi__lid {
+  position: absolute;
+  background: #fff1f1;
+  box-shadow: 0 0 2px 1.5px #fff1f1;
+  border-radius: 22% / 28%;
+  transform: scaleY(0);
+  transform-origin: 50% 12%;
+  animation: didi-blink 3.8s ease-in-out infinite;
+}
+
+/* Calibrated against the 585×516 PNG eye pixels (slightly oversized). */
+.didi__lid--l {
+  left: 28%;
+  top: 31.2%;
+  width: 9%;
+  height: 11%;
+}
+
+.didi__lid--r {
+  left: 56%;
+  top: 30.6%;
+  width: 9.2%;
+  height: 11.2%;
+  /* Tiny lag so the blink isn't perfectly mechanical. */
+  animation-delay: 40ms;
+}
+
+/*
+  Natural blink while floating: quick close, brief hold, reopen,
+  then a short double-blink mid-cycle.
+*/
+@keyframes didi-blink {
+  0%,
+  36%,
+  52%,
+  100% {
+    transform: scaleY(0);
+  }
+
+  38%,
+  40% {
+    transform: scaleY(1);
+  }
+
+  42% {
+    transform: scaleY(0);
+  }
+
+  44%,
+  45.5% {
+    transform: scaleY(1);
+  }
+}

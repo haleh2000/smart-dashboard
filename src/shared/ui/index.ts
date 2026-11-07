@@ -6,6 +6,7 @@ export { DataTable, type DataColumn } from './DataTable';
 export { DateTimePicker } from './DateTimePicker';
 export { JalaliDatePicker } from './JalaliDatePicker';
 export { Dialog } from './Dialog';
+export { Didi } from './Didi';
 export { EmptyState } from './EmptyState';
 export { ErrorState } from './ErrorState';
 export { FilterBar, FilterField, FilterSelect } from './FilterBar';
