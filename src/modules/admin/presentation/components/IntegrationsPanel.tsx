@@ -26,7 +26,8 @@ export function IntegrationsPanel() {
 
   return (
     <div className="integrations">
-      <CrmSyncCard />
+      <CrmSyncCard stream="tickets" />
+      <CrmSyncCard stream="calls" />
       {data.map((integration) => {
         const meta = integrationMeta[integration.id];
         const status = integrationStatusMeta[integration.status];

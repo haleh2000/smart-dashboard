@@ -188,7 +188,10 @@ export function useCrmSyncStatus() {
   return useQuery({
     queryKey: settingsKeys.crmSync(),
     queryFn: () => repository.getStatus(),
-    refetchInterval: (query) => (query.state.data?.running ? 3000 : 30_000),
+    refetchInterval: (query) =>
+      query.state.data?.tickets.running || query.state.data?.calls.running
+        ? 3000
+        : 30_000,
   });
 }
 
@@ -196,7 +199,8 @@ export function useStartCrmSync() {
   const repository = useCrmSyncRepository();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (options?: { reset?: boolean }) => repository.startSync(options),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: settingsKeys.crmSync() }),
+    mutationFn: (stream: 'tickets' | 'calls') => repository.startSync(stream),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: settingsKeys.crmSync() }),
   });
 }

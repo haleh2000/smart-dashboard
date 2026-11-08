@@ -15,9 +15,11 @@ export type {
   UserRepository,
 } from './domain/AdminRepositories';
 export type {
+  CrmStreamStatus,
   CrmSyncRepository,
-  CrmSyncResult,
+  CrmSyncStartResult,
   CrmSyncStatus,
+  CrmSyncStream,
 } from './domain/CrmSyncRepository';
 export { MockRoleRepository } from './infrastructure/MockRoleRepository';
 export { MockSettingsRepository } from './infrastructure/MockSettingsRepository';

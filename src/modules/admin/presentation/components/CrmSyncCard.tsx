@@ -1,6 +1,7 @@
 import { ApiError } from '@/shared/http';
 import { formatDateTime, formatPersianNumber } from '@/shared/lib/format';
 import { Button, ErrorState, SkeletonTable, StatusBadge } from '@/shared/ui';
+import type { CrmSyncStream } from '../../domain/CrmSyncRepository';
 import { useCrmSyncStatus, useStartCrmSync } from '../hooks/adminQueries';
 
 const stoppedReasonLabel: Record<string, string> = {
@@ -10,13 +11,38 @@ const stoppedReasonLabel: Record<string, string> = {
   empty_chunk: 'داده بیشتری نبود',
 };
 
-/** Admin control to pull VOC tickets from company CRM (VPN required). */
-export function CrmSyncCard() {
+const copy: Record<
+  CrmSyncStream,
+  { title: string; description: string; countLabel: string; button: string }
+> = {
+  tickets: {
+    title: 'یکپارچه‌سازی تیکت‌ها',
+    description:
+      'با فشردن دکمه، جاب بک‌اند API تیکت‌های جدید CRM (`voc_fetch_all`) را با type=new صدا می‌گیرد، next_ticketid را در فایل JSON ریشه ذخیره می‌کند و تا has_more=false ادامه می‌دهد. اجرای بعدی فقط تیکت‌های جدیدتر را می‌آورد.',
+    countLabel: 'تیکت ذخیره‌شده',
+    button: 'شروع همگام‌سازی تیکت‌ها',
+  },
+  calls: {
+    title: 'یکپارچه‌سازی تماس‌ها',
+    description:
+      'با فشردن دکمه، جاب بک‌اند API تماس‌های جدید CRM (`voc_fetch_all_calls`) را با type=new می‌گیرد، next_ticketid را در همان فایل JSON ذخیره می‌کند و تا has_more=false ادامه می‌دهد. اجرای بعدی فقط تماس‌های جدید را می‌آورد.',
+    countLabel: 'تماس ذخیره‌شده',
+    button: 'شروع همگام‌سازی تماس‌ها',
+  },
+};
+
+type CrmSyncCardProps = {
+  stream: CrmSyncStream;
+};
+
+/** One integration line: tickets or calls VOC sync job. */
+export function CrmSyncCard({ stream }: CrmSyncCardProps) {
   const { data, isPending, isError, refetch } = useCrmSyncStatus();
   const sync = useStartCrmSync();
+  const meta = copy[stream];
 
   if (isPending) return <SkeletonTable rows={4} />;
-  if (isError)
+  if (isError || !data)
     return (
       <ErrorState
         message="وضعیت همگام‌سازی CRM دریافت نشد. با حساب admin وارد شوید و اتصال به بک‌اند را بررسی کنید."
@@ -24,63 +50,79 @@ export function CrmSyncCard() {
       />
     );
 
-  const busy = data.running || sync.isPending;
+  const status = data[stream];
+  const starting = sync.isPending && sync.variables === stream;
+  const busy = status.running || starting;
   const syncError =
-    sync.error instanceof ApiError
+    sync.error instanceof ApiError && sync.variables === stream
       ? sync.error.status === 503
         ? 'CRM در دسترس نیست — به VPN شرکت وصل شوید و دوباره تلاش کنید.'
         : sync.error.status === 409
-          ? 'همگام‌سازی در حال اجراست.'
+          ? 'همگام‌سازی این خط در حال اجراست.'
           : 'شروع همگام‌سازی با خطا مواجه شد.'
-      : sync.isError
+      : sync.isError && sync.variables === stream
         ? 'شروع همگام‌سازی با خطا مواجه شد.'
         : null;
 
   return (
     <article className="integrations__card integrations__card--wide">
       <header className="integrations__header">
-        <h3 className="integrations__name">همگام‌سازی تیکت‌های CRM</h3>
+        <h3 className="integrations__name">{meta.title}</h3>
         <StatusBadge tone={busy ? 'warning' : 'success'} pulse={busy}>
           {busy ? 'در حال دریافت…' : 'آماده'}
         </StatusBadge>
       </header>
-      <p className="integrations__description">
-        در هر اجرا ابتدا تیکت‌های قدیمی‌تر از ۱ سال حذف می‌شوند، سپس از{' '}
-        <bdi dir="ltr">(now - 1 year)</bdi> تا الان از CRM دریافت و در جدول تیکت ذخیره
-        می‌شود. برای اجرا باید به شبکه/VPN شرکت متصل باشید.
-      </p>
+      <p className="integrations__description">{meta.description}</p>
       <dl className="integrations__facts">
         <div>
-          <dt>شروع بازه (۱ سال قبل)</dt>
+          <dt>آدرس API</dt>
           <dd>
-            <bdi dir="ltr">{data.windowStart || data.lastModified || '—'}</bdi>
+            <bdi dir="ltr" className="integrations__endpoint">
+              {status.fetchUrl}
+            </bdi>
           </dd>
         </div>
         <div>
-          <dt>آخرین modified</dt>
+          <dt>آخرین ticketid</dt>
           <dd>
-            <bdi dir="ltr">{data.lastModified || '—'}</bdi>
+            <bdi dir="ltr">{status.lastTicketId || '0'}</bdi>
           </dd>
         </div>
         <div>
           <dt>تعداد chunk</dt>
-          <dd>{formatPersianNumber(data.chunksProcessed)}</dd>
+          <dd>{formatPersianNumber(status.chunksProcessed)}</dd>
         </div>
         <div>
-          <dt>تیکت ذخیره‌شده</dt>
-          <dd>{formatPersianNumber(data.ticketsUpserted)}</dd>
+          <dt>{meta.countLabel}</dt>
+          <dd>{formatPersianNumber(status.itemsUpserted)}</dd>
         </div>
         <div>
-          <dt>به‌روزرسانی وضعیت</dt>
-          <dd>{data.updatedAt ? formatDateTime(new Date(data.updatedAt)) : '—'}</dd>
+          <dt>آخرین اجرا</dt>
+          <dd>
+            {status.lastRunAt ? formatDateTime(new Date(status.lastRunAt)) : '—'}
+          </dd>
+        </div>
+        <div>
+          <dt>وضعیت آخرین اجرا</dt>
+          <dd>
+            {status.lastStoppedReason
+              ? (stoppedReasonLabel[status.lastStoppedReason] ??
+                status.lastStoppedReason)
+              : busy
+                ? 'در حال اجرا'
+                : '—'}
+          </dd>
         </div>
       </dl>
 
-      {sync.isSuccess && (
+      {sync.isSuccess && sync.variables === stream && sync.data.started && (
         <p className="integrations__hint integrations__hint--ok" role="status">
-          همگام‌سازی انجام شد: حذف {formatPersianNumber(sync.data.deleted)} تیکت قدیمی، ذخیره{' '}
-          {formatPersianNumber(sync.data.upserted)} تیکت در {formatPersianNumber(sync.data.chunks)}{' '}
-          chunk — {stoppedReasonLabel[sync.data.stoppedReason] ?? sync.data.stoppedReason}
+          جاب شروع شد — پیشرفت از روی وضعیت بالا به‌روز می‌شود.
+        </p>
+      )}
+      {status.lastError && (
+        <p className="integrations__hint integrations__hint--error" role="alert">
+          {status.lastError}
         </p>
       )}
       {syncError && (
@@ -90,9 +132,11 @@ export function CrmSyncCard() {
       )}
 
       <footer className="integrations__footer">
-        <span className="integrations__hint">بازه فعال: یک سال اخیر</span>
-        <Button disabled={busy} onClick={() => sync.mutate({ reset: false })}>
-          {busy ? 'در حال همگام‌سازی…' : 'شروع همگام‌سازی ۱ ساله'}
+        <span className="integrations__hint">
+          کرسر در <bdi dir="ltr">{data.cursorFile}</bdi>
+        </span>
+        <Button disabled={busy} onClick={() => sync.mutate(stream)}>
+          {busy ? 'در حال همگام‌سازی…' : meta.button}
         </Button>
       </footer>
     </article>

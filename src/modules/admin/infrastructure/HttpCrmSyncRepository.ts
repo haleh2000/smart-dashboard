@@ -1,8 +1,9 @@
 import type { HttpClient } from '@/shared/http';
 import type {
   CrmSyncRepository,
-  CrmSyncResult,
+  CrmSyncStartResult,
   CrmSyncStatus,
+  CrmSyncStream,
 } from '../domain/CrmSyncRepository';
 
 /** Talks to VOC Panel Nest CRM sync endpoints. */
@@ -17,9 +18,9 @@ export class HttpCrmSyncRepository implements CrmSyncRepository {
     return this.#http.get<CrmSyncStatus>('/crm/sync/status');
   }
 
-  startSync(options?: { reset?: boolean }) {
-    return this.#http.post<CrmSyncResult>('/crm/sync', {
-      body: { reset: options?.reset ?? false },
+  startSync(stream: CrmSyncStream, options?: { reset?: boolean }) {
+    return this.#http.post<CrmSyncStartResult>(`/crm/sync/${stream}`, {
+      body: options?.reset ? { reset: true } : {},
     });
   }
 }
